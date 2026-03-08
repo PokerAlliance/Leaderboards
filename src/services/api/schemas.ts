@@ -19,8 +19,8 @@ export const ApiPlayerSchema = z.object({
 export const ApiSeatSchema = z.object({
   id: z.number(),
   username: z.string(),
-  chips: z.number(),
-  bounty: z.number(),
+  chips: z.number().optional(),
+  bounty: z.number().optional(),
   url: z.string(),
   avatar: z.string(),
   country: z.string(),
@@ -56,7 +56,7 @@ export const ApiBlindLevelSchema = z.object({
   level: z.number().nullable(),
   small: z.number().nullable(),
   big: z.number().nullable(),
-  minutes: z.number(),
+  minutes: z.number().optional(),
   ante: z.number().nullable().optional(),
 })
 
@@ -164,7 +164,7 @@ export const ApiTournamentResponseSchema = z.object({
   user: z.object({
     id: z.number(),
     isAdmin: z.boolean(),
-  }),
+  }).optional(),
 })
 
 export const ApiLeagueTournamentSchema = z.object({

@@ -54,7 +54,7 @@ function formatLiveTime(date: Date): string {
         </div>
 
         <RouterLink
-          :to="`/game/${live.id}`"
+          :to="`/league/${leagueSlug}/game/${live.id}`"
           class="game-calendar__live-game"
         >
           <div class="game-calendar__live-info">
@@ -106,7 +106,7 @@ function formatLiveTime(date: Date): string {
           <RouterLink
             v-for="game in recentGames"
             :key="game.id"
-            :to="`/game/${game.id}`"
+            :to="`/league/${leagueSlug}/game/${game.id}`"
             class="game-calendar__item game-calendar__item--clickable"
           >
             <div class="game-calendar__item-date">

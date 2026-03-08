@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useLeague } from '@/composables'
+import { getLeagueConfig } from '@/config/leagues'
 import LeagueHeader from '@/components/league/LeagueHeader.vue'
 import LeagueDescription from '@/components/league/LeagueDescription.vue'
 import LeagueRules from '@/components/league/LeagueRules.vue'
@@ -14,6 +15,13 @@ const props = defineProps<{
 }>()
 
 const validSlug = computed(() => props.leagueSlug as LeagueSlug)
+
+const leagueConfig = computed(() => getLeagueConfig(validSlug.value))
+
+const backgroundStyle = computed(() => {
+  const bgImage = leagueConfig.value.backgroundImage
+  return bgImage ? { backgroundImage: `url(${bgImage})` } : {}
+})
 
 const {
   leagueInfo,
@@ -40,7 +48,7 @@ watch(
 
 <template>
   <div class="league-view" :class="`theme-${leagueSlug}`">
-    <div class="league-view__bg"></div>
+    <div class="league-view__bg" :style="backgroundStyle"></div>
 
     <div class="league-view__container">
       <LeagueHeader :league-slug="validSlug" :league-info="leagueInfo" />
@@ -103,11 +111,10 @@ watch(
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: var(--theme-background-image, none);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  z-index: -1;
+  z-index: 0;
 }
 
 .league-view__bg::after {

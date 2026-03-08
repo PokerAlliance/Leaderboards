@@ -14,9 +14,18 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/league/:leagueSlug/game/:tournamentId',
-    name: 'game',
+    name: 'league-game',
     component: () => import('@/views/GameView.vue'),
     props: true,
+  },
+  {
+    path: '/game/:tournamentId',
+    name: 'game',
+    component: () => import('@/views/GameView.vue'),
+    props: (route) => ({
+      tournamentId: route.params.tournamentId,
+      leagueSlug: route.query.league || undefined,
+    }),
   },
   {
     path: '/admin',

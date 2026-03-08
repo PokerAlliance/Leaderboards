@@ -79,7 +79,7 @@ export function useScoring(leagueSlug: LeagueSlug, options: UseScoringOptions): 
         if (a.isEliminated && !b.isEliminated) return 1
         if (!a.isEliminated && b.isEliminated) return -1
         if (a.isEliminated && b.isEliminated) return 0
-        return b.chips - a.chips
+        return (b.chips ?? 0) - (a.chips ?? 0)
       })
 
       sortedPlayers.forEach((player, index) => {

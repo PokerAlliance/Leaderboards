@@ -4,7 +4,7 @@ import UnoCSS from 'unocss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-  base: '/',
+  base: '/Leaderboards/',
   plugins: [vue(), UnoCSS()],
   resolve: {
     alias: {

@@ -15,6 +15,7 @@
     "@vueuse/core": "^14.2.1",
     "@vueuse/motion": "^3.0.3",
     "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "ofetch": "^1.5.1",
     "vue": "^3.5.25",
     "vue-router": "^5.0.3",

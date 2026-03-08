@@ -1,9 +1,14 @@
 /**
  * useTournament Composable
  * Fetch and normalize tournament data from ReplayPoker API
+ * 
+ * Smart polling behavior:
+ * - Initial load: always fetch once
+ * - Polling: only when isLive === true AND enablePolling !== false
+ * - Auto-stop: when state changes from 'running' to 'finished'
  */
 
-import { ref, computed, type Ref, type ComputedRef } from 'vue'
+import { ref, computed, watch, type Ref, type ComputedRef } from 'vue'
 import { replayApi } from '@/services/api'
 import { usePolling } from './usePolling'
 import type {
@@ -18,7 +23,7 @@ import type {
 
 export interface UseTournamentOptions {
   pollInterval?: number
-  autoStart?: boolean
+  enablePolling?: boolean
 }
 
 export interface UseTournamentReturn {
@@ -30,8 +35,9 @@ export interface UseTournamentReturn {
   lastUpdated: Ref<Date | null>
   isLive: ComputedRef<boolean>
   isFinished: ComputedRef<boolean>
-  start: () => void
-  stop: () => void
+  isPending: ComputedRef<boolean>
+  startPolling: () => void
+  stopPolling: () => void
   refresh: () => Promise<void>
   load: (tournamentId: number) => Promise<void>
 }
@@ -121,7 +127,7 @@ export function useTournament(
   initialTournamentId?: number,
   options: UseTournamentOptions = {}
 ): UseTournamentReturn {
-  const { pollInterval = 30000, autoStart = false } = options
+  const { pollInterval = 30000, enablePolling = true } = options
 
   const tournamentId = ref<number | null>(initialTournamentId ?? null)
   const raw = ref<ApiTournamentResponse | null>(null)
@@ -142,10 +148,16 @@ export function useTournament(
 
   const isLive = computed(() => tournament.value?.state === 'running')
   const isFinished = computed(() => tournament.value?.state === 'finished')
+  const isPending = computed(() => tournament.value?.state === 'registering')
 
   async function load(id: number): Promise<void> {
     tournamentId.value = id
+    polling.stop()
     await refresh()
+    
+    if (enablePolling && isLive.value) {
+      startPollingIfLive()
+    }
   }
 
   async function refresh(): Promise<void> {
@@ -156,19 +168,40 @@ export function useTournament(
     }
   }
 
-  function start(): void {
+  function startPollingIfLive(): void {
+    if (!enablePolling) return
+    if (!tournamentId.value) return
+    if (!isLive.value) return
+    if (polling.isPolling.value) return
+    
+    polling.start()
+  }
+
+  function startPolling(): void {
+    if (!enablePolling) {
+      console.warn('Polling is disabled for this tournament instance')
+      return
+    }
     if (tournamentId.value) {
-      polling.start()
+      startPollingIfLive()
     }
   }
 
-  function stop(): void {
+  function stopPolling(): void {
     polling.stop()
   }
 
-  if (autoStart && initialTournamentId) {
-    start()
-  }
+  watch(isFinished, (finished) => {
+    if (finished && polling.isPolling.value) {
+      polling.stop()
+    }
+  })
+
+  watch(isLive, (live) => {
+    if (live && enablePolling && !polling.isPolling.value) {
+      polling.start()
+    }
+  })
 
   return {
     tournament,
@@ -179,8 +212,9 @@ export function useTournament(
     lastUpdated: polling.lastUpdated,
     isLive,
     isFinished,
-    start,
-    stop,
+    isPending,
+    startPolling,
+    stopPolling,
     refresh,
     load,
   }

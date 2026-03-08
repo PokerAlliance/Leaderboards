@@ -93,7 +93,7 @@ onMounted(async () => {
         <p>Results not yet available</p>
       </div>
 
-      <RouterLink :to="`/game/${game.id}`" class="recent-game__link">
+      <RouterLink :to="`/league/${leagueSlug}/game/${game.id}`" class="recent-game__link">
         <BaseButton variant="primary" size="md" full-width>
           View Full Scoreboard
         </BaseButton>

@@ -16,8 +16,8 @@ export interface ApiPlayer {
 }
 
 export interface ApiSeat extends ApiPlayer {
-  chips: number
-  bounty: number
+  chips?: number
+  bounty?: number
 }
 
 export interface ApiWinner {
@@ -50,7 +50,7 @@ export interface ApiBlindLevel {
   level: number | null
   small: number | null
   big: number | null
-  minutes: number
+  minutes?: number
   ante?: number | null
 }
 
@@ -153,7 +153,7 @@ export interface ApiTournamentResponse {
   blindLevels: ApiBlindLevel[]
   pageTitle: string
   messages: unknown[]
-  user: {
+  user?: {
     id: number
     isAdmin: boolean
   }

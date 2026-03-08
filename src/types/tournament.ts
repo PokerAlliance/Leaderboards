@@ -8,7 +8,7 @@ import type { TournamentState } from './replay-api'
 export interface TournamentPlayer {
   id: number
   username: string
-  chips: number
+  chips?: number
   avatar: string
   country: string
   position?: number
@@ -34,7 +34,7 @@ export interface BlindLevel {
   smallBlind: number
   bigBlind: number
   ante: number
-  durationMinutes: number
+  durationMinutes?: number
 }
 
 export interface CurrentBlinds {

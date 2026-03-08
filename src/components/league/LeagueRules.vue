@@ -12,42 +12,27 @@ const props = defineProps<Props>()
 
 const config = computed(() => getLeagueConfig(props.leagueSlug))
 
+const ordinalSuffix = (n: number): string => {
+  const s = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  const suffix = s[(v - 20) % 10] ?? s[v] ?? s[0] ?? 'th'
+  return n + suffix
+}
+
 const pointsTable = computed(() => {
-  if (props.leagueSlug === 'dreamweaver') {
-    return [
-      { position: '1st', points: 21 },
-      { position: '2nd', points: 18 },
-      { position: '3rd', points: 16 },
-      { position: '4th', points: 15 },
-      { position: '5th', points: 14 },
-      { position: '6th', points: 13 },
-      { position: '7th', points: 12 },
-      { position: '8th', points: 11 },
-      { position: '9th', points: 10 },
-      { position: '10th', points: 9 },
-      { position: '11th', points: 8 },
-      { position: '12th', points: 7 },
-      { position: '13th', points: 6 },
-      { position: '14th', points: 5 },
-      { position: '15th', points: 4 },
-      { position: '16th', points: 3 },
-      { position: '17th', points: 2 },
-      { position: '18th', points: 1 },
-    ]
-  }
-  return []
+  const table = config.value.scoringRules.pointsTable
+  return table.map((points, index) => ({
+    position: ordinalSuffix(index + 1),
+    points,
+  }))
 })
 
 const monthPoints = computed(() => {
-  if (props.leagueSlug === 'dreamweaver') {
-    return [
-      { position: '1st', points: 4 },
-      { position: '2nd', points: 3 },
-      { position: '3rd', points: 2 },
-      { position: '4th', points: 1 },
-    ]
-  }
-  return []
+  const table = config.value.scoringRules.monthPointsTable
+  return table.map((points, index) => ({
+    position: ordinalSuffix(index + 1),
+    points,
+  }))
 })
 
 const gameDays = computed(() => {
@@ -62,6 +47,9 @@ const gameDays = computed(() => {
   }
   return config.value.gameDays.map((day) => dayMap[day] || day)
 })
+
+const gameStartTime = computed(() => config.value.scoringRules.gameStartTime)
+const rulesDescription = computed(() => config.value.scoringRules.rulesDescription)
 </script>
 
 <template>
@@ -82,13 +70,13 @@ const gameDays = computed(() => {
             {{ day }}
           </span>
         </div>
-        <p class="league-rules__note">Games start at 9:30 PM EST</p>
+        <p v-if="gameStartTime" class="league-rules__note">Games start at {{ gameStartTime }}</p>
       </section>
 
-      <section class="league-rules__section">
+      <section v-if="pointsTable.length > 0" class="league-rules__section">
         <h3 class="league-rules__subtitle">Player Points</h3>
-        <p class="league-rules__description">
-          Points are awarded to the top 18 finishers in each game. Team scores are the sum of all team members' points.
+        <p v-if="rulesDescription" class="league-rules__description">
+          {{ rulesDescription }}
         </p>
         <div class="league-rules__points-grid">
           <div
@@ -103,10 +91,10 @@ const gameDays = computed(() => {
         </div>
       </section>
 
-      <section class="league-rules__section">
+      <section v-if="monthPoints.length > 0" class="league-rules__section">
         <h3 class="league-rules__subtitle">Month-End Bonus</h3>
         <p class="league-rules__description">
-          At the end of each month, teams receive bonus points based on their final standings.
+          At the end of each {{ config.seasonType === 'quarterly' ? 'quarter' : 'month' }}, teams receive bonus points based on their final standings.
         </p>
         <div class="league-rules__month-points">
           <div

@@ -4,34 +4,36 @@
 
 import type { Team, DreamweaverTeamSlug, LeagueSlug } from '@/types'
 
+const BASE = import.meta.env.BASE_URL
+
 export const DREAMWEAVER_TEAMS: Team[] = [
   {
     id: 'pirates',
     name: 'Pirates',
     slug: 'pirates',
     color: '#00a5a5',
-    logoUrl: '/assets/sprites/dreamweaver/pirates.png',
+    logoUrl: `${BASE}assets/sprites/dreamweaver/pirates.png`,
   },
   {
     id: 'con',
     name: 'Con Artist',
     slug: 'con',
     color: '#d946ef',
-    logoUrl: '/assets/sprites/dreamweaver/con.png',
+    logoUrl: `${BASE}assets/sprites/dreamweaver/con.png`,
   },
   {
     id: 'outlaws',
     name: 'Outlaws',
     slug: 'outlaws',
     color: '#c9a66b',
-    logoUrl: '/assets/sprites/dreamweaver/outlaws.png',
+    logoUrl: `${BASE}assets/sprites/dreamweaver/outlaws.png`,
   },
   {
     id: 'renegades',
     name: 'Renegades',
     slug: 'renegades',
     color: '#f97316',
-    logoUrl: '/assets/sprites/dreamweaver/renegades.png',
+    logoUrl: `${BASE}assets/sprites/dreamweaver/renegades.png`,
   },
 ]
 

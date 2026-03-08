@@ -1,19 +1,135 @@
 <script setup lang="ts">
-  defineProps<{
-    leagueSlug: string
-    tournamentId: string
-  }>()
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import GameScoreboard from '@/components/scoreboard/GameScoreboard.vue'
+import type { LeagueSlug } from '@/types'
+
+interface Props {
+  tournamentId: string
+  leagueSlug?: string
+}
+
+const props = defineProps<Props>()
+const router = useRouter()
+
+const parsedTournamentId = computed(() => {
+  const id = parseInt(props.tournamentId, 10)
+  return isNaN(id) ? null : id
+})
+
+const validLeagueSlug = computed(() => {
+  if (!props.leagueSlug) return undefined
+  const valid: LeagueSlug[] = ['dreamweaver', 'tpp', 'fpl']
+  return valid.includes(props.leagueSlug as LeagueSlug)
+    ? (props.leagueSlug as LeagueSlug)
+    : undefined
+})
+
+const scoreboardError = ref<string | null>(null)
+
+function handleError(error: Error) {
+  scoreboardError.value = error.message
+}
+
+function handleUpdate(data: { isLive: boolean; isFinished: boolean }) {
+  console.log('Scoreboard update:', data)
+}
+
+function goBack() {
+  if (props.leagueSlug) {
+    router.push(`/league/${props.leagueSlug}`)
+  } else {
+    router.push('/')
+  }
+}
 </script>
 
 <template>
-  <main class="p-8">
-    <h1 class="text-3xl font-bold text-gold">Game Scoreboard</h1>
-    <p class="text-text-secondary mt-4">
-      League: {{ leagueSlug }} | Tournament: {{ tournamentId }}
-    </p>
-    <p class="text-text-muted mt-2">Game View - Sprint 4 will add content</p>
-    <nav class="mt-8 flex gap-4">
-      <router-link :to="`/league/${leagueSlug}`" class="btn-primary">Back to League</router-link>
-    </nav>
+  <main class="game-view">
+    <div v-if="!parsedTournamentId" class="game-view__error">
+      <h1>Invalid Tournament ID</h1>
+      <p>The tournament ID "{{ tournamentId }}" is not valid.</p>
+      <button class="game-view__back-btn" @click="goBack">
+        Go Back
+      </button>
+    </div>
+
+    <template v-else>
+      <nav class="game-view__nav">
+        <button class="game-view__back-btn" @click="goBack">
+          <span class="game-view__back-icon">←</span>
+          <span v-if="leagueSlug">Back to {{ leagueSlug }}</span>
+          <span v-else>Back</span>
+        </button>
+      </nav>
+
+      <GameScoreboard
+        :tournament-id="parsedTournamentId"
+        :league-slug="validLeagueSlug"
+        :poll-interval="30000"
+        @error="handleError"
+        @update="handleUpdate"
+      />
+    </template>
   </main>
 </template>
+
+<style scoped>
+.game-view {
+  min-height: 100vh;
+}
+
+.game-view__nav {
+  position: fixed;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 100;
+}
+
+.game-view__back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(10, 15, 20, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(8px);
+}
+
+.game-view__back-btn:hover {
+  background: rgba(20, 30, 40, 0.9);
+  border-color: var(--color-gold);
+}
+
+.game-view__back-icon {
+  font-size: var(--text-lg);
+}
+
+.game-view__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.game-view__error h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  color: var(--color-error);
+  margin-bottom: var(--space-4);
+}
+
+.game-view__error p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+</style>

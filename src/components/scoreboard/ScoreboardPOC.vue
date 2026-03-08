@@ -26,11 +26,15 @@
   const topPlayers = computed(() => props.tournament.players.slice(0, 10))
 
   const showChips = computed(() => isLive.value)
+
+  const bgStyle = computed(() => ({
+    backgroundImage: `url(${import.meta.env.BASE_URL}assets/backgrounds/dw-background.png)`,
+  }))
 </script>
 
 <template>
   <div class="scoreboard theme-dreamweaver">
-    <div class="scoreboard__bg-fixed" />
+    <div class="scoreboard__bg-fixed" :style="bgStyle" />
 
     <div class="scoreboard__wrapper">
       <header class="scoreboard__header">
@@ -106,7 +110,6 @@
   .scoreboard__bg-fixed {
     position: fixed;
     inset: 0;
-    background-image: url('/assets/backgrounds/dw-background.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
