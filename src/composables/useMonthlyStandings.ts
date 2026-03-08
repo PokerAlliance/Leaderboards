@@ -1,6 +1,9 @@
 /**
  * useMonthlyStandings Composable
  * Aggregate team standings for the current month from game history
+ *
+ * For MTT leagues like Dreamweaver, standings are based on cumulative month points
+ * (4-3-2-1 awarded per game based on team rank), not individual game points.
  */
 
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
@@ -11,11 +14,10 @@ import type { LeagueSlug, Team } from '@/types'
 
 export interface TeamStanding {
   team: Team
-  totalGamePoints: number
+  totalMonthPoints: number
   gamesPlayed: number
   rank: number
-  monthPoints: number
-  averagePointsPerGame: number
+  projectedBonus: number
 }
 
 export interface UseMonthlyStandingsReturn {
@@ -46,49 +48,47 @@ export function useMonthlyStandings(leagueSlug: LeagueSlug): UseMonthlyStandings
     const teamStatsMap = new Map<
       string,
       {
-        totalPoints: number
+        totalMonthPoints: number
         gamesPlayed: Set<string>
       }
     >()
 
     for (const team of teams) {
       teamStatsMap.set(team.slug, {
-        totalPoints: 0,
+        totalMonthPoints: 0,
         gamesPlayed: new Set(),
       })
     }
 
     for (const game of monthlyGames) {
-      const results = gameHistory.getGameResults(game.game_id)
-      if (!results) continue
+      if (!game.teamScores || game.teamScores.length === 0) continue
 
-      for (const teamScore of results.teamScores) {
+      for (const teamScore of game.teamScores) {
         const stats = teamStatsMap.get(teamScore.teamSlug)
         if (stats) {
-          stats.totalPoints += teamScore.totalPoints
+          stats.totalMonthPoints += teamScore.monthPts
           stats.gamesPlayed.add(game.game_id)
         }
       }
     }
 
-    const unsortedStandings: Omit<TeamStanding, 'rank' | 'monthPoints'>[] = teams.map((team) => {
-      const stats = teamStatsMap.get(team.slug) || { totalPoints: 0, gamesPlayed: new Set() }
+    const unsortedStandings: Omit<TeamStanding, 'rank' | 'projectedBonus'>[] = teams.map((team) => {
+      const stats = teamStatsMap.get(team.slug) || { totalMonthPoints: 0, gamesPlayed: new Set() }
       const gamesPlayed = stats.gamesPlayed.size
 
       return {
         team,
-        totalGamePoints: stats.totalPoints,
+        totalMonthPoints: stats.totalMonthPoints,
         gamesPlayed,
-        averagePointsPerGame: gamesPlayed > 0 ? Math.round((stats.totalPoints / gamesPlayed) * 10) / 10 : 0,
       }
     })
 
-    const sortedStandings = unsortedStandings.sort((a, b) => b.totalGamePoints - a.totalGamePoints)
+    const sortedStandings = unsortedStandings.sort((a, b) => b.totalMonthPoints - a.totalMonthPoints)
 
     return sortedStandings.map((standing, index) => ({
       ...standing,
       rank: index + 1,
-      monthPoints: scoringStrategy.calculateMonthPoints(index + 1, teams.length),
+      projectedBonus: scoringStrategy.calculateMonthPoints(index + 1, teams.length),
     }))
   })
 

@@ -15,7 +15,7 @@ import type {
 import { getScoringStrategy } from '@/services/scoring'
 
 export interface UseScoringOptions {
-  getPlayerTeam: (playerId: number) => { teamSlug: string; teamName: string } | null
+  getPlayerTeam: (username: string) => { teamSlug: string; teamName: string } | null
 }
 
 export interface UseScoringReturn {
@@ -45,7 +45,7 @@ export function useScoring(leagueSlug: LeagueSlug, options: UseScoringOptions): 
     position: number,
     totalPlayers: number
   ): PlayerGameResult {
-    const teamAssignment = getPlayerTeam(playerId)
+    const teamAssignment = getPlayerTeam(username)
     const points = strategy.calculatePlayerPoints(position, totalPlayers)
 
     return {

@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue'
 import { format } from 'date-fns'
 import BaseCard from '@/components/common/BaseCard.vue'
 import { useMonthlyStandings } from '@/composables'
+import { getLeagueConfig } from '@/config/leagues'
 import type { LeagueSlug } from '@/types'
 
 interface Props {
@@ -12,6 +13,9 @@ interface Props {
 const props = defineProps<Props>()
 
 const { standings, currentMonth, isLoading, error, load } = useMonthlyStandings(props.leagueSlug)
+
+const leagueConfig = computed(() => getLeagueConfig(props.leagueSlug))
+const showGamesPlayed = computed(() => leagueConfig.value.gameFormat !== 'mtt')
 
 const monthLabel = computed(() => {
   const date = new Date(currentMonth.value.year, currentMonth.value.month)
@@ -59,11 +63,11 @@ onMounted(() => {
         <p>No games played this month yet.</p>
       </div>
 
-      <div v-else class="monthly-standings__table">
+      <div v-else class="monthly-standings__table" :class="{ 'monthly-standings__table--no-gp': !showGamesPlayed }">
         <div class="standings-header">
           <span class="standings-header__rank">#</span>
           <span class="standings-header__team">Team</span>
-          <span class="standings-header__games">GP</span>
+          <span v-if="showGamesPlayed" class="standings-header__games">GP</span>
           <span class="standings-header__points">Pts</span>
         </div>
 
@@ -84,19 +88,19 @@ onMounted(() => {
             <span class="standings-row__name">{{ standing.team.name }}</span>
           </div>
 
-          <span class="standings-row__games">{{ standing.gamesPlayed }}</span>
+          <span v-if="showGamesPlayed" class="standings-row__games">{{ standing.gamesPlayed }}</span>
 
           <div class="standings-row__points-cell">
-            <span class="standings-row__points">{{ standing.totalGamePoints }}</span>
-            <span v-if="standing.monthPoints > 0" class="standings-row__month-bonus">
-              +{{ standing.monthPoints }}
+            <span class="standings-row__points">{{ standing.totalMonthPoints }}</span>
+            <span v-if="standing.projectedBonus > 0" class="standings-row__month-bonus">
+              +{{ standing.projectedBonus }}
             </span>
           </div>
         </div>
       </div>
 
       <div v-if="standings.length > 0" class="monthly-standings__legend">
-        <span class="monthly-standings__legend-item">GP = Games Played</span>
+        <span v-if="showGamesPlayed" class="monthly-standings__legend-item">GP = Games Played</span>
         <span class="monthly-standings__legend-item">Pts = Total Points</span>
         <span class="monthly-standings__legend-item">+N = Month Bonus</span>
       </div>
@@ -164,6 +168,11 @@ onMounted(() => {
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.monthly-standings__table--no-gp .standings-header,
+.monthly-standings__table--no-gp .standings-row {
+  grid-template-columns: 40px 1fr 80px;
 }
 
 .standings-header__rank {

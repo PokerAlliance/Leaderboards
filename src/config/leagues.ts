@@ -6,6 +6,7 @@ import type { LeagueSlug } from '@/types'
 
 export type SeasonType = 'monthly' | 'quarterly'
 export type GameDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
+export type GameFormat = 'mtt' | 'sng'
 
 export interface LeagueScoringRules {
   pointsTable: number[]
@@ -21,6 +22,7 @@ export interface LeagueConfig {
   replayLeagueId: number
   scoringStrategy: string
   seasonType: SeasonType
+  gameFormat: GameFormat
   gameDays: GameDay[]
   theme: string
   description: string
@@ -39,6 +41,7 @@ export const LEAGUES: Record<LeagueSlug, LeagueConfig> = {
     replayLeagueId: 30,
     scoringStrategy: 'dreamweaver',
     seasonType: 'monthly',
+    gameFormat: 'mtt',
     gameDays: ['monday', 'wednesday', 'thursday', 'sunday'],
     theme: 'dreamweaver',
     description: 'A team league where four teams compete for monthly supremacy',
@@ -47,7 +50,7 @@ export const LEAGUES: Record<LeagueSlug, LeagueConfig> = {
       pointsTable: [21, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
       monthPointsTable: [4, 3, 2, 1],
       gameStartTime: '9:30 PM EST',
-      rulesDescription: "Points are awarded to the top 18 finishers in each game. Team scores are the sum of all team members' points.",
+      rulesDescription: "Points are awarded to the top 18 finishers in each game. Teams are ranked by game points, then earn 4/3/2/1 month points based on that ranking. Monthly standings show cumulative month points.",
     },
     backgroundImage: `${BASE}assets/backgrounds/dw-background.png`,
   },
@@ -58,6 +61,7 @@ export const LEAGUES: Record<LeagueSlug, LeagueConfig> = {
     replayLeagueId: 0,
     scoringStrategy: 'tpp',
     seasonType: 'quarterly',
+    gameFormat: 'mtt',
     gameDays: [],
     theme: 'tpp',
     description: 'Team Poker League with quarterly seasons',
@@ -77,6 +81,7 @@ export const LEAGUES: Record<LeagueSlug, LeagueConfig> = {
     replayLeagueId: 0,
     scoringStrategy: 'fpl',
     seasonType: 'monthly',
+    gameFormat: 'sng',
     gameDays: [],
     theme: 'fpl',
     description: '6-max SNG pairs tournament',

@@ -1,12 +1,412 @@
 <script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { useAuth, useTournament, useTeamRoster, useScoring } from '@/composables'
+import { sheetsClient } from '@/services/sheets'
+import { LoginForm, ScoreEditor } from '@/components/admin'
+import BaseCard from '@/components/common/BaseCard.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
+import type { LeagueSlug, GameSavePayload, Tournament } from '@/types'
+
+const auth = useAuth()
+const { isLoggedIn, username, leagueSlug: adminLeague, logout, initialize, getAdminKey } = auth
+
+const selectedLeague = ref<LeagueSlug>('dreamweaver')
+const tournamentIdInput = ref('')
+const loadError = ref('')
+const saveError = ref('')
+const saveSuccess = ref(false)
+const isLoading = ref(false)
+
+const scoreEditorRef = ref<InstanceType<typeof ScoreEditor> | null>(null)
+
+const {
+  tournament: tournamentData,
+  isLoading: tournamentLoading,
+  error: tournamentError,
+  load: loadTournament,
+} = useTournament(undefined, { enablePolling: false })
+
+const {
+  load: loadRoster,
+  getPlayerTeam,
+  isLoading: rosterLoading,
+} = useTeamRoster(selectedLeague.value)
+
+const scoring = useScoring(selectedLeague.value, { getPlayerTeam })
+
+const tournament = computed<Tournament | null>(() => tournamentData.value)
+const hasScores = computed(() => scoring.teamScores.value.length > 0)
+
+watch(selectedLeague, () => {
+  loadRoster()
+})
+
+onMounted(async () => {
+  await initialize()
+  if (isLoggedIn.value) {
+    await loadRoster()
+  }
+})
+
+async function handleLoginSuccess() {
+  await loadRoster()
+}
+
+async function handleLoadTournament() {
+  const id = parseInt(tournamentIdInput.value, 10)
+  if (isNaN(id) || id <= 0) {
+    loadError.value = 'Please enter a valid tournament ID'
+    return
+  }
+
+  loadError.value = ''
+  saveSuccess.value = false
+  saveError.value = ''
+  isLoading.value = true
+
+  try {
+    await loadTournament(id)
+
+    if (tournament.value) {
+      scoring.calculateFromTournament(tournament.value)
+    }
+  } catch {
+    loadError.value = tournamentError.value?.message || 'Failed to load tournament'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function handleSave(payload: GameSavePayload) {
+  saveError.value = ''
+  saveSuccess.value = false
+
+  const adminKey = getAdminKey()
+  if (!adminKey) {
+    saveError.value = 'Session expired. Please log in again.'
+    scoreEditorRef.value?.resetSaving()
+    return
+  }
+
+  const result = await sheetsClient.saveGameResults(selectedLeague.value, payload, adminKey)
+
+  if (result.success) {
+    saveSuccess.value = true
+    scoreEditorRef.value?.resetSaving()
+  } else {
+    saveError.value = result.error || 'Failed to save results'
+    scoreEditorRef.value?.resetSaving()
+  }
+}
+
+function handleLogout() {
+  logout()
+  tournamentIdInput.value = ''
+  loadError.value = ''
+  saveError.value = ''
+  saveSuccess.value = false
+}
 </script>
 
 <template>
-  <main class="p-8">
-    <h1 class="text-3xl font-bold text-gold">Admin Panel</h1>
-    <p class="text-text-secondary mt-4">Admin View - Sprint 7 will add content</p>
-    <nav class="mt-8 flex gap-4">
-      <router-link to="/" class="btn-primary">Back to Home</router-link>
-    </nav>
+  <main class="admin-view">
+    <div class="admin-view__container">
+      <header class="admin-view__header">
+        <h1 class="admin-view__title">Admin Panel</h1>
+        <p class="admin-view__subtitle">Manage league scores and lock in game results</p>
+      </header>
+
+      <template v-if="!isLoggedIn">
+        <LoginForm @success="handleLoginSuccess" />
+      </template>
+
+      <template v-else>
+        <BaseCard class="admin-view__user-info">
+          <div class="admin-view__user-row">
+            <div class="admin-view__user-details">
+              <span class="admin-view__user-label">Logged in as:</span>
+              <span class="admin-view__user-name">{{ username }}</span>
+              <span v-if="adminLeague !== 'all'" class="admin-view__user-league">
+                ({{ adminLeague }})
+              </span>
+            </div>
+            <BaseButton variant="ghost" size="sm" @click="handleLogout">
+              Logout
+            </BaseButton>
+          </div>
+        </BaseCard>
+
+        <BaseCard class="admin-view__loader">
+          <h2 class="admin-view__section-title">Load Tournament</h2>
+
+          <div class="admin-view__form-row">
+            <div class="admin-view__input-group">
+              <label for="league-select" class="admin-view__label">League</label>
+              <select
+                id="league-select"
+                v-model="selectedLeague"
+                class="admin-view__select"
+                :disabled="adminLeague !== 'all'"
+              >
+                <option value="dreamweaver">Dreamweaver</option>
+                <option value="tpp" disabled>TPP (coming soon)</option>
+                <option value="fpl" disabled>FPL (coming soon)</option>
+              </select>
+            </div>
+
+            <div class="admin-view__input-group admin-view__input-group--grow">
+              <label for="tournament-id" class="admin-view__label">Tournament ID</label>
+              <input
+                id="tournament-id"
+                v-model="tournamentIdInput"
+                type="text"
+                class="admin-view__input"
+                placeholder="e.g., 8093458"
+                @keyup.enter="handleLoadTournament"
+              />
+            </div>
+
+            <BaseButton
+              variant="primary"
+              :loading="isLoading || tournamentLoading || rosterLoading"
+              :disabled="!tournamentIdInput"
+              class="admin-view__load-btn"
+              @click="handleLoadTournament"
+            >
+              Load
+            </BaseButton>
+          </div>
+
+          <div v-if="loadError" class="admin-view__error">
+            {{ loadError }}
+          </div>
+        </BaseCard>
+
+        <div v-if="saveSuccess" class="admin-view__success">
+          Results saved successfully!
+        </div>
+
+        <div v-if="saveError" class="admin-view__error">
+          {{ saveError }}
+        </div>
+
+        <template v-if="tournament && hasScores">
+          <ScoreEditor
+            ref="scoreEditorRef"
+            :tournament="tournament"
+            :league-slug="selectedLeague"
+            :team-scores="scoring.teamScores.value"
+            :player-results="scoring.playerResults.value"
+            :unassigned-players="scoring.unassignedPlayers.value"
+            @save="handleSave"
+          />
+        </template>
+
+        <template v-else-if="tournament && !hasScores">
+          <BaseCard class="admin-view__empty">
+            <p>Tournament loaded but no team scores calculated.</p>
+            <p class="admin-view__hint">Make sure the team roster is set up correctly.</p>
+          </BaseCard>
+        </template>
+      </template>
+
+      <nav class="admin-view__nav">
+        <router-link to="/" class="admin-view__link">← Back to Home</router-link>
+      </nav>
+    </div>
   </main>
 </template>
+
+<style scoped>
+.admin-view {
+  min-height: 100vh;
+  padding: var(--space-6);
+  background: var(--color-bg-base);
+}
+
+.admin-view__container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.admin-view__header {
+  text-align: center;
+}
+
+.admin-view__title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--color-gold);
+  margin: 0 0 var(--space-2);
+}
+
+.admin-view__subtitle {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.admin-view__user-info {
+  padding: var(--space-3) var(--space-4);
+}
+
+.admin-view__user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.admin-view__user-details {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.admin-view__user-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.admin-view__user-name {
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.admin-view__user-league {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.admin-view__section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4);
+}
+
+.admin-view__form-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-end;
+}
+
+.admin-view__input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-view__input-group--grow {
+  flex: 1;
+}
+
+.admin-view__label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+}
+
+.admin-view__select,
+.admin-view__input {
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  background: var(--color-bg-base);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  min-height: 40px;
+}
+
+.admin-view__select:focus,
+.admin-view__input:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+.admin-view__select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-view__load-btn {
+  flex-shrink: 0;
+}
+
+.admin-view__error {
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-4);
+}
+
+.admin-view__success {
+  padding: var(--space-4);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-success);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.admin-view__empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.admin-view__hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-2);
+}
+
+.admin-view__nav {
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-view__link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  transition: color var(--transition-base);
+}
+
+.admin-view__link:hover {
+  color: var(--color-gold);
+}
+
+@media (max-width: 640px) {
+  .admin-view {
+    padding: var(--space-4);
+  }
+
+  .admin-view__form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-view__load-btn {
+    width: 100%;
+  }
+
+  .admin-view__user-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+}
+</style>

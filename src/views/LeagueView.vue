@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
-import { useLeague } from '@/composables'
+import { useRouter } from 'vue-router'
+import { useLeague, useQuickLock } from '@/composables'
 import { getLeagueConfig } from '@/config/leagues'
 import LeagueHeader from '@/components/league/LeagueHeader.vue'
 import LeagueDescription from '@/components/league/LeagueDescription.vue'
@@ -13,6 +14,8 @@ import type { LeagueSlug } from '@/types'
 const props = defineProps<{
   leagueSlug: string
 }>()
+
+const router = useRouter()
 
 const validSlug = computed(() => props.leagueSlug as LeagueSlug)
 
@@ -34,14 +37,20 @@ const {
   load,
 } = useLeague(validSlug.value)
 
-onMounted(() => {
-  load()
+const quickLock = useQuickLock(validSlug.value)
+
+function handleLockGame(tournamentId: number) {
+  router.push(`/league/${validSlug.value}/game/${tournamentId}`)
+}
+
+onMounted(async () => {
+  await Promise.all([load(), quickLock.loadHistory()])
 })
 
 watch(
   () => props.leagueSlug,
-  () => {
-    load()
+  async () => {
+    await Promise.all([load(), quickLock.loadHistory()])
   }
 )
 </script>
@@ -77,6 +86,9 @@ watch(
               :recent="recentGames"
               :live="liveGame"
               :league-slug="validSlug"
+              :saved-tournament-ids="quickLock.savedTournamentIds.value"
+              :can-lock="quickLock.canLock.value"
+              @lock="handleLockGame"
             />
           </section>
         </div>

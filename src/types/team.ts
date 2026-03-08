@@ -14,7 +14,6 @@ export interface Team {
 }
 
 export interface TeamMember {
-  playerId: number
   username: string
   teamSlug: string
   joinedDate: Date
@@ -26,7 +25,7 @@ export interface TeamRoster {
 }
 
 export interface PlayerTeamAssignment {
-  playerId: number
+  username: string
   teamSlug: string
   teamName: string
 }

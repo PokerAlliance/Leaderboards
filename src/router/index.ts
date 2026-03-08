@@ -1,4 +1,11 @@
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
+import { useAuth } from '@/composables'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean
+  }
+}
 
 const routes: RouteRecordRaw[] = [
   {
@@ -31,6 +38,7 @@ const routes: RouteRecordRaw[] = [
     path: '/admin',
     name: 'admin',
     component: () => import('@/views/AdminView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/poc',
@@ -47,4 +55,15 @@ const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHashHistory(),
   routes,
+})
+
+let authInitialized = false
+
+router.beforeEach(async (to, _from, next) => {
+  if (to.meta.requiresAuth && !authInitialized) {
+    const { initialize } = useAuth()
+    await initialize()
+    authInitialized = true
+  }
+  next()
 })

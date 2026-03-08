@@ -26,6 +26,7 @@ export interface UseGameHistoryReturn {
   error: Ref<Error | null>
   load: () => Promise<void>
   getGameById: (gameId: string) => ParsedSheetGame | undefined
+  getGameByTournamentId: (tournamentId: number) => ParsedSheetGame | undefined
   getGameResults: (gameId: string) => GameResult | null
   getMonthlyGames: (year: number, month: number) => ParsedSheetGame[]
   totalGames: ComputedRef<number>
@@ -65,6 +66,10 @@ export function useGameHistory(
 
   function getGameById(gameId: string): ParsedSheetGame | undefined {
     return games.value.find((g) => g.game_id === gameId)
+  }
+
+  function getGameByTournamentId(tournamentId: number): ParsedSheetGame | undefined {
+    return games.value.find((g) => g.tournament_id === tournamentId)
   }
 
   function getGameResults(gameId: string): GameResult | null {
@@ -138,6 +143,7 @@ export function useGameHistory(
     error,
     load,
     getGameById,
+    getGameByTournamentId,
     getGameResults,
     getMonthlyGames,
     totalGames,

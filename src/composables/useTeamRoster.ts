@@ -1,6 +1,6 @@
 /**
  * useTeamRoster Composable
- * Load team rosters from Google Sheets and map player IDs to teams
+ * Load team rosters from Google Sheets and map usernames to teams
  */
 
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
@@ -18,9 +18,9 @@ export interface UseTeamRosterReturn {
   isLoading: Ref<boolean>
   error: Ref<Error | null>
   load: () => Promise<void>
-  getPlayerTeam: (playerId: number) => PlayerTeamAssignment | null
+  getPlayerTeam: (username: string) => PlayerTeamAssignment | null
   getTeamMembers: (teamSlug: string) => TeamMember[]
-  isPlayerInLeague: (playerId: number) => boolean
+  isPlayerInLeague: (username: string) => boolean
 }
 
 export function useTeamRoster(
@@ -33,13 +33,12 @@ export function useTeamRoster(
   const isLoading = ref(false)
   const error = ref<Error | null>(null)
 
-  const playerTeamMap = new Map<number, PlayerTeamAssignment>()
+  const playerTeamMap = new Map<string, PlayerTeamAssignment>()
 
   const teams = computed(() => getTeams(leagueSlug))
 
   function transformMember(raw: ParsedSheetTeamMember): TeamMember {
     return {
-      playerId: raw.player_id,
       username: raw.username,
       teamSlug: raw.team_slug,
       joinedDate: raw.joined_date,
@@ -50,8 +49,8 @@ export function useTeamRoster(
     playerTeamMap.clear()
     for (const member of members.value) {
       const team = getTeamBySlug(leagueSlug, member.teamSlug)
-      playerTeamMap.set(member.playerId, {
-        playerId: member.playerId,
+      playerTeamMap.set(member.username, {
+        username: member.username,
         teamSlug: member.teamSlug,
         teamName: team?.name || member.teamSlug,
       })
@@ -74,16 +73,16 @@ export function useTeamRoster(
     }
   }
 
-  function getPlayerTeam(playerId: number): PlayerTeamAssignment | null {
-    return playerTeamMap.get(playerId) || null
+  function getPlayerTeam(username: string): PlayerTeamAssignment | null {
+    return playerTeamMap.get(username) || null
   }
 
   function getTeamMembers(teamSlug: string): TeamMember[] {
     return members.value.filter((m) => m.teamSlug === teamSlug)
   }
 
-  function isPlayerInLeague(playerId: number): boolean {
-    return playerTeamMap.has(playerId)
+  function isPlayerInLeague(username: string): boolean {
+    return playerTeamMap.has(username)
   }
 
   if (autoLoad) {

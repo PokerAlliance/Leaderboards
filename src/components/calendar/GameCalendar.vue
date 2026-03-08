@@ -14,16 +14,28 @@ interface Props {
   leagueSlug: LeagueSlug
   maxUpcoming?: number
   maxRecent?: number
+  savedTournamentIds?: number[]
+  canLock?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   live: null,
   maxUpcoming: 5,
   maxRecent: 5,
+  savedTournamentIds: () => [],
+  canLock: false,
 })
+
+const emit = defineEmits<{
+  (e: 'lock', tournamentId: number): void
+}>()
 
 const upcomingGames = computed(() => props.upcoming.slice(0, props.maxUpcoming))
 const recentGames = computed(() => props.recent.slice(0, props.maxRecent))
+
+function isGameSaved(tournamentId: number): boolean {
+  return props.savedTournamentIds.includes(tournamentId)
+}
 
 function formatGameDate(date: Date): string {
   if (isToday(date)) return 'Today'
@@ -103,20 +115,44 @@ function formatLiveTime(date: Date): string {
         </div>
 
         <div class="game-calendar__list">
-          <RouterLink
+          <div
             v-for="game in recentGames"
             :key="game.id"
-            :to="`/league/${leagueSlug}/game/${game.id}`"
-            class="game-calendar__item game-calendar__item--clickable"
+            class="game-calendar__item game-calendar__item--recent"
           >
-            <div class="game-calendar__item-date">
-              <span class="game-calendar__date-day">{{ formatGameDate(game.startTime) }}</span>
+            <RouterLink
+              :to="`/league/${leagueSlug}/game/${game.id}`"
+              class="game-calendar__item-link"
+            >
+              <div class="game-calendar__item-date">
+                <span class="game-calendar__date-day">{{ formatGameDate(game.startTime) }}</span>
+              </div>
+              <div class="game-calendar__item-info">
+                <span class="game-calendar__item-name">{{ game.name }}</span>
+              </div>
+              <span class="game-calendar__item-arrow">View →</span>
+            </RouterLink>
+
+            <div
+              v-if="game.state === 'finished' && !isGameSaved(game.id) && canLock"
+              class="game-calendar__item-actions"
+            >
+              <span class="game-calendar__unsaved-badge">Unsaved</span>
+              <button
+                class="game-calendar__lock-btn"
+                @click.stop="emit('lock', game.id)"
+              >
+                Lock
+              </button>
             </div>
-            <div class="game-calendar__item-info">
-              <span class="game-calendar__item-name">{{ game.name }}</span>
-            </div>
-            <span class="game-calendar__item-arrow">View →</span>
-          </RouterLink>
+
+            <span
+              v-else-if="isGameSaved(game.id)"
+              class="game-calendar__saved-badge"
+            >
+              Saved
+            </span>
+          </div>
         </div>
       </section>
 
@@ -296,6 +332,78 @@ function formatLiveTime(date: Date): string {
 
 .game-calendar__item--clickable:hover .game-calendar__item-arrow {
   opacity: 1;
+}
+
+.game-calendar__item--recent {
+  flex-wrap: wrap;
+}
+
+.game-calendar__item-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--transition-base);
+}
+
+.game-calendar__item--recent:hover {
+  background: var(--color-bg-card);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.game-calendar__item--recent:hover .game-calendar__item-arrow {
+  opacity: 1;
+}
+
+.game-calendar__item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.game-calendar__unsaved-badge {
+  padding: var(--space-1) var(--space-2);
+  background: rgba(234, 179, 8, 0.15);
+  color: var(--color-warning, #eab308);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.game-calendar__saved-badge {
+  padding: var(--space-1) var(--space-2);
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--color-success);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.game-calendar__lock-btn {
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-gold);
+  color: var(--color-bg-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.game-calendar__lock-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .game-calendar__empty {

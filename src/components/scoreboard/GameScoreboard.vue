@@ -3,6 +3,7 @@ import { computed, watch, onUnmounted, ref } from 'vue'
 import { useTournament } from '@/composables/useTournament'
 import { useTeamRoster } from '@/composables/useTeamRoster'
 import { useScoring } from '@/composables/useScoring'
+import { useQuickLock } from '@/composables/useQuickLock'
 import { getLeagueConfig } from '@/config/leagues'
 import { formatGameDateTime } from '@/utils/datetime'
 import TeamStandings from './TeamStandings.vue'
@@ -10,6 +11,7 @@ import PlayerRankings from './PlayerRankings.vue'
 import UnassignedPlayers from './UnassignedPlayers.vue'
 import ScoreboardSkeleton from './ScoreboardSkeleton.vue'
 import LiveBadge from './LiveBadge.vue'
+import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 import type { LeagueSlug } from '@/types'
 
 interface Props {
@@ -27,6 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'update', data: { isLive: boolean; isFinished: boolean }): void
   (e: 'error', error: Error): void
+  (e: 'locked'): void
 }>()
 
 const leagueConfig = computed(() =>
@@ -87,6 +90,22 @@ const playerResults = computed(() => {
 const teamScores = computed(() => scoring?.teamScores.value ?? [])
 const unassignedPlayers = computed(() => scoring?.unassignedPlayers.value ?? [])
 
+const quickLock = props.leagueSlug ? useQuickLock(props.leagueSlug) : null
+
+const showLockConfirm = ref(false)
+const lockError = ref<string | null>(null)
+const lockSuccess = ref(false)
+
+const showLockButton = computed(() => {
+  if (!quickLock || !tournament.value) return false
+  return (
+    quickLock.canLock.value &&
+    isFinished.value &&
+    !quickLock.isGameSaved(tournament.value.id) &&
+    !lockSuccess.value
+  )
+})
+
 const formattedDate = computed(() => {
   if (!tournament.value) return ''
   return formatGameDateTime(tournament.value.startTime)
@@ -107,9 +126,32 @@ async function initialize() {
       await teamRoster.load()
       rosterLoaded.value = true
     }
+    if (quickLock) {
+      await quickLock.loadHistory()
+    }
     await load(props.tournamentId)
   } catch (e) {
     emit('error', e instanceof Error ? e : new Error(String(e)))
+  }
+}
+
+async function handleLock() {
+  if (!quickLock || !tournament.value) return
+
+  lockError.value = null
+
+  const result = await quickLock.lockGame(
+    tournament.value,
+    teamScores.value,
+    playerResults.value
+  )
+
+  if (result.success) {
+    lockSuccess.value = true
+    showLockConfirm.value = false
+    emit('locked')
+  } else {
+    lockError.value = result.error || 'Failed to lock results'
   }
 }
 
@@ -188,7 +230,31 @@ onUnmounted(() => {
           <span v-if="leagueConfig" class="game-scoreboard__league">
             {{ leagueConfig.name }}
           </span>
+
+          <div v-if="showLockButton" class="game-scoreboard__lock-section">
+            <button
+              class="game-scoreboard__lock-btn"
+              :disabled="quickLock?.isLocking.value"
+              @click="showLockConfirm = true"
+            >
+              {{ quickLock?.isLocking.value ? 'Locking...' : 'Lock Results' }}
+            </button>
+          </div>
+
+          <span v-if="lockSuccess" class="game-scoreboard__lock-success">
+            Results saved
+          </span>
         </footer>
+
+        <ConfirmDialog
+          :open="showLockConfirm"
+          title="Lock Game Results"
+          :message="`Are you sure you want to lock the results for this game? This will save the scores to the league history.${unassignedPlayers.length > 0 ? ` Warning: ${unassignedPlayers.length} player(s) are not assigned to teams.` : ''}${lockError ? `\n\nError: ${lockError}` : ''}`"
+          confirm-text="Lock Results"
+          :loading="quickLock?.isLocking.value ?? false"
+          @confirm="handleLock"
+          @cancel="showLockConfirm = false"
+        />
       </template>
 
       <div v-else-if="error" class="game-scoreboard__error">
@@ -351,6 +417,41 @@ onUnmounted(() => {
 
 .game-scoreboard__retry:hover {
   opacity: 0.9;
+}
+
+.game-scoreboard__lock-section {
+  margin-left: auto;
+}
+
+.game-scoreboard__lock-btn {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-gold);
+  color: var(--color-bg-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.game-scoreboard__lock-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.game-scoreboard__lock-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.game-scoreboard__lock-success {
+  padding: var(--space-1) var(--space-2);
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-success);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-sm);
 }
 
 @media (max-width: 900px) {

@@ -14,7 +14,6 @@ export interface SheetConfig {
 }
 
 export interface SheetTeamMember {
-  player_id: number
   username: string
   team_slug: string
   joined_date: string
@@ -47,9 +46,18 @@ export interface ParsedSheetTeamMember extends Omit<SheetTeamMember, 'joined_dat
   joined_date: Date
 }
 
+export interface SheetTeamScore {
+  teamSlug: string
+  score: number
+  rank: number
+  monthPts: number
+  penalty: number
+}
+
 export interface ParsedSheetGame extends Omit<SheetGame, 'game_date' | 'locked_at'> {
   game_date: Date
   locked_at: Date
+  teamScores: SheetTeamScore[]
 }
 
 export interface ParsedSheetPlayerResult extends SheetPlayerResult {}

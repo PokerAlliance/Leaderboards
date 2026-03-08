@@ -16,7 +16,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const { load, getGameResults } = useGameHistory(props.leagueSlug)
+const { load, getGameByTournamentId, getGameResults } = useGameHistory(props.leagueSlug)
 
 const teamScores = ref<TeamGameScore[]>([])
 const isLoading = ref(true)
@@ -46,10 +46,12 @@ function getTeamLogo(teamSlug: string): string {
 
 onMounted(async () => {
   await load()
-  const gameId = `${props.leagueSlug}-${props.game.id}`
-  const results = getGameResults(gameId)
-  if (results) {
-    teamScores.value = results.teamScores
+  const game = getGameByTournamentId(props.game.id)
+  if (game) {
+    const results = getGameResults(game.game_id)
+    if (results) {
+      teamScores.value = results.teamScores
+    }
   }
   isLoading.value = false
 })
