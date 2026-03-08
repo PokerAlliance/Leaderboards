@@ -1,0 +1,98 @@
+/* Team Logo Styles */
+
+/* Base team logo class */
+.team-logo {
+  width: 48px;
+  height: 48px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+}
+
+/* Dreamweaver team logos - individual images */
+.team-logo--pirates {
+  background-image: url('/assets/sprites/dreamweaver/pirates.png');
+}
+
+.team-logo--con {
+  background-image: url('/assets/sprites/dreamweaver/con.png');
+}
+
+.team-logo--outlaws {
+  background-image: url('/assets/sprites/dreamweaver/outlaws.png');
+}
+
+.team-logo--renegades {
+  background-image: url('/assets/sprites/dreamweaver/renegades.png');
+}
+
+/* Size variants */
+.team-logo--xs {
+  width: 24px;
+  height: 24px;
+}
+
+.team-logo--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.team-logo--lg {
+  width: 64px;
+  height: 64px;
+}
+
+.team-logo--xl {
+  width: 96px;
+  height: 96px;
+}
+
+/* TPP team logos (placeholder) */
+.team-logo--tpp-team1,
+.team-logo--tpp-team2,
+.team-logo--tpp-team3,
+.team-logo--tpp-team4,
+.team-logo--tpp-team5,
+.team-logo--tpp-team6,
+.team-logo--tpp-team7 {
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+/* FPL team logos (placeholder) */
+.team-logo--mystics {
+  background: var(--color-fpl-mystics);
+  border-radius: var(--radius-md);
+}
+
+.team-logo--munchers {
+  background: var(--color-fpl-munchers);
+  border-radius: var(--radius-md);
+}
+
+.team-logo--mentors {
+  background: var(--color-fpl-mentors);
+  border-radius: var(--radius-md);
+}
+
+/* Alliance logo */
+.alliance-logo {
+  width: 160px;
+  height: 40px;
+  background-image: url('/assets/branding/poker-alliance-logo.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.alliance-logo--sm {
+  width: 120px;
+  height: 30px;
+}
+
+.alliance-logo--lg {
+  width: 200px;
+  height: 50px;
+}

@@ -1,0 +1,105 @@
+/* Dreamweaver League Theme */
+
+.theme-dreamweaver {
+  /* League-specific color overrides */
+  --league-primary: #0d3320;
+  --league-secondary: #1a4a35;
+  --league-accent: #d4af37;
+  
+  /* Team colors mapped to generic names */
+  --team-1-color: var(--color-dw-pirates);
+  --team-2-color: var(--color-dw-cons);
+  --team-3-color: var(--color-dw-outlaws);
+  --team-4-color: var(--color-dw-renegades);
+}
+
+.theme-dreamweaver .scoreboard__header {
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 15, 20, 0.95) 0%,
+    rgba(10, 15, 20, 0.8) 100%
+  );
+  border-bottom: 2px solid var(--color-gold);
+}
+
+.theme-dreamweaver .scoreboard__title h1 {
+  font-family: var(--font-display);
+  color: var(--color-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Team row styling with team color accents */
+.theme-dreamweaver .team-row--pirates {
+  --team-color: var(--color-dw-pirates);
+}
+
+.theme-dreamweaver .team-row--con {
+  --team-color: var(--color-dw-cons);
+}
+
+.theme-dreamweaver .team-row--outlaws {
+  --team-color: var(--color-dw-outlaws);
+}
+
+.theme-dreamweaver .team-row--renegades {
+  --team-color: var(--color-dw-renegades);
+}
+
+.theme-dreamweaver .team-row {
+  border-left: 4px solid var(--team-color, var(--color-gold));
+  background: linear-gradient(
+    to right,
+    rgba(var(--team-color), 0.1) 0%,
+    transparent 30%
+  );
+}
+
+/* Dreamweaver specific card styling */
+.theme-dreamweaver .card {
+  background: rgba(19, 27, 35, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(212, 175, 55, 0.1);
+}
+
+/* Section headers */
+.theme-dreamweaver .section-header {
+  font-family: var(--font-display);
+  color: var(--color-gold);
+  text-transform: uppercase;
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+/* Player rankings styling */
+.theme-dreamweaver .player-row:nth-child(1) {
+  background: linear-gradient(to right, rgba(212, 175, 55, 0.15) 0%, transparent 50%);
+}
+
+.theme-dreamweaver .player-row:nth-child(2) {
+  background: linear-gradient(to right, rgba(168, 168, 168, 0.1) 0%, transparent 50%);
+}
+
+.theme-dreamweaver .player-row:nth-child(3) {
+  background: linear-gradient(to right, rgba(205, 127, 50, 0.1) 0%, transparent 50%);
+}
+
+/* Unassigned section */
+.theme-dreamweaver .unassigned-section {
+  border-top: 1px dashed rgba(100, 116, 139, 0.5);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.theme-dreamweaver .unassigned-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
