@@ -19,7 +19,7 @@ export interface LeagueInfo {
 export interface ParsedTournament {
   id: number
   name: string
-  state: 'announced' | 'registering' | 'running' | 'finished'
+  state: 'announced' | 'registering' | 'lateRegistration' | 'running' | 'finished'
   url: string
   startTime: Date
   registrationTime: Date

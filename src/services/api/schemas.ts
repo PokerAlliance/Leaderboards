@@ -4,7 +4,7 @@
 
 import { z } from 'zod'
 
-export const TournamentStateSchema = z.enum(['announced', 'registering', 'running', 'finished'])
+export const TournamentStateSchema = z.enum(['announced', 'registering', 'lateRegistration', 'running', 'finished'])
 
 export const ApiPlayerSchema = z.object({
   id: z.number(),

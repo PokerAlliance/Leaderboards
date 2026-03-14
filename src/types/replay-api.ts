@@ -3,7 +3,7 @@
  * Based on actual API responses from casino.org/replaypoker
  */
 
-export type TournamentState = 'announced' | 'registering' | 'running' | 'finished'
+export type TournamentState = 'announced' | 'registering' | 'lateRegistration' | 'running' | 'finished'
 
 export interface ApiPlayer {
   id: number
