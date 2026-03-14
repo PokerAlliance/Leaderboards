@@ -13,18 +13,48 @@ const routes: RouteRecordRaw[] = [
     name: 'home',
     component: () => import('@/views/HomeView.vue'),
   },
+
+  // Dreamweaver League - Full Implementation
   {
-    path: '/league/:leagueSlug',
-    name: 'league',
-    component: () => import('@/views/LeagueView.vue'),
-    props: true,
+    path: '/league/dreamweaver',
+    name: 'dreamweaver-league',
+    component: () => import('@/views/leagues/dreamweaver/DreamweaverLeagueView.vue'),
   },
   {
-    path: '/league/:leagueSlug/game/:tournamentId',
-    name: 'league-game',
-    component: () => import('@/views/GameView.vue'),
+    path: '/league/dreamweaver/game/:tournamentId',
+    name: 'dreamweaver-game',
+    component: () => import('@/views/leagues/dreamweaver/DreamweaverGameView.vue'),
     props: true,
   },
+
+  // Anarchy League - Full Implementation
+  {
+    path: '/league/anarchy',
+    name: 'anarchy-league',
+    component: () => import('@/views/leagues/anarchy/AnarchyLeagueView.vue'),
+  },
+  {
+    path: '/league/anarchy/game/:tournamentId',
+    name: 'anarchy-game',
+    component: () => import('@/views/leagues/anarchy/AnarchyGameView.vue'),
+    props: true,
+  },
+
+  // TPP League - Coming Soon
+  {
+    path: '/league/tpp',
+    name: 'tpp-league',
+    component: () => import('@/views/leagues/tpp/TPPComingSoon.vue'),
+  },
+
+  // FPL League - Coming Soon
+  {
+    path: '/league/fpl',
+    name: 'fpl-league',
+    component: () => import('@/views/leagues/fpl/FPLComingSoon.vue'),
+  },
+
+  // Generic game view (for testing with any tournament)
   {
     path: '/game/:tournamentId',
     name: 'game',
@@ -34,6 +64,7 @@ const routes: RouteRecordRaw[] = [
       leagueSlug: route.query.league || undefined,
     }),
   },
+
   {
     path: '/admin',
     name: 'admin',

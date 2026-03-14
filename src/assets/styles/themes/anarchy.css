@@ -1,0 +1,238 @@
+/* Anarchy League Theme
+ * "Where silence is broken and strategy is shared"
+ * 
+ * Color Palette:
+ * - Primary: Deep blacks and dark grays
+ * - Accent: Red/crimson for bounties
+ * - Success: Green for primary standings
+ * - Teams: Crusaders (brown/gold), Chaos (magenta/cyan), Harmonic (purple/blue)
+ */
+
+:root {
+  /* Anarchy base colors */
+  --color-an-bg: #1a1a1a;
+  --color-an-bg-dark: #0f0f0f;
+  --color-an-accent: #dc2626;
+  --color-an-bounty: #ef4444;
+  --color-an-primary: #22c55e;
+  
+  /* Team colors */
+  --color-an-crusaders: #8B4513;
+  --color-an-crusaders-accent: #D4AF37;
+  --color-an-chaos: #FF0080;
+  --color-an-chaos-accent: #00FFFF;
+  --color-an-harmonic: #7B2D8E;
+  --color-an-harmonic-accent: #00D4FF;
+}
+
+.theme-anarchy {
+  --league-primary: var(--color-an-bg);
+  --league-secondary: var(--color-an-bg-dark);
+  --league-accent: var(--color-an-accent);
+  
+  --team-1-color: var(--color-an-crusaders);
+  --team-2-color: var(--color-an-chaos);
+  --team-3-color: var(--color-an-harmonic);
+}
+
+/* Scoreboard header styling */
+.theme-anarchy .scoreboard__header {
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0.95) 0%,
+    rgba(10, 10, 10, 0.8) 100%
+  );
+  border-bottom: 2px solid var(--color-an-bounty);
+}
+
+.theme-anarchy .scoreboard__title h1 {
+  font-family: var(--font-display);
+  color: var(--color-an-bounty);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Team row styling with team color accents */
+.theme-anarchy .team-row--crusaders {
+  --team-color: var(--color-an-crusaders);
+}
+
+.theme-anarchy .team-row--chaos {
+  --team-color: var(--color-an-chaos);
+}
+
+.theme-anarchy .team-row--harmonic {
+  --team-color: var(--color-an-harmonic);
+}
+
+.theme-anarchy .team-row {
+  border-left: 4px solid var(--team-color, var(--color-an-bounty));
+  background: linear-gradient(
+    to right,
+    rgba(var(--team-color), 0.1) 0%,
+    transparent 30%
+  );
+}
+
+/* Anarchy specific card styling */
+.theme-anarchy .card {
+  background: rgba(15, 15, 15, 0.9);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(239, 68, 68, 0.1);
+}
+
+/* Section headers */
+.theme-anarchy .section-header {
+  font-family: var(--font-display);
+  color: var(--color-an-bounty);
+  text-transform: uppercase;
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+/* Primary standings panel */
+.theme-anarchy .standings-panel--primary {
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.theme-anarchy .standings-panel--primary .standings-title {
+  color: var(--color-an-primary);
+}
+
+/* Bounty panel */
+.theme-anarchy .standings-panel--bounty {
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.theme-anarchy .standings-panel--bounty .standings-title {
+  color: var(--color-an-bounty);
+}
+
+/* Player rankings styling */
+.theme-anarchy .player-row:nth-child(1) {
+  background: linear-gradient(to right, rgba(239, 68, 68, 0.15) 0%, transparent 50%);
+}
+
+.theme-anarchy .player-row:nth-child(2) {
+  background: linear-gradient(to right, rgba(168, 168, 168, 0.1) 0%, transparent 50%);
+}
+
+.theme-anarchy .player-row:nth-child(3) {
+  background: linear-gradient(to right, rgba(205, 127, 50, 0.1) 0%, transparent 50%);
+}
+
+/* Bounty indicators */
+.theme-anarchy .bounty-count {
+  color: var(--color-an-bounty);
+  font-weight: 600;
+}
+
+.theme-anarchy .bounty-count.has-bounties {
+  color: var(--color-an-bounty);
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+/* Top 5 player badges */
+.theme-anarchy .player-badge {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.theme-anarchy .player-badge.top5 {
+  border-color: var(--color-an-primary);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+/* Crosshair/bounty icon */
+.theme-anarchy .crosshair-icon {
+  color: var(--color-an-bounty);
+}
+
+/* Unassigned section */
+.theme-anarchy .unassigned-section {
+  border-top: 1px dashed rgba(100, 100, 100, 0.5);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.theme-anarchy .unassigned-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Hover states */
+.theme-anarchy .team-row:hover {
+  background: linear-gradient(
+    to right,
+    rgba(var(--team-color), 0.2) 0%,
+    transparent 30%
+  );
+}
+
+.theme-anarchy .player-badge:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Dual panel layout */
+.theme-anarchy .dual-panel-container {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.theme-anarchy .dual-panel-container .primary-panel {
+  flex: 0 0 65%;
+}
+
+.theme-anarchy .dual-panel-container .bounty-panel {
+  flex: 0 0 35%;
+}
+
+/* Mobile responsive */
+@media (max-width: 900px) {
+  .theme-anarchy .dual-panel-container {
+    flex-direction: column;
+  }
+  
+  .theme-anarchy .dual-panel-container .primary-panel,
+  .theme-anarchy .dual-panel-container .bounty-panel {
+    flex: 1;
+  }
+}
+
+/* Animation for live game bounty updates */
+@keyframes bounty-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.theme-anarchy .bounty-updated {
+  animation: bounty-pulse 1s ease-out;
+}
+
+/* Footer styling */
+.theme-anarchy .game-footer {
+  border-top-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Back button */
+.theme-anarchy .game-view__back-btn:hover {
+  border-color: var(--color-an-bounty);
+  color: var(--color-an-bounty);
+}

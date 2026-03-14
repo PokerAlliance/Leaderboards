@@ -63,8 +63,14 @@ export const ApiBlindLevelSchema = z.object({
 export const ApiPrizesSchema = z.object({
   chips: z.number(),
   guarantee: z.number().optional(),
+  bounty: z.number().optional(),
   tickets: z.record(z.string(), z.unknown()),
   distribution: z.array(z.string()),
+})
+
+export const ApiBountyWinnerSchema = z.object({
+  username: z.string(),
+  prizes: z.array(z.string()),
 })
 
 export const ApiBuyInsSchema = z.object({
@@ -157,7 +163,7 @@ export const ApiTournamentResponseSchema = z.object({
   tables: z.array(ApiTableSchema),
   seats: z.array(ApiSeatSchema),
   winners: z.array(ApiWinnerSchema).optional(),
-  bounty_winners: z.array(z.unknown()),
+  bounty_winners: z.array(ApiBountyWinnerSchema).optional(),
   blindLevels: z.array(ApiBlindLevelSchema),
   pageTitle: z.string(),
   messages: z.array(z.unknown()),

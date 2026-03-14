@@ -2,7 +2,7 @@
  * Admin Authentication and Data Types
  */
 
-export type AdminLeagueSlug = 'dreamweaver' | 'tpp' | 'fpl' | 'all'
+export type AdminLeagueSlug = 'dreamweaver' | 'tpp' | 'fpl' | 'anarchy' | 'all'
 
 export interface AuthState {
   isLoggedIn: boolean

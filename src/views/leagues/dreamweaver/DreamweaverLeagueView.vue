@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+/**
+ * Dreamweaver League View
+ * League-specific homepage for the Dreamweaver league
+ */
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLeague, useQuickLock } from '@/composables'
 import { getLeagueConfig } from '@/config/leagues'
@@ -11,15 +15,11 @@ import GameCalendar from '@/components/calendar/GameCalendar.vue'
 import MonthlyStandings from '@/components/leaderboard/MonthlyStandings.vue'
 import type { LeagueSlug } from '@/types'
 
-const props = defineProps<{
-  leagueSlug: string
-}>()
+const LEAGUE_SLUG: LeagueSlug = 'dreamweaver'
 
 const router = useRouter()
 
-const validSlug = computed(() => props.leagueSlug as LeagueSlug)
-
-const leagueConfig = computed(() => getLeagueConfig(validSlug.value))
+const leagueConfig = computed(() => getLeagueConfig(LEAGUE_SLUG))
 
 const backgroundStyle = computed(() => {
   const bgImage = leagueConfig.value.backgroundImage
@@ -35,32 +35,25 @@ const {
   isLoading,
   error,
   load,
-} = useLeague(validSlug.value)
+} = useLeague(LEAGUE_SLUG)
 
-const quickLock = useQuickLock(validSlug.value)
+const quickLock = useQuickLock(LEAGUE_SLUG)
 
 function handleLockGame(tournamentId: number) {
-  router.push(`/league/${validSlug.value}/game/${tournamentId}`)
+  router.push(`/league/${LEAGUE_SLUG}/game/${tournamentId}`)
 }
 
 onMounted(async () => {
   await Promise.all([load(), quickLock.loadHistory()])
 })
-
-watch(
-  () => props.leagueSlug,
-  async () => {
-    await Promise.all([load(), quickLock.loadHistory()])
-  }
-)
 </script>
 
 <template>
-  <div class="league-view" :class="`theme-${leagueSlug}`">
+  <div class="league-view theme-dreamweaver">
     <div class="league-view__bg" :style="backgroundStyle"></div>
 
     <div class="league-view__container">
-      <LeagueHeader :league-slug="validSlug" :league-info="leagueInfo" />
+      <LeagueHeader :league-slug="LEAGUE_SLUG" :league-info="leagueInfo" />
 
       <div v-if="isLoading" class="league-view__loading">
         <p>Loading league data...</p>
@@ -77,7 +70,7 @@ watch(
 
         <div class="league-view__grid">
           <section class="league-view__standings">
-            <MonthlyStandings :league-slug="validSlug" />
+            <MonthlyStandings :league-slug="LEAGUE_SLUG" />
           </section>
 
           <section class="league-view__calendar">
@@ -85,7 +78,7 @@ watch(
               :upcoming="upcomingGames"
               :recent="recentGames"
               :live="liveGame"
-              :league-slug="validSlug"
+              :league-slug="LEAGUE_SLUG"
               :saved-tournament-ids="quickLock.savedTournamentIds.value"
               :can-lock="quickLock.canLock.value"
               @lock="handleLockGame"
@@ -94,11 +87,11 @@ watch(
         </div>
 
         <section v-if="mostRecentFinished" class="league-view__recent">
-          <RecentGameCard :game="mostRecentFinished" :league-slug="validSlug" />
+          <RecentGameCard :game="mostRecentFinished" :league-slug="LEAGUE_SLUG" />
         </section>
 
         <section class="league-view__rules">
-          <LeagueRules :league-slug="validSlug" />
+          <LeagueRules :league-slug="LEAGUE_SLUG" />
         </section>
       </main>
 
@@ -135,9 +128,9 @@ watch(
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(10, 15, 20, 0.55) 0%,
-    rgba(10, 15, 20, 0.65) 50%,
-    rgba(10, 15, 20, 0.75) 100%
+    rgba(10, 15, 20, 0.7) 0%,
+    rgba(10, 15, 20, 0.85) 50%,
+    rgba(10, 15, 20, 0.95) 100%
   );
 }
 

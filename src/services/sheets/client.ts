@@ -14,6 +14,9 @@ import type {
   SheetTeamScore,
   GameSavePayload,
   SaveGameResponse,
+  ParsedAnarchyGame,
+  ParsedAnarchyPlayerResult,
+  AnarchyTeamSlug,
 } from '@/types'
 
 export class SheetsClientError extends Error {
@@ -251,6 +254,125 @@ export const sheetsClient = {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to save game results',
+      }
+    }
+  },
+
+  /**
+   * Fetch Anarchy game history
+   * Uses team-agnostic structure (no team-specific columns in games sheet)
+   */
+  async getAnarchyGames(): Promise<ParsedAnarchyGame[]> {
+    const sheetName = 'anarchy_games'
+    const raw = await fetchSheet<RawSheetRow>(sheetName)
+    return raw.map((row) => ({
+      gameId: row.game_id || '',
+      tournamentId: parseNumber(row.tournament_id),
+      gameDate: parseDate(row.game_date),
+      gameSlot: (row.game_slot || 'sat_7pm') as 'wed_1pm' | 'sat_7pm',
+      totalPlayers: parseNumber(row.total_players),
+      bountyValue: parseNumber(row.bounty_value),
+      lockedBy: row.locked_by || '',
+      lockedAt: parseDate(row.locked_at),
+    }))
+  },
+
+  /**
+   * Fetch Anarchy player results
+   * Contains individual player data with bounties
+   */
+  async getAnarchyPlayerResults(): Promise<ParsedAnarchyPlayerResult[]> {
+    const sheetName = 'anarchy_player_results'
+    const raw = await fetchSheet<RawSheetRow>(sheetName)
+    return raw.map((row) => {
+      const teamSlug = row.team_slug || null
+      return {
+        gameId: row.game_id || '',
+        username: row.username || '',
+        teamSlug: teamSlug ? (teamSlug as AnarchyTeamSlug) : null,
+        finishPosition: parseNumber(row.finish_position),
+        pointsEarned: parseNumber(row.points_earned),
+        bountiesCollected: parseNumber(row.bounties_collected),
+        countedInTop5: parseBoolean(row.counted_in_top5),
+      }
+    })
+  },
+
+  /**
+   * Get Anarchy player results for a specific game
+   */
+  async getAnarchyGameResults(gameId: string): Promise<ParsedAnarchyPlayerResult[]> {
+    const allResults = await this.getAnarchyPlayerResults()
+    return allResults.filter((result) => result.gameId === gameId)
+  },
+
+  /**
+   * Get Anarchy games for a specific quarter
+   */
+  async getAnarchyQuarterlyGames(year: number, quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4'): Promise<ParsedAnarchyGame[]> {
+    const quarterMonths: Record<string, number[]> = {
+      Q1: [0, 1, 2],
+      Q2: [3, 4, 5],
+      Q3: [6, 7, 8],
+      Q4: [9, 10, 11],
+    }
+    const months = quarterMonths[quarter]
+    
+    const allGames = await this.getAnarchyGames()
+    return allGames.filter((game) => {
+      const gameDate = game.gameDate
+      return gameDate.getFullYear() === year && months?.includes(gameDate.getMonth())
+    })
+  },
+
+  /**
+   * Get Anarchy games for a specific month
+   */
+  async getAnarchyMonthlyGames(year: number, month: number): Promise<ParsedAnarchyGame[]> {
+    const allGames = await this.getAnarchyGames()
+    return allGames.filter((game) => {
+      const gameDate = game.gameDate
+      return gameDate.getFullYear() === year && gameDate.getMonth() === month
+    })
+  },
+
+  /**
+   * Save Anarchy game results (admin only)
+   */
+  async saveAnarchyGameResults(
+    gameData: {
+      gameId: string
+      tournamentId: number
+      gameDate: string
+      gameSlot: string
+      totalPlayers: number
+      bountyValue: number
+      playerResults: Array<{
+        username: string
+        teamSlug: string | null
+        finishPosition: number
+        pointsEarned: number
+        bountiesCollected: number
+        countedInTop5: boolean
+      }>
+    },
+    adminKey: string
+  ): Promise<SaveGameResponse> {
+    if (!adminKey) {
+      return { success: false, error: 'Admin key is required' }
+    }
+
+    try {
+      const response = await postToAppScript<SaveGameResponse>({
+        action: 'save_anarchy_game',
+        key: adminKey,
+        gameData,
+      })
+      return response
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to save Anarchy game results',
       }
     }
   },

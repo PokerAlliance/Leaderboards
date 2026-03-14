@@ -23,11 +23,14 @@
 
       <nav class="app-header__nav" :class="{ 'app-header__nav--open': isMobileMenuOpen }">
         <RouterLink to="/" class="app-header__link" @click="closeMobileMenu">Home</RouterLink>
+        <RouterLink to="/league/anarchy" class="app-header__link app-header__link--anarchy" @click="closeMobileMenu">
+          Anarchy
+        </RouterLink>
         <RouterLink to="/league/dreamweaver" class="app-header__link" @click="closeMobileMenu">
           Dreamweaver
         </RouterLink>
         <RouterLink to="/league/tpp" class="app-header__link" @click="closeMobileMenu">
-          TPP
+          Team Play Poker
         </RouterLink>
         <RouterLink to="/league/fpl" class="app-header__link" @click="closeMobileMenu">
           FPL
@@ -101,6 +104,17 @@
     }
   }
 
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .app-header__nav--open {
     display: flex;
     flex-direction: column;
@@ -108,20 +122,58 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: var(--color-bg-base);
+    background: rgba(10, 15, 20, 0.98);
+    backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(212, 175, 55, 0.2);
     padding: var(--space-4);
     gap: var(--space-2);
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .app-header__nav--open .app-header__link {
+    animation: slideDown 0.3s ease-out backwards;
+  }
+
+  .app-header__nav--open .app-header__link:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+  .app-header__nav--open .app-header__link:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  .app-header__nav--open .app-header__link:nth-child(3) {
+    animation-delay: 0.15s;
+  }
+  .app-header__nav--open .app-header__link:nth-child(4) {
+    animation-delay: 0.2s;
+  }
+  .app-header__nav--open .app-header__link:nth-child(5) {
+    animation-delay: 0.25s;
+  }
+  .app-header__nav--open .app-header__link:nth-child(6) {
+    animation-delay: 0.3s;
   }
 
   .app-header__link {
+    position: relative;
     padding: var(--space-2) var(--space-4);
     color: var(--color-text-secondary);
     text-decoration: none;
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
+    transition: all 0.3s ease;
+  }
+
+  .app-header__link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--color-gold);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
   }
 
   .app-header__link:hover {
@@ -129,9 +181,34 @@
     background: rgba(255, 255, 255, 0.05);
   }
 
+  .app-header__link:hover::after {
+    width: 60%;
+  }
+
   .app-header__link.router-link-active {
     color: var(--color-gold);
     background: rgba(212, 175, 55, 0.1);
+  }
+
+  .app-header__link.router-link-active::after {
+    width: 80%;
+  }
+
+  .app-header__link--anarchy {
+    color: #ef4444;
+  }
+
+  .app-header__link--anarchy:hover {
+    color: #f87171;
+  }
+
+  .app-header__link--anarchy::after {
+    background: #ef4444;
+  }
+
+  .app-header__link--anarchy.router-link-active {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
   }
 
   .app-header__link--admin {

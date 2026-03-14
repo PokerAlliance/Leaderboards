@@ -4,9 +4,9 @@
 
 import type { LeagueSlug } from '@/types'
 
-export type SeasonType = 'monthly' | 'quarterly'
+export type SeasonType = 'monthly' | 'quarterly' | 'dual'
 export type GameDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
-export type GameFormat = 'mtt' | 'sng'
+export type GameFormat = 'mtt' | 'sng' | 'bounty-mtt'
 
 export interface LeagueScoringRules {
   pointsTable: number[]
@@ -93,6 +93,26 @@ export const LEAGUES: Record<LeagueSlug, LeagueConfig> = {
       rulesDescription: '',
     },
     backgroundImage: '',
+  },
+  anarchy: {
+    slug: 'anarchy',
+    name: 'Anarchy',
+    shortName: 'AN',
+    replayLeagueId: 86,
+    scoringStrategy: 'anarchy',
+    seasonType: 'dual',
+    gameFormat: 'bounty-mtt',
+    gameDays: ['wednesday', 'saturday'],
+    theme: 'anarchy',
+    description: 'Where silence is broken and strategy is shared. Team poker with bounties and open table discussion.',
+    isActive: true,
+    scoringRules: {
+      pointsTable: [],
+      monthPointsTable: [],
+      gameStartTime: 'Wed 1pm ET / Sat 7pm ET',
+      rulesDescription: 'Points = Total Players - Position + 1. Top 5 finishers per team form Primary score. All bounties count for Bounty leaderboard. Primary is quarterly, Bounty is monthly.',
+    },
+    backgroundImage: `${BASE}assets/backgrounds/anarchy-background.png`,
   },
 }
 

@@ -1,6 +1,8 @@
 @import './variables.css';
 @import './sprites.css';
+@import './animations.css';
 @import './themes/dreamweaver.css';
+@import './themes/anarchy.css';
 
 *,
 *::before,

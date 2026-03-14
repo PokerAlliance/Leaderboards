@@ -2,7 +2,7 @@
  * Team Configuration
  */
 
-import type { Team, DreamweaverTeamSlug, LeagueSlug } from '@/types'
+import type { Team, DreamweaverTeamSlug, LeagueSlug, AnarchyTeamSlug } from '@/types'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -37,10 +37,35 @@ export const DREAMWEAVER_TEAMS: Team[] = [
   },
 ]
 
+export const ANARCHY_TEAMS: Team[] = [
+  {
+    id: 'crusaders',
+    name: 'Crusaders',
+    slug: 'crusaders',
+    color: '#8B4513',
+    logoUrl: `${BASE}assets/sprites/anarchy/crusaders.png`,
+  },
+  {
+    id: 'chaos',
+    name: 'Chaos',
+    slug: 'chaos',
+    color: '#FF0080',
+    logoUrl: `${BASE}assets/sprites/anarchy/chaos.jpg`,
+  },
+  {
+    id: 'harmonic',
+    name: 'Harmonic Force',
+    slug: 'harmonic',
+    color: '#7B2D8E',
+    logoUrl: `${BASE}assets/sprites/anarchy/harmonic.jpg`,
+  },
+]
+
 export const LEAGUE_TEAMS: Record<LeagueSlug, Team[]> = {
   dreamweaver: DREAMWEAVER_TEAMS,
   tpp: [],
   fpl: [],
+  anarchy: ANARCHY_TEAMS,
 }
 
 export function getTeams(leagueSlug: LeagueSlug): Team[] {
@@ -54,6 +79,10 @@ export function getTeamBySlug(leagueSlug: LeagueSlug, teamSlug: string): Team | 
 
 export function getDreamweaverTeam(teamSlug: DreamweaverTeamSlug): Team | undefined {
   return DREAMWEAVER_TEAMS.find((team) => team.slug === teamSlug)
+}
+
+export function getAnarchyTeam(teamSlug: AnarchyTeamSlug): Team | undefined {
+  return ANARCHY_TEAMS.find((team) => team.slug === teamSlug)
 }
 
 export function getTeamColor(leagueSlug: LeagueSlug, teamSlug: string): string {

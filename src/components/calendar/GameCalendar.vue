@@ -86,10 +86,11 @@ function formatLiveTime(date: Date): string {
         </div>
 
         <div class="game-calendar__list">
-          <div
+          <RouterLink
             v-for="game in upcomingGames"
             :key="game.id"
-            class="game-calendar__item"
+            :to="`/league/${leagueSlug}/game/${game.id}`"
+            class="game-calendar__item game-calendar__item--upcoming"
           >
             <div class="game-calendar__item-date">
               <span class="game-calendar__date-day">{{ formatGameDate(game.startTime) }}</span>
@@ -104,7 +105,8 @@ function formatLiveTime(date: Date): string {
                 Registration Open
               </span>
             </div>
-          </div>
+            <span class="game-calendar__item-arrow">View →</span>
+          </RouterLink>
         </div>
       </section>
 
@@ -273,15 +275,21 @@ function formatLiveTime(date: Date): string {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.game-calendar__item--clickable {
+.game-calendar__item--clickable,
+.game-calendar__item--upcoming {
   text-decoration: none;
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
-.game-calendar__item--clickable:hover {
+.game-calendar__item--clickable:hover,
+.game-calendar__item--upcoming:hover {
   background: var(--color-bg-card);
   border-color: rgba(212, 175, 55, 0.3);
+}
+
+.game-calendar__item--upcoming:hover .game-calendar__item-arrow {
+  opacity: 1;
 }
 
 .game-calendar__item-date {

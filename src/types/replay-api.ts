@@ -57,8 +57,14 @@ export interface ApiBlindLevel {
 export interface ApiPrizes {
   chips: number
   guarantee?: number
+  bounty?: number
   tickets: Record<string, unknown>
   distribution: string[]
+}
+
+export interface ApiBountyWinner {
+  username: string
+  prizes: string[]
 }
 
 export interface ApiBuyIns {
@@ -149,7 +155,7 @@ export interface ApiTournamentResponse {
   tables: ApiTable[]
   seats: ApiSeat[]
   winners?: ApiWinner[]
-  bounty_winners: unknown[]
+  bounty_winners?: ApiBountyWinner[]
   blindLevels: ApiBlindLevel[]
   pageTitle: string
   messages: unknown[]

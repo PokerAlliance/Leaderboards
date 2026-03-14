@@ -434,13 +434,44 @@ export const mockLiveDreamweaverGame: MockTournament = {
   unassignedPlayers: [],
 }
 
-export const mockLeagues = [
+export interface MockLeague {
+  slug: string
+  name: string
+  description: string
+  teamCount: number
+  format: string
+  isActive?: boolean
+  isNew?: boolean
+  themeColor?: string
+  nextGame?: {
+    name: string
+    date: string
+  }
+}
+
+export const mockLeagues: MockLeague[] = [
+  {
+    slug: 'anarchy',
+    name: 'Anarchy',
+    description: 'Where silence is broken and strategy is shared. Bounty MTT with open table discussion.',
+    teamCount: 3,
+    format: 'Bounty MTT',
+    isActive: true,
+    isNew: true,
+    themeColor: '#ef4444',
+    nextGame: {
+      name: 'Wednesday Anarchy',
+      date: '2026-03-11T13:00:00-05:00',
+    },
+  },
   {
     slug: 'dreamweaver',
     name: 'Dreamweavers',
     description: 'The original team poker league with 4 legendary teams competing weekly.',
     teamCount: 4,
     format: 'MTT',
+    isActive: true,
+    themeColor: '#3b82f6',
     nextGame: {
       name: 'Monday Dream Team',
       date: '2026-03-09T21:30:00-05:00',
@@ -448,10 +479,12 @@ export const mockLeagues = [
   },
   {
     slug: 'tpp',
-    name: 'TPP',
+    name: 'Team Play Poker',
     description: 'Team of the Week battles with 7 teams competing for quarterly glory.',
     teamCount: 7,
     format: 'MTT',
+    isActive: false,
+    themeColor: '#10b981',
     nextGame: {
       name: 'Team of Week',
       date: '2026-03-10T20:00:00-05:00',
@@ -463,9 +496,20 @@ export const mockLeagues = [
     description: 'Fast-paced 6-max SNG action across 4 tables with paired teams.',
     teamCount: 3,
     format: '6-max SNG',
+    isActive: false,
+    themeColor: '#f59e0b',
     nextGame: {
       name: 'Lightning Pairs',
       date: '2026-03-06T20:00:00-05:00',
     },
+  },
+  {
+    slug: 'donks',
+    name: 'The Badonks Donks',
+    description: 'Details coming soon...',
+    teamCount: 0,
+    format: 'TBD',
+    isActive: false,
+    themeColor: '#8b5cf6',
   },
 ]
