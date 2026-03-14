@@ -467,7 +467,7 @@ export const mockLeagues: MockLeague[] = [
   {
     slug: 'dreamweaver',
     name: 'Dreamweavers',
-    description: 'The original team poker league with 4 legendary teams competing weekly.',
+    description: 'Team poker league with 4 legendary teams competing weekly.',
     teamCount: 4,
     format: 'MTT',
     isActive: true,
