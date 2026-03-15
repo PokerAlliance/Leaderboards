@@ -601,7 +601,7 @@ const getTeamColor = (teamSlug: string) => {
   background: rgba(0, 0, 0, 0.6);
   border-radius: 12px;
   padding: 20px;
-  margin-bottom: var(--space-4);
+  /* margin-bottom: var(--space-4); */
   border: 1px solid rgba(239, 68, 68, 0.2);
   backdrop-filter: blur(8px);
 }
@@ -611,7 +611,7 @@ const getTeamColor = (teamSlug: string) => {
   flex-direction: column;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  /* margin-bottom: var(--space-4); */
 }
 
 .game-info-card__title {
@@ -643,6 +643,7 @@ const getTeamColor = (teamSlug: string) => {
 .game-info-card__meta {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-1);
   padding: var(--space-3);
   background: rgba(0, 0, 0, 0.3);
@@ -676,16 +677,16 @@ const getTeamColor = (teamSlug: string) => {
 /* Compact variants for better space utilization */
 .game-info-card--compact {
   padding: 14px;
-  margin-bottom: var(--space-3);
+  /* margin-bottom: var(--space-3); */
 }
 
 .game-info-card--compact .game-info-card__title-row {
   gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  /* margin-bottom: var(--space-3); */
 }
 
 .game-info-card--compact .game-info-card__title {
-  font-size: var(--text-4xl);
+  font-size: var(--text-5xl);
 }
 
 .game-info-card--compact .game-info-card__meta {
@@ -709,6 +710,7 @@ const getTeamColor = (teamSlug: string) => {
 /* Compact bounty board */
 :deep(.bounty-board--compact) {
   padding: 12px !important;
+  border: 1px solid rgba(239, 68, 68, .2);
 }
 
 :deep(.bounty-board--compact .bounty-board__title) {
@@ -751,17 +753,19 @@ const getTeamColor = (teamSlug: string) => {
   display: flex;
   gap: var(--space-5);
   margin-bottom: var(--space-6);
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .game-view__primary-panel {
   flex: 0 0 calc(65% - var(--space-3));
+  border: 1px solid rgba(239, 68, 68, .2);
 }
 
 .game-view__info-panel {
   flex: 0 0 calc(35% - var(--space-3));
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: var(--space-2);
 }
 
@@ -896,6 +900,7 @@ const getTeamColor = (teamSlug: string) => {
   .game-view__primary-panel,
   .game-view__info-panel {
     flex: 1 1 100%;
+    border: 1px solid rgba(239, 68, 68, .2);
   }
 
   .game-info-card {
