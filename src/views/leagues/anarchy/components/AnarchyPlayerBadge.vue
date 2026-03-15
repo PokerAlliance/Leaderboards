@@ -3,17 +3,20 @@
  * AnarchyPlayerBadge Component
  * 
  * Compact inline badge showing player info for top-5 standings:
- * [tiny avatar] username #position xN
+ * [points] [tiny avatar] username #position xN
  */
 
-import type { AnarchyTop5Player } from '@/types/anarchy'
+import type { AnarchyTop5Player, AnarchyTeamSlug } from '@/types/anarchy'
+import { getAnarchyTeam } from '@/config/teams'
+import { computed } from 'vue'
 
 interface Props {
   player: AnarchyTop5Player
+  teamSlug?: AnarchyTeamSlug
   showPoints?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   showPoints: false,
 })
 
@@ -22,10 +25,22 @@ const avatarUrl = (avatar: string) => {
   if (avatar.startsWith('http')) return avatar
   return `https://www.replaypoker.com${avatar}`
 }
+
+const teamColor = computed(() => {
+  if (!props.teamSlug) return '#3b82f6' // Default blue
+  const team = getAnarchyTeam(props.teamSlug)
+  return team?.color || '#3b82f6'
+})
 </script>
 
 <template>
-  <div class="player-badge">
+  <div class="player-badge" :style="{ '--badge-team-color': teamColor }">
+    <!-- Points prefix section -->
+    <div class="player-badge__points">
+      <span class="points-value">{{ player.pointsEarned }}</span>
+      <span class="points-label">Pts</span>
+    </div>
+    
     <!-- Player info section -->
     <div class="player-badge__info">
       <img 
@@ -74,7 +89,38 @@ const avatarUrl = (avatar: string) => {
   transform: translateY(-1px);
 }
 
-/* Player info section - left side */
+/* Points prefix section - leftmost */
+.player-badge__points {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 10px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--badge-team-color, #3b82f6) 50%, rgba(0, 0, 0, 0.4)) 0%,
+    color-mix(in srgb, var(--badge-team-color, #3b82f6) 35%, rgba(0, 0, 0, 0.5)) 100%
+  );
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50px 0 0 50px;
+  color: color-mix(in srgb, var(--badge-team-color, #3b82f6) 30%, white);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.player-badge__points .points-value {
+  color: #fff;
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.player-badge__points .points-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+/* Player info section - middle */
 .player-badge__info {
   display: flex;
   align-items: center;

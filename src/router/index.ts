@@ -77,6 +77,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/PocView.vue'),
   },
   {
+    path: '/poc/sheets-api',
+    name: 'sheets-api-poc',
+    component: () => import('@/views/SheetsApiPoc.vue'),
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/views/NotFoundView.vue'),

@@ -70,6 +70,7 @@ const getRankIcon = (rank: number) => {
             v-for="player in team.top5Players"
             :key="player.username"
             :player="player"
+            :team-slug="team.teamSlug"
           />
         </div>
         

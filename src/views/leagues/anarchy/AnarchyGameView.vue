@@ -200,14 +200,6 @@ const getTeamColor = (teamSlug: string) => {
 
         <template v-else-if="gameResult">
           <div class="game-view__dual-panel">
-            <div class="game-view__primary-panel">
-              <AnarchyTeamStandings
-                :team-scores="gameResult.teamScores"
-                title="TEAM PRIMARY STANDINGS"
-                :show-player-badges="true"
-              />
-            </div>
-            
             <div class="game-view__info-panel">
               <!-- Game Info Card -->
               <div class="game-info-card">
@@ -241,6 +233,15 @@ const getTeamColor = (teamSlug: string) => {
                 title="BOUNTY HUNTERS"
               />
             </div>
+            <div class="game-view__primary-panel">
+              <AnarchyTeamStandings
+                :team-scores="gameResult.teamScores"
+                title="TEAM PRIMARY STANDINGS"
+                :show-player-badges="true"
+              />
+            </div>
+            
+            
           </div>
 
           <BaseCard variant="glass" padding="md" class="game-view__player-table">
@@ -393,6 +394,7 @@ const getTeamColor = (teamSlug: string) => {
 
 .game-info-card__title-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
@@ -400,7 +402,7 @@ const getTeamColor = (teamSlug: string) => {
 
 .game-info-card__title {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
+  font-size: var(--text-5xl);
   font-weight: 800;
   color: var(--color-an-bounty, #ef4444);
   text-transform: uppercase;
