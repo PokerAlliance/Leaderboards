@@ -82,27 +82,10 @@ const isLocking = ref(false)
 function processResults() {
   if (!tournament.value) return
   
-  // #region agent log
-  const raw = rawTournament.value as any;
-  const activePlayerIds = new Set(raw?.playersLeftIds || []);
-  const eliminatedSeats = raw?.seats?.filter((s: any) => !activePlayerIds.has(s.id)) || [];
-  const seatsWithBounty = raw?.seats?.filter((s: any) => s.bounty > 0) || [];
-  fetch('http://127.0.0.1:7243/ingest/0c04544e-83a2-40f4-b335-81378515735c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AnarchyGameView:processResults',message:'Deep bounty check',data:{state:raw?.state,playersTotal:raw?.playersIds?.length,playersLeft:raw?.playersLeftIds?.length,eliminatedCount:eliminatedSeats.length,eliminatedSeats:eliminatedSeats.slice(0,5),seatsWithBountyCount:seatsWithBounty.length,seatsWithBounty:seatsWithBounty.slice(0,5),prizes:raw?.prizes,winners:raw?.winners,bountyWinners:raw?.bounty_winners},timestamp:Date.now(),hypothesisId:'H7'})}).catch(()=>{});
-  // #endregion
-  
   const bountyWinners = rawTournament.value?.bounty_winners || []
   const bountyValue = rawTournament.value?.prizes?.bounty || 0
   
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/0c04544e-83a2-40f4-b335-81378515735c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AnarchyGameView:processResults:afterExtract',message:'Extracted bounty data',data:{bountyWinnersCount:bountyWinners.length,bountyValue,bountyWinners},timestamp:Date.now(),hypothesisId:'H1-H4'})}).catch(()=>{});
-  // #endregion
-  
   const result = calculateFromTournament(tournament.value, bountyWinners, bountyValue)
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/0c04544e-83a2-40f4-b335-81378515735c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AnarchyGameView:processResults:result',message:'Calculation result',data:{teamScoresBounties:result.teamScores.map((t: any)=>({team:t.teamName,bounty:t.bountyScore})),playerBounties:result.playerResults.slice(0,5).map((p: any)=>({name:p.username,bounties:p.bountiesCollected}))},timestamp:Date.now(),hypothesisId:'H1-H4'})}).catch(()=>{});
-  // #endregion
-  
   gameResult.value = {
     teamScores: result.teamScores,
     playerResults: result.playerResults,
@@ -114,7 +97,13 @@ async function handleLockGame() {
   
   isLocking.value = true
   try {
-    await quickLock.lockGame(tournament.value, gameResult.value.teamScores as any, gameResult.value.playerResults as any)
+    const bountyValue = rawTournament.value?.prizes?.bounty || 0
+    await quickLock.lockGame(
+      tournament.value,
+      gameResult.value.teamScores as any,
+      gameResult.value.playerResults,
+      { bountyValue }
+    )
     showLockDialog.value = false
   } catch (e) {
     console.error('Failed to lock game:', e)

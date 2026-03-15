@@ -10,13 +10,14 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLeague, useQuickLock } from '@/composables'
 import { getLeagueConfig } from '@/config/leagues'
+import { sheetsClient } from '@/services/sheets'
 import LeagueHeader from '@/components/league/LeagueHeader.vue'
 import LeagueDescription from '@/components/league/LeagueDescription.vue'
 import GameCalendar from '@/components/calendar/GameCalendar.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import { ANARCHY_TEAMS } from '@/config/teams'
-import type { LeagueSlug, AnarchyQuarterlyStanding, AnarchyMonthlyBountyStanding, AnarchyTeamSlug } from '@/types'
-import { getCurrentQuarter } from '@/types/anarchy'
+import type { LeagueSlug, AnarchyQuarterlyStanding, AnarchyMonthlyBountyStanding, AnarchyTeamSlug, ParsedAnarchyGame, ParsedAnarchyPlayerResult } from '@/types'
+import { getCurrentQuarter, getQuarterBounds } from '@/types/anarchy'
 
 const LEAGUE_SLUG: LeagueSlug = 'anarchy'
 
@@ -55,6 +56,8 @@ const currentMonth = computed(() => {
 
 const quarterlyStandings = ref<AnarchyQuarterlyStanding[]>([])
 const monthlyBountyStandings = ref<AnarchyMonthlyBountyStanding[]>([])
+const anarchyGames = ref<ParsedAnarchyGame[]>([])
+const anarchyPlayerResults = ref<ParsedAnarchyPlayerResult[]>([])
 
 function initializePlaceholderStandings() {
   quarterlyStandings.value = ANARCHY_TEAMS.map((team, index) => ({
@@ -72,6 +75,150 @@ function initializePlaceholderStandings() {
     gamesPlayed: 0,
     rank: index + 1,
   }))
+}
+
+async function loadAnarchyStandings() {
+  try {
+    const [games, playerResults] = await Promise.all([
+      sheetsClient.getAnarchyGames(),
+      sheetsClient.getAnarchyPlayerResults(),
+    ])
+    
+    anarchyGames.value = games
+    anarchyPlayerResults.value = playerResults
+    
+    calculateQuarterlyStandings()
+    calculateMonthlyBountyStandings()
+  } catch (e) {
+    console.error('Failed to load Anarchy standings:', e)
+  }
+}
+
+function calculateQuarterlyStandings() {
+  const now = new Date()
+  const quarter = getCurrentQuarter(now)
+  const year = now.getFullYear()
+  const { start, end } = getQuarterBounds(year, quarter)
+  
+  const quarterGames = anarchyGames.value.filter((game) => {
+    const gameDate = new Date(game.gameDate)
+    return gameDate >= start && gameDate <= end
+  })
+  
+  const teamStats = new Map<AnarchyTeamSlug, { primaryPoints: number; gamesPlayed: Set<string> }>()
+  
+  for (const team of ANARCHY_TEAMS) {
+    teamStats.set(team.slug as AnarchyTeamSlug, {
+      primaryPoints: 0,
+      gamesPlayed: new Set(),
+    })
+  }
+
+  for (const game of quarterGames) {
+    const gameResults = anarchyPlayerResults.value.filter((r) => r.gameId === game.gameId)
+    
+    const teamResultsMap = new Map<AnarchyTeamSlug, ParsedAnarchyPlayerResult[]>()
+    
+    for (const result of gameResults) {
+      if (result.teamSlug) {
+        const existing = teamResultsMap.get(result.teamSlug as AnarchyTeamSlug) || []
+        existing.push(result)
+        teamResultsMap.set(result.teamSlug as AnarchyTeamSlug, existing)
+      }
+    }
+
+    for (const [teamSlug, results] of teamResultsMap) {
+      const stats = teamStats.get(teamSlug)
+      if (stats) {
+        const sortedByPoints = [...results].sort((a, b) => b.pointsEarned - a.pointsEarned)
+        const top5 = sortedByPoints.slice(0, 5)
+        const primaryScore = top5.reduce((sum, r) => sum + r.pointsEarned, 0)
+        
+        stats.primaryPoints += primaryScore
+        stats.gamesPlayed.add(game.gameId)
+      }
+    }
+  }
+
+  const standingsList: AnarchyQuarterlyStanding[] = ANARCHY_TEAMS.map((team) => {
+    const stats = teamStats.get(team.slug as AnarchyTeamSlug)!
+    return {
+      teamSlug: team.slug as AnarchyTeamSlug,
+      teamName: team.name,
+      totalPrimaryPoints: stats.primaryPoints,
+      gamesPlayed: stats.gamesPlayed.size,
+      rank: 0,
+    }
+  })
+
+  standingsList.sort((a, b) => b.totalPrimaryPoints - a.totalPrimaryPoints)
+
+  let currentRank = 1
+  for (let i = 0; i < standingsList.length; i++) {
+    if (i > 0 && standingsList[i]!.totalPrimaryPoints < standingsList[i - 1]!.totalPrimaryPoints) {
+      currentRank = i + 1
+    }
+    standingsList[i]!.rank = currentRank
+  }
+  
+  quarterlyStandings.value = standingsList
+}
+
+function calculateMonthlyBountyStandings() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  
+  const monthGames = anarchyGames.value.filter((game) => {
+    const gameDate = new Date(game.gameDate)
+    return gameDate.getFullYear() === year && gameDate.getMonth() === month
+  })
+  
+  const teamStats = new Map<AnarchyTeamSlug, { totalBounties: number; gamesPlayed: Set<string> }>()
+  
+  for (const team of ANARCHY_TEAMS) {
+    teamStats.set(team.slug as AnarchyTeamSlug, {
+      totalBounties: 0,
+      gamesPlayed: new Set(),
+    })
+  }
+
+  for (const game of monthGames) {
+    const gameResults = anarchyPlayerResults.value.filter((r) => r.gameId === game.gameId)
+    
+    for (const result of gameResults) {
+      if (result.teamSlug) {
+        const stats = teamStats.get(result.teamSlug as AnarchyTeamSlug)
+        if (stats) {
+          stats.totalBounties += result.bountiesCollected
+          stats.gamesPlayed.add(game.gameId)
+        }
+      }
+    }
+  }
+
+  const standingsList: AnarchyMonthlyBountyStanding[] = ANARCHY_TEAMS.map((team) => {
+    const stats = teamStats.get(team.slug as AnarchyTeamSlug)!
+    return {
+      teamSlug: team.slug as AnarchyTeamSlug,
+      teamName: team.name,
+      totalBounties: stats.totalBounties,
+      gamesPlayed: stats.gamesPlayed.size,
+      rank: 0,
+    }
+  })
+
+  standingsList.sort((a, b) => b.totalBounties - a.totalBounties)
+
+  let currentRank = 1
+  for (let i = 0; i < standingsList.length; i++) {
+    if (i > 0 && standingsList[i]!.totalBounties < standingsList[i - 1]!.totalBounties) {
+      currentRank = i + 1
+    }
+    standingsList[i]!.rank = currentRank
+  }
+
+  monthlyBountyStandings.value = standingsList
 }
 
 function handleLockGame(tournamentId: number) {
@@ -101,7 +248,7 @@ const getRankIcon = (rank: number) => {
 
 onMounted(async () => {
   initializePlaceholderStandings()
-  await Promise.all([load(), quickLock.loadHistory()])
+  await Promise.all([load(), quickLock.loadHistory(), loadAnarchyStandings()])
 })
 </script>
 

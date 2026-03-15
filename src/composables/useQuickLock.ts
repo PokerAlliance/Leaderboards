@@ -18,7 +18,12 @@ import type {
   TeamScorePayload,
   PlayerResultPayload,
   SaveGameResponse,
+  AnarchyPlayerResult,
 } from '@/types'
+
+export interface LockGameOptions {
+  bountyValue?: number
+}
 
 export interface UseQuickLockReturn {
   canLock: ComputedRef<boolean>
@@ -26,7 +31,8 @@ export interface UseQuickLockReturn {
   lockGame: (
     tournament: Tournament,
     teamScores: TeamGameScore[],
-    playerResults: PlayerGameResult[]
+    playerResults: PlayerGameResult[] | AnarchyPlayerResult[],
+    options?: LockGameOptions
   ) => Promise<SaveGameResponse>
   loadHistory: () => Promise<void>
   isLocking: Ref<boolean>
@@ -70,7 +76,10 @@ export function useQuickLock(leagueSlug: LeagueSlug): UseQuickLockReturn {
     const strategy = getScoringStrategy(leagueSlug)
 
     const sortedTeams = [...teamScores].sort((a, b) => b.totalPoints - a.totalPoints)
-    const rankedTeams: TeamScorePayload[] = sortedTeams.map((score, index) => {
+    const rankedTeams: TeamScorePayload[] = []
+    
+    for (let index = 0; index < sortedTeams.length; index++) {
+      const score = sortedTeams[index]!
       let rank = index + 1
       let monthPoints = strategy.calculateMonthPoints(rank, sortedTeams.length)
 
@@ -85,15 +94,15 @@ export function useQuickLock(leagueSlug: LeagueSlug): UseQuickLockReturn {
         }
       }
 
-      return {
+      rankedTeams.push({
         teamSlug: score.teamSlug,
         teamName: score.teamName,
         totalPoints: score.totalPoints,
         rank,
         monthPoints,
         penalty: 0,
-      }
-    })
+      })
+    }
 
     const playerResultsPayload: PlayerResultPayload[] = playerResults.map((result) => ({
       playerId: result.playerId,
@@ -114,10 +123,20 @@ export function useQuickLock(leagueSlug: LeagueSlug): UseQuickLockReturn {
     }
   }
 
+  function calculateAnarchyGameSlot(startTime: Date): string {
+    const day = startTime.getDay()
+    const hours = startTime.getUTCHours()
+    
+    if (day === 3) return 'wed_1pm'
+    if (day === 6) return 'sat_7pm'
+    return hours < 18 ? 'wed_1pm' : 'sat_7pm'
+  }
+
   async function lockGame(
     tournament: Tournament,
     teamScores: TeamGameScore[],
-    playerResults: PlayerGameResult[]
+    playerResults: PlayerGameResult[] | AnarchyPlayerResult[],
+    options?: LockGameOptions
   ): Promise<SaveGameResponse> {
     const adminKey = getAdminKey()
     if (!adminKey) {
@@ -139,8 +158,31 @@ export function useQuickLock(leagueSlug: LeagueSlug): UseQuickLockReturn {
     isLocking.value = true
 
     try {
-      const payload = buildGamePayload(tournament, teamScores, playerResults)
-      const result = await sheetsClient.saveGameResults(leagueSlug, payload, adminKey)
+      let result: SaveGameResponse
+
+      if (leagueSlug === 'anarchy') {
+        const gameDate = new Date(tournament.startTime)
+        const anarchyPayload = {
+          gameId: format(gameDate, 'yyyy_MM_dd'),
+          tournamentId: tournament.id,
+          gameDate: format(gameDate, 'yyyy-MM-dd'),
+          gameSlot: calculateAnarchyGameSlot(gameDate),
+          totalPlayers: tournament.totalPlayers,
+          bountyValue: options?.bountyValue || 0,
+          playerResults: (playerResults as AnarchyPlayerResult[]).map((p) => ({
+            username: p.username,
+            teamSlug: p.teamSlug,
+            finishPosition: p.finishPosition,
+            pointsEarned: p.pointsEarned,
+            bountiesCollected: p.bountiesCollected,
+            countedInTop5: p.isInTop5,
+          })),
+        }
+        result = await sheetsClient.saveAnarchyGameResults(anarchyPayload, adminKey)
+      } else {
+        const payload = buildGamePayload(tournament, teamScores, playerResults as PlayerGameResult[])
+        result = await sheetsClient.saveGameResults(leagueSlug, payload, adminKey)
+      }
 
       if (result.success) {
         await gameHistory.load()
