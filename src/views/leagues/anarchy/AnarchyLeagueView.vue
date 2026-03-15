@@ -32,7 +32,7 @@ const backgroundStyle = computed(() => {
 const {
   leagueInfo,
   upcomingGames,
-  liveGame,
+  liveGames,
   recentGames,
   mostRecentFinished,
   isLoading,
@@ -203,7 +203,7 @@ onMounted(async () => {
             <GameCalendar
               :upcoming="upcomingGames"
               :recent="recentGames"
-              :live="liveGame"
+              :live-games="liveGames"
               :league-slug="LEAGUE_SLUG"
               :saved-tournament-ids="quickLock.savedTournamentIds.value"
               :can-lock="quickLock.canLock.value"

@@ -29,7 +29,7 @@ const backgroundStyle = computed(() => {
 const {
   leagueInfo,
   upcomingGames,
-  liveGame,
+  liveGames,
   recentGames,
   mostRecentFinished,
   isLoading,
@@ -84,7 +84,7 @@ watch(
             <GameCalendar
               :upcoming="upcomingGames"
               :recent="recentGames"
-              :live="liveGame"
+              :live-games="liveGames"
               :league-slug="validSlug"
               :saved-tournament-ids="quickLock.savedTournamentIds.value"
               :can-lock="quickLock.canLock.value"

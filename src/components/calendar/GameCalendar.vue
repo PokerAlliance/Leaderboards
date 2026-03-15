@@ -11,6 +11,7 @@ interface Props {
   upcoming: ParsedTournament[]
   recent: ParsedTournament[]
   live?: ParsedTournament | null
+  liveGames?: ParsedTournament[]
   leagueSlug: LeagueSlug
   maxUpcoming?: number
   maxRecent?: number
@@ -20,6 +21,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   live: null,
+  liveGames: () => [],
   maxUpcoming: 5,
   maxRecent: 5,
   savedTournamentIds: () => [],
@@ -32,6 +34,13 @@ const emit = defineEmits<{
 
 const upcomingGames = computed(() => props.upcoming.slice(0, props.maxUpcoming))
 const recentGames = computed(() => props.recent.slice(0, props.maxRecent))
+const currentlyRunning = computed(() => props.liveGames.length > 0 ? props.liveGames : (props.live ? [props.live] : []))
+
+function getGameStatus(game: ParsedTournament): string {
+  if (game.state === 'lateRegistration') return 'Late Registration'
+  if (game.state === 'running') return 'In Progress'
+  return ''
+}
 
 function isGameSaved(tournamentId: number): boolean {
   return props.savedTournamentIds.includes(tournamentId)
@@ -59,24 +68,34 @@ function formatLiveTime(date: Date): string {
     </template>
 
     <div class="game-calendar__content">
-      <section v-if="live" class="game-calendar__section game-calendar__section--live">
+      <section v-if="currentlyRunning.length > 0" class="game-calendar__section game-calendar__section--live">
         <div class="game-calendar__section-header">
           <LiveBadge size="sm" />
-          <span class="game-calendar__section-title">Live Now</span>
+          <span class="game-calendar__section-title">Currently Running</span>
         </div>
 
-        <RouterLink
-          :to="`/league/${leagueSlug}/game/${live.id}`"
-          class="game-calendar__live-game"
-        >
-          <div class="game-calendar__live-info">
-            <span class="game-calendar__live-name">{{ live.name }}</span>
-            <span class="game-calendar__live-meta">
-              {{ formatLiveTime(live.startTime) }} • {{ live.registeredPlayers }} players
-            </span>
-          </div>
-          <span class="game-calendar__live-action">Watch Live →</span>
-        </RouterLink>
+        <div class="game-calendar__live-list">
+          <RouterLink
+            v-for="game in currentlyRunning"
+            :key="game.id"
+            :to="`/league/${leagueSlug}/game/${game.id}`"
+            class="game-calendar__live-game"
+            :class="{ 'game-calendar__live-game--late-reg': game.state === 'lateRegistration' }"
+          >
+            <div class="game-calendar__live-info">
+              <span class="game-calendar__live-name">{{ game.name }}</span>
+              <span class="game-calendar__live-meta">
+                {{ formatLiveTime(game.startTime) }} • {{ game.registeredPlayers }} players
+              </span>
+            </div>
+            <div class="game-calendar__live-right">
+              <span class="game-calendar__live-status" :class="{ 'late-reg': game.state === 'lateRegistration' }">
+                {{ getGameStatus(game) }}
+              </span>
+              <span class="game-calendar__live-action">View →</span>
+            </div>
+          </RouterLink>
+        </div>
       </section>
 
       <section v-if="upcomingGames.length > 0" class="game-calendar__section">
@@ -252,11 +271,50 @@ function formatLiveTime(date: Date): string {
   color: var(--color-text-secondary);
 }
 
+.game-calendar__live-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.game-calendar__live-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.game-calendar__live-status {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-live);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.game-calendar__live-status.late-reg {
+  color: var(--color-warning, #eab308);
+}
+
+.game-calendar__live-game--late-reg {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.game-calendar__live-game--late-reg:hover {
+  background: rgba(234, 179, 8, 0.15);
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
 .game-calendar__live-action {
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   color: var(--color-live);
   white-space: nowrap;
+}
+
+.game-calendar__live-game--late-reg .game-calendar__live-action {
+  color: var(--color-warning, #eab308);
 }
 
 .game-calendar__list {

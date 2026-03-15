@@ -92,7 +92,7 @@ export const ApiBlindsSchema = z.object({
     level: z.number(),
     small: z.number(),
     big: z.number(),
-    ante: z.number(),
+    ante: z.number().optional(),
   }),
   next: z
     .object({
@@ -100,7 +100,7 @@ export const ApiBlindsSchema = z.object({
       small: z.number(),
       big: z.number(),
       time: z.string(),
-      ante: z.number(),
+      ante: z.number().optional(),
     })
     .optional(),
 })

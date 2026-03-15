@@ -33,7 +33,7 @@ export interface BlindLevel {
   level: number
   smallBlind: number
   bigBlind: number
-  ante: number
+  ante?: number
   durationMinutes?: number
 }
 
@@ -41,7 +41,7 @@ export interface CurrentBlinds {
   level: number
   smallBlind: number
   bigBlind: number
-  ante: number
+  ante?: number
   nextLevelAt?: Date
 }
 

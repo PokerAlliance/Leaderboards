@@ -86,14 +86,14 @@ export interface ApiBlinds {
     level: number
     small: number
     big: number
-    ante: number
+    ante?: number
   }
   next?: {
     level: number
     small: number
     big: number
     time: string
-    ante: number
+    ante?: number
   }
 }
 

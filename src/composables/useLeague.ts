@@ -37,6 +37,7 @@ export interface UseLeagueReturn {
   leagueInfo: Ref<LeagueInfo | null>
   tournaments: Ref<ParsedTournament[]>
   upcomingGames: ComputedRef<ParsedTournament[]>
+  liveGames: ComputedRef<ParsedTournament[]>
   liveGame: ComputedRef<ParsedTournament | null>
   recentGames: ComputedRef<ParsedTournament[]>
   mostRecentFinished: ComputedRef<ParsedTournament | null>
@@ -90,8 +91,14 @@ export function useLeague(leagueSlug: LeagueSlug): UseLeagueReturn {
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
   })
 
+  const liveGames = computed(() => {
+    return tournaments.value
+      .filter((t) => t.state === 'running' || t.state === 'lateRegistration')
+      .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+  })
+
   const liveGame = computed(() => {
-    return tournaments.value.find((t) => t.state === 'running') ?? null
+    return liveGames.value[0] ?? null
   })
 
   const recentGames = computed(() => {
@@ -130,6 +137,7 @@ export function useLeague(leagueSlug: LeagueSlug): UseLeagueReturn {
     leagueInfo,
     tournaments,
     upcomingGames,
+    liveGames,
     liveGame,
     recentGames,
     mostRecentFinished,
