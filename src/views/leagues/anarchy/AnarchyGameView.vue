@@ -366,15 +366,6 @@ const formattedDate = computed(() => {
   })
 })
 
-const formattedTime = computed(() => {
-  if (!tournament.value?.startTime) return ''
-  return new Date(tournament.value.startTime).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  })
-})
-
 const getTeamColor = (teamSlug: string) => {
   const team = ANARCHY_TEAMS.find((t) => t.slug === teamSlug)
   return team?.color || '#888888'
