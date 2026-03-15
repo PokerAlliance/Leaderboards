@@ -12,11 +12,15 @@ import { useRouter } from 'vue-router'
 import { useTournament, useTeamRoster, useAnarchyScoring, useAuth, useQuickLock } from '@/composables'
 import { getLeagueConfig } from '@/config/leagues'
 import { ANARCHY_TEAMS } from '@/config/teams'
+import { sheetsClient } from '@/services/sheets/client'
 import LiveBadge from '@/components/scoreboard/LiveBadge.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
-import { AnarchyTeamStandings, AnarchyBountyBoard } from './components'
+import { AnarchyTeamStandings, AnarchyBountyBoard, AnarchyPodiumCard } from './components'
 import type { LeagueSlug, AnarchyTeamSlug, AnarchyTeamScore, AnarchyPlayerResult } from '@/types'
+import type { ParsedAnarchyGame, ParsedAnarchyPlayerResult, AnarchyQuarterlyStanding, AnarchyMonthlyBountyStanding } from '@/types/anarchy'
+import { getCurrentQuarter, getQuarterBounds } from '@/types/anarchy'
+import type { PodiumStanding } from './components/AnarchyPodiumCard.vue'
 
 const LEAGUE_SLUG: LeagueSlug = 'anarchy'
 
@@ -69,6 +73,49 @@ const gameResult = ref<{ teamScores: AnarchyTeamScore[]; playerResults: AnarchyP
 const { isLoggedIn, leagueSlug: userLeagueSlug } = useAuth()
 const quickLock = useQuickLock(LEAGUE_SLUG)
 
+// Historical standings for podium display
+const historicalStandings = ref<{
+  quarterly: AnarchyQuarterlyStanding[]
+  monthly: AnarchyMonthlyBountyStanding[]
+} | null>(null)
+const isLoadingStandings = ref(false)
+
+// Computed podium standings for display
+const quarterlyPodium = computed<PodiumStanding[]>(() => {
+  if (!historicalStandings.value?.quarterly) return []
+  return historicalStandings.value.quarterly.map(s => ({
+    teamSlug: s.teamSlug,
+    teamName: s.teamName,
+    value: s.totalPrimaryPoints,
+    rank: s.rank,
+  }))
+})
+
+const monthlyPodium = computed<PodiumStanding[]>(() => {
+  if (!historicalStandings.value?.monthly) return []
+  return historicalStandings.value.monthly.map(s => ({
+    teamSlug: s.teamSlug,
+    teamName: s.teamName,
+    value: s.totalBounties,
+    rank: s.rank,
+  }))
+})
+
+// Get title with dynamic quarter/month
+const quarterTitle = computed(() => {
+  if (!tournament.value?.startTime) return 'QUARTERLY'
+  const gameDate = new Date(tournament.value.startTime)
+  const quarter = getCurrentQuarter(gameDate)
+  return `${quarter} PRIMARY`
+})
+
+const monthTitle = computed(() => {
+  if (!tournament.value?.startTime) return 'MONTHLY'
+  const gameDate = new Date(tournament.value.startTime)
+  const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+  return `${monthNames[gameDate.getMonth()]} BOUNTIES`
+})
+
 const canLockGame = computed(() => {
   if (!isLoggedIn.value) return false
   if (!isFinished.value) return false
@@ -112,6 +159,167 @@ async function handleLockGame() {
   }
 }
 
+// Calculate quarterly standings up to a specific date
+function calculateQuarterlyUpTo(
+  games: ParsedAnarchyGame[],
+  results: ParsedAnarchyPlayerResult[],
+  upToDate: Date
+): AnarchyQuarterlyStanding[] {
+  const quarter = getCurrentQuarter(upToDate)
+  const year = upToDate.getFullYear()
+  const { start } = getQuarterBounds(year, quarter)
+  
+  // Filter games in this quarter up to and including the game date
+  const quarterGames = games.filter((game) => {
+    const gameDate = new Date(game.gameDate)
+    return gameDate >= start && gameDate <= upToDate
+  })
+  
+  const teamStats = new Map<AnarchyTeamSlug, { primaryPoints: number; gamesPlayed: Set<string> }>()
+  
+  for (const team of ANARCHY_TEAMS) {
+    teamStats.set(team.slug as AnarchyTeamSlug, {
+      primaryPoints: 0,
+      gamesPlayed: new Set(),
+    })
+  }
+
+  for (const game of quarterGames) {
+    const gameResults = results.filter((r) => r.gameId === game.gameId)
+    const teamResultsMap = new Map<AnarchyTeamSlug, ParsedAnarchyPlayerResult[]>()
+    
+    for (const result of gameResults) {
+      if (result.teamSlug) {
+        const existing = teamResultsMap.get(result.teamSlug as AnarchyTeamSlug) || []
+        existing.push(result)
+        teamResultsMap.set(result.teamSlug as AnarchyTeamSlug, existing)
+      }
+    }
+
+    for (const [teamSlug, teamResults] of teamResultsMap) {
+      const stats = teamStats.get(teamSlug)
+      if (stats) {
+        const sortedByPoints = [...teamResults].sort((a, b) => b.pointsEarned - a.pointsEarned)
+        const top5 = sortedByPoints.slice(0, 5)
+        const primaryScore = top5.reduce((sum, r) => sum + r.pointsEarned, 0)
+        
+        stats.primaryPoints += primaryScore
+        stats.gamesPlayed.add(game.gameId)
+      }
+    }
+  }
+
+  const standingsList: AnarchyQuarterlyStanding[] = ANARCHY_TEAMS.map((team) => {
+    const stats = teamStats.get(team.slug as AnarchyTeamSlug)!
+    return {
+      teamSlug: team.slug as AnarchyTeamSlug,
+      teamName: team.name,
+      totalPrimaryPoints: stats.primaryPoints,
+      gamesPlayed: stats.gamesPlayed.size,
+      rank: 0,
+    }
+  })
+
+  standingsList.sort((a, b) => b.totalPrimaryPoints - a.totalPrimaryPoints)
+
+  let currentRank = 1
+  for (let i = 0; i < standingsList.length; i++) {
+    if (i > 0 && standingsList[i]!.totalPrimaryPoints < standingsList[i - 1]!.totalPrimaryPoints) {
+      currentRank = i + 1
+    }
+    standingsList[i]!.rank = currentRank
+  }
+  
+  return standingsList
+}
+
+// Calculate monthly bounty standings up to a specific date
+function calculateMonthlyUpTo(
+  games: ParsedAnarchyGame[],
+  results: ParsedAnarchyPlayerResult[],
+  upToDate: Date
+): AnarchyMonthlyBountyStanding[] {
+  const year = upToDate.getFullYear()
+  const month = upToDate.getMonth()
+  
+  // Filter games in this month up to and including the game date
+  const monthGames = games.filter((game) => {
+    const gameDate = new Date(game.gameDate)
+    return gameDate.getFullYear() === year && 
+           gameDate.getMonth() === month && 
+           gameDate <= upToDate
+  })
+  
+  const teamStats = new Map<AnarchyTeamSlug, { totalBounties: number; gamesPlayed: Set<string> }>()
+  
+  for (const team of ANARCHY_TEAMS) {
+    teamStats.set(team.slug as AnarchyTeamSlug, {
+      totalBounties: 0,
+      gamesPlayed: new Set(),
+    })
+  }
+
+  for (const game of monthGames) {
+    const gameResults = results.filter((r) => r.gameId === game.gameId)
+    
+    for (const result of gameResults) {
+      if (result.teamSlug) {
+        const stats = teamStats.get(result.teamSlug as AnarchyTeamSlug)
+        if (stats) {
+          stats.totalBounties += result.bountiesCollected
+          stats.gamesPlayed.add(game.gameId)
+        }
+      }
+    }
+  }
+
+  const standingsList: AnarchyMonthlyBountyStanding[] = ANARCHY_TEAMS.map((team) => {
+    const stats = teamStats.get(team.slug as AnarchyTeamSlug)!
+    return {
+      teamSlug: team.slug as AnarchyTeamSlug,
+      teamName: team.name,
+      totalBounties: stats.totalBounties,
+      gamesPlayed: stats.gamesPlayed.size,
+      rank: 0,
+    }
+  })
+
+  standingsList.sort((a, b) => b.totalBounties - a.totalBounties)
+
+  let currentRank = 1
+  for (let i = 0; i < standingsList.length; i++) {
+    if (i > 0 && standingsList[i]!.totalBounties < standingsList[i - 1]!.totalBounties) {
+      currentRank = i + 1
+    }
+    standingsList[i]!.rank = currentRank
+  }
+  
+  return standingsList
+}
+
+// Load historical standings asynchronously
+async function loadHistoricalStandings(gameDate: Date) {
+  isLoadingStandings.value = true
+  try {
+    const [games, results] = await Promise.all([
+      sheetsClient.getAnarchyGames(),
+      sheetsClient.getAnarchyPlayerResults(),
+    ])
+    
+    // Calculate quarterly standings up to game date
+    const quarterly = calculateQuarterlyUpTo(games, results, gameDate)
+    
+    // Calculate monthly standings up to game date
+    const monthly = calculateMonthlyUpTo(games, results, gameDate)
+    
+    historicalStandings.value = { quarterly, monthly }
+  } catch (e) {
+    console.error('Failed to load historical standings:', e)
+  } finally {
+    isLoadingStandings.value = false
+  }
+}
+
 watch(tournament, () => {
   if (tournament.value) {
     processResults()
@@ -132,6 +340,10 @@ onMounted(async () => {
     await loadTournament(parsedTournamentId.value)
     if (isLive.value) {
       startPolling()
+    }
+    // Fire and forget - load historical standings asynchronously
+    if (tournament.value?.startTime) {
+      loadHistoricalStandings(new Date(tournament.value.startTime))
     }
   }
 })
@@ -201,12 +413,11 @@ const getTeamColor = (teamSlug: string) => {
         <template v-else-if="gameResult">
           <div class="game-view__dual-panel">
             <div class="game-view__info-panel">
-              <!-- Game Info Card -->
-              <div class="game-info-card">
+              <!-- Game Info Card - Compact -->
+              <div class="game-info-card game-info-card--compact">
                 <div class="game-info-card__title-row">
                   <h1 class="game-info-card__title">ANARCHY</h1>
                   <LiveBadge v-if="isLive" />
-                  <span v-else-if="isFinished" class="game-info-card__status game-info-card__status--finished">FINISHED</span>
                 </div>
                 
                 <div class="game-info-card__meta">
@@ -214,24 +425,36 @@ const getTeamColor = (teamSlug: string) => {
                     <span class="game-info-card__icon">📅</span>
                     <span class="game-info-card__value">{{ formattedDate }}</span>
                   </div>
-                  <div class="game-info-card__row">
-                    <span class="game-info-card__icon">🕐</span>
-                    <span class="game-info-card__value">{{ formattedTime }}</span>
-                  </div>
                   <div v-if="tournament" class="game-info-card__row">
                     <span class="game-info-card__icon">👥</span>
                     <span class="game-info-card__value">{{ tournament.playersRemaining }} / {{ tournament.totalPlayers }} players</span>
                   </div>
                 </div>
                 
-                <p class="game-info-card__tagline">"Embrace the Chaos"</p>
               </div>
               
-              <!-- Bounty Board below -->
+              <!-- Bounty Board - Compact -->
               <AnarchyBountyBoard
                 :team-scores="gameResult.teamScores"
                 title="BOUNTY HUNTERS"
+                class="bounty-board--compact"
               />
+              
+              <!-- Season/Monthly Podium Cards -->
+              <div class="podium-section">
+                <AnarchyPodiumCard
+                  :title="quarterTitle"
+                  :standings="quarterlyPodium"
+                  type="primary"
+                  :is-loading="isLoadingStandings"
+                />
+                <AnarchyPodiumCard
+                  :title="monthTitle"
+                  :standings="monthlyPodium"
+                  type="bounty"
+                  :is-loading="isLoadingStandings"
+                />
+              </div>
             </div>
             <div class="game-view__primary-panel">
               <AnarchyTeamStandings
@@ -459,6 +682,56 @@ const getTeamColor = (teamSlug: string) => {
   text-align: center;
 }
 
+/* Compact variants for better space utilization */
+.game-info-card--compact {
+  padding: 14px;
+  margin-bottom: var(--space-3);
+}
+
+.game-info-card--compact .game-info-card__title-row {
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.game-info-card--compact .game-info-card__title {
+  font-size: var(--text-4xl);
+}
+
+.game-info-card--compact .game-info-card__meta {
+  padding: var(--space-2);
+  gap: 2px;
+}
+
+.game-info-card--compact .game-info-card__icon {
+  font-size: 0.8rem;
+}
+
+.game-info-card--compact .game-info-card__value {
+  font-size: 0.8rem;
+}
+
+.game-info-card--compact .game-info-card__tagline {
+  margin: var(--space-2) 0 0;
+  font-size: 0.75rem;
+}
+
+/* Compact bounty board */
+:deep(.bounty-board--compact) {
+  padding: 12px !important;
+}
+
+:deep(.bounty-board--compact .bounty-board__title) {
+  font-size: 0.7rem !important;
+  margin-bottom: 8px !important;
+}
+
+/* Podium section */
+.podium-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
 .game-view__loading,
 .game-view__error-message {
   text-align: center;
@@ -498,7 +771,7 @@ const getTeamColor = (teamSlug: string) => {
   flex: 0 0 calc(35% - var(--space-3));
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
 .game-view__player-table {

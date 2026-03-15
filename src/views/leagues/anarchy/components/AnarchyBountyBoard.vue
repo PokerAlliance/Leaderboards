@@ -76,10 +76,6 @@ const getRankIcon = (rank: number) => {
 
 <template>
   <div class="bounty-board">
-    <div class="bounty-board__header">
-      <h3 class="bounty-board__title">{{ title }}</h3>
-      <span v-if="subtitle" class="bounty-board__subtitle">{{ subtitle }}</span>
-    </div>
     
     <div class="bounty-board__list">
       <div 
