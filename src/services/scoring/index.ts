@@ -12,6 +12,9 @@ const strategies: Record<LeagueSlug, ScoringStrategy> = {
   tpp: dreamweaverStrategy,
   fpl: dreamweaverStrategy,
   anarchy: anarchyStrategy,
+  // Donks uses formula-based individual scoring (see src/services/scoring/strategies/donks.ts)
+  // Not registered here as it doesn't conform to the team-based ScoringStrategy interface
+  donks: dreamweaverStrategy,
 }
 
 export function getScoringStrategy(leagueSlug: LeagueSlug): ScoringStrategy {
@@ -34,3 +37,4 @@ export function registerScoringStrategy(leagueSlug: LeagueSlug, strategy: Scorin
 export { type ScoringStrategy, type ScoringConfig, BaseScoringStrategy } from './types'
 export { dreamweaverStrategy, DreamweaverScoringStrategy } from './strategies/dreamweaver'
 export { anarchyStrategy, AnarchyScoringStrategy, type BountyWinner } from './strategies/anarchy'
+export { calculateDonksPoints, calculateTopN, getCountedGameIds } from './strategies/donks'

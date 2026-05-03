@@ -26,6 +26,9 @@
         <RouterLink to="/league/anarchy" class="app-header__link app-header__link--anarchy" @click="closeMobileMenu">
           Anarchy
         </RouterLink>
+        <RouterLink to="/league/donks" class="app-header__link app-header__link--donks" @click="closeMobileMenu">
+          The Donks
+        </RouterLink>
         <RouterLink to="/league/dreamweaver" class="app-header__link" @click="closeMobileMenu">
           Dreamweaver
         </RouterLink>
@@ -152,6 +155,9 @@
   .app-header__nav--open .app-header__link:nth-child(6) {
     animation-delay: 0.3s;
   }
+  .app-header__nav--open .app-header__link:nth-child(7) {
+    animation-delay: 0.35s;
+  }
 
   .app-header__link {
     position: relative;
@@ -209,6 +215,23 @@
   .app-header__link--anarchy.router-link-active {
     color: #ef4444;
     background: rgba(239, 68, 68, 0.1);
+  }
+
+  .app-header__link--donks {
+    color: #c9a227;
+  }
+
+  .app-header__link--donks:hover {
+    color: #e4c95a;
+  }
+
+  .app-header__link--donks::after {
+    background: #c9a227;
+  }
+
+  .app-header__link--donks.router-link-active {
+    color: #c9a227;
+    background: rgba(201, 162, 39, 0.1);
   }
 
   .app-header__link--admin {

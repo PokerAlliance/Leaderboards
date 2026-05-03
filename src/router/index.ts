@@ -1,9 +1,12 @@
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuth } from '@/composables'
+import { useDonksStore } from '@/composables/useDonksStore'
+import { getCurrentDonksQuarter } from '@/config/donks'
 
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
+    donksRoute?: boolean
   }
 }
 
@@ -38,6 +41,33 @@ const routes: RouteRecordRaw[] = [
     name: 'anarchy-game',
     component: () => import('@/views/leagues/anarchy/AnarchyGameView.vue'),
     props: true,
+  },
+
+  // Donks League
+  {
+    path: '/league/donks',
+    name: 'donks-home',
+    component: () => import('@/views/leagues/donks/DonksHomeView.vue'),
+    meta: { donksRoute: true },
+  },
+  {
+    path: '/league/donks/holdem',
+    name: 'donks-holdem',
+    component: () => import('@/views/leagues/donks/DonksHoldemView.vue'),
+    meta: { donksRoute: true },
+  },
+  {
+    path: '/league/donks/omaha',
+    name: 'donks-omaha',
+    component: () => import('@/views/leagues/donks/DonksOmahaView.vue'),
+    meta: { donksRoute: true },
+  },
+  {
+    path: '/league/donks/cup/:cupSlug',
+    name: 'donks-cup',
+    component: () => import('@/views/leagues/donks/DonksCupView.vue'),
+    props: true,
+    meta: { donksRoute: true },
   },
 
   // TPP League - Coming Soon
@@ -96,10 +126,25 @@ export const router = createRouter({
 let authInitialized = false
 
 router.beforeEach(async (to, _from, next) => {
+  // Auth guard
   if (to.meta.requiresAuth && !authInitialized) {
     const { initialize } = useAuth()
     await initialize()
     authInitialized = true
   }
+
+  // Donks guard: kick off data load when entering any Donks route
+  // The store will no-op if the current quarter is already cached.
+  if (to.meta.donksRoute) {
+    const store = useDonksStore()
+    if (!store.loadedQuarter.value) {
+      // Fire-and-forget: the loading gate component in each Donks view watches
+      // store.isLoading to display the animated loading screen.
+      store.loadQuarter(getCurrentDonksQuarter()).catch((err) => {
+        console.error('[router] Donks data load failed:', err)
+      })
+    }
+  }
+
   next()
 })

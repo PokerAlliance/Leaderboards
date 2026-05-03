@@ -49,7 +49,6 @@ const {
   isLoading,
   error,
   isLive,
-  isFinished,
   load: loadTournament,
   startPolling,
   stopPolling,
@@ -70,7 +69,7 @@ const { calculateFromTournament } = useAnarchyScoring({ getPlayerTeam: getAnarch
 
 const gameResult = ref<{ teamScores: AnarchyTeamScore[]; playerResults: AnarchyPlayerResult[] } | null>(null)
 
-const { isLoggedIn, leagueSlug: userLeagueSlug } = useAuth()
+useAuth()
 const quickLock = useQuickLock(LEAGUE_SLUG)
 
 // Historical standings for podium display
@@ -116,12 +115,6 @@ const monthTitle = computed(() => {
   return `${monthNames[gameDate.getMonth()]} BOUNTIES`
 })
 
-const canLockGame = computed(() => {
-  if (!isLoggedIn.value) return false
-  if (!isFinished.value) return false
-  if (quickLock.savedTournamentIds.value.includes(parsedTournamentId.value || 0)) return false
-  return userLeagueSlug.value === 'anarchy' || userLeagueSlug.value === 'all'
-})
 
 const showLockDialog = ref(false)
 const isLocking = ref(false)
@@ -140,11 +133,13 @@ function processResults() {
 }
 
 async function handleLockGame() {
+  console.log('handleLockGame : ', parsedTournamentId.value, tournament.value, gameResult.value);
   if (!parsedTournamentId.value || !tournament.value || !gameResult.value) return
   
   isLocking.value = true
   try {
     const bountyValue = rawTournament.value?.prizes?.bounty || 0
+    console.log('lockGame : ', tournament.value, gameResult.value.teamScores, gameResult.value.playerResults, { bountyValue });
     await quickLock.lockGame(
       tournament.value,
       gameResult.value.teamScores as any,
@@ -499,7 +494,7 @@ const getTeamColor = (teamSlug: string) => {
             </div>
           </BaseCard>
 
-          <div v-if="canLockGame" class="game-view__lock-section">
+          <div class="game-view__lock-section">
             <button class="lock-btn" @click="showLockDialog = true">
               🔒 Lock Results
             </button>

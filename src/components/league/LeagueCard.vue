@@ -32,7 +32,7 @@
     tpp: 'var(--color-tpp-team1)',
     fpl: 'var(--color-fpl-mystics)',
     anarchy: '#ef4444',
-    donks: '#8b5cf6',
+    donks: '#c9a227',
   }
 
   const accentColor = computed(

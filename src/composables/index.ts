@@ -12,6 +12,9 @@ export { useMonthlyStandings } from './useMonthlyStandings'
 export { useAuth } from './useAuth'
 export { useQuickLock } from './useQuickLock'
 
+// Donks-specific composables
+export { useDonksStore } from './useDonksStore'
+
 // Anarchy-specific composables
 export { useAnarchyScoring } from './useAnarchyScoring'
 export { useAnarchyQuarterlyStandings } from './useAnarchyQuarterlyStandings'

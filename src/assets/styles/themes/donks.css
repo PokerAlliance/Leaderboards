@@ -1,0 +1,194 @@
+/* Donks League Theme
+ * "The toughest private poker tournaments on ReplayPoker"
+ *
+ * Color Palette:
+ * - Primary: Warm cream, ivory, soft gold
+ * - Accent: Rich gold, deep green felt, burgundy
+ * - Cards: Frosted glass white with blur
+ * - Text: Near-black on light surfaces
+ *
+ * Aesthetic: Light casino / poker room — inverse of dark Anarchy theme
+ */
+
+:root {
+  /* Donks base palette */
+  --color-donks-gold: #c9a227;
+  --color-donks-gold-light: #e4c95a;
+  --color-donks-gold-dark: #9a7b1c;
+  --color-donks-felt: #1a6b3a;
+  --color-donks-felt-light: #238b4e;
+  --color-donks-cream: #f5f0e8;
+  --color-donks-cream-dark: #e8dfd2;
+  --color-donks-burgundy: #7b1c2e;
+  --color-donks-ivory: #faf8f4;
+  --color-donks-text: #1a1a2e;
+  --color-donks-text-secondary: #3a3a55;
+  --color-donks-text-muted: #55556e;
+
+  /* Card surfaces */
+  --color-donks-card-bg: rgba(255, 255, 255, 0.88);
+  --color-donks-card-bg-hover: rgba(255, 255, 255, 0.94);
+  --color-donks-card-border: rgba(201, 162, 39, 0.35);
+  --shadow-donks-card: 0 4px 24px rgba(0, 0, 0, 0.10),
+                       0 0 0 1px rgba(201, 162, 39, 0.2);
+  --shadow-donks-card-hover: 0 8px 32px rgba(0, 0, 0, 0.15),
+                              0 0 0 1px rgba(201, 162, 39, 0.35);
+
+  /* Cup accent colors */
+  --color-donks-badonkidonk: #e85d04;
+  --color-donks-puggywug: #7b2d8b;
+  --color-donks-blackwidow: #c9184a;
+  --color-donks-ladycon: #1a759f;
+  --color-donks-boyd2: #2d6a4f;
+  --color-donks-bopflop: #40916c;
+}
+
+.theme-donks {
+  --league-primary: var(--color-donks-cream);
+  --league-secondary: var(--color-donks-ivory);
+  --league-accent: var(--color-donks-gold);
+  color: var(--color-donks-text);
+}
+
+/* Card styling */
+.theme-donks .donks-card {
+  background: var(--color-donks-card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-donks-card-border);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-donks-card);
+  color: var(--color-donks-text);
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.theme-donks .donks-card:hover {
+  box-shadow: var(--shadow-donks-card-hover);
+  background: var(--color-donks-card-bg-hover);
+}
+
+/* Section headers */
+.theme-donks .donks-section-title {
+  font-family: var(--font-display);
+  color: var(--color-donks-gold-dark);
+  text-transform: uppercase;
+  font-size: var(--text-sm);
+  letter-spacing: 0.12em;
+  font-size: 0.85rem;
+  border-bottom: 2px solid var(--color-donks-card-border);
+  padding-bottom: var(--space-2);
+  padding-left: 0.75rem;
+  margin-bottom: var(--space-4);
+  border-left: 3px solid var(--color-donks-gold);
+}
+
+/* Gold accent links */
+.theme-donks a {
+  color: var(--color-donks-gold-dark);
+  transition: color 0.2s ease;
+}
+
+.theme-donks a:hover {
+  color: var(--color-donks-gold);
+}
+
+/* Badges */
+.theme-donks .donks-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.theme-donks .donks-badge--gold {
+  background: linear-gradient(135deg, #c9a227 0%, #e4c95a 100%);
+  color: #1a1a2e;
+}
+
+.theme-donks .donks-badge--felt {
+  background: linear-gradient(135deg, #1a6b3a 0%, #238b4e 100%);
+  color: #fff;
+}
+
+.theme-donks .donks-badge--burgundy {
+  background: linear-gradient(135deg, #7b1c2e 0%, #a62744 100%);
+  color: #fff;
+}
+
+.theme-donks .donks-badge--past {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--color-donks-text-muted);
+}
+
+.theme-donks .donks-badge--today {
+  background: var(--color-donks-gold);
+  color: #1a1a2e;
+}
+
+.theme-donks .donks-badge--upcoming {
+  background: rgba(26, 107, 58, 0.12);
+  color: var(--color-donks-felt);
+}
+
+/* Buttons */
+.theme-donks .donks-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.65em 1.5em;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s ease;
+}
+
+.theme-donks .donks-btn--primary {
+  background: linear-gradient(135deg, var(--color-donks-gold) 0%, var(--color-donks-gold-light) 100%);
+  color: #1a1a2e;
+  box-shadow: 0 2px 12px rgba(201, 162, 39, 0.3);
+}
+
+.theme-donks .donks-btn--primary:hover {
+  box-shadow: 0 4px 20px rgba(201, 162, 39, 0.45);
+  transform: translateY(-1px);
+}
+
+.theme-donks .donks-btn--outline {
+  background: transparent;
+  color: var(--color-donks-gold-dark);
+  border: 1.5px solid var(--color-donks-card-border);
+}
+
+.theme-donks .donks-btn--outline:hover {
+  background: rgba(201, 162, 39, 0.08);
+  border-color: var(--color-donks-gold);
+}
+
+/* Background overlay for pages */
+.theme-donks .donks-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.theme-donks .donks-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(245, 240, 232, 0.78) 0%,
+    rgba(245, 240, 232, 0.72) 40%,
+    rgba(245, 240, 232, 0.82) 100%
+  );
+}

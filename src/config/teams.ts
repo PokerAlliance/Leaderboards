@@ -66,6 +66,7 @@ export const LEAGUE_TEAMS: Record<LeagueSlug, Team[]> = {
   tpp: [],
   fpl: [],
   anarchy: ANARCHY_TEAMS,
+  donks: [],
 }
 
 export function getTeams(leagueSlug: LeagueSlug): Team[] {

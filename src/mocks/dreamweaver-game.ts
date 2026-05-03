@@ -505,11 +505,12 @@ export const mockLeagues: MockLeague[] = [
   },
   {
     slug: 'donks',
-    name: 'The Badonks Donks',
-    description: 'Details coming soon...',
+    name: "Badonk's Donks League",
+    description: 'The toughest private poker tournaments on ReplayPoker. 6 weekly cups, 8 leaderboards, quarterly standings.',
     teamCount: 0,
-    format: 'TBD',
-    isActive: false,
-    themeColor: '#8b5cf6',
+    format: 'Individual MTT',
+    isActive: true,
+    isNew: true,
+    themeColor: '#c9a227',
   },
 ]

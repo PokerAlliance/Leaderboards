@@ -139,6 +139,7 @@ export function useQuickLock(leagueSlug: LeagueSlug): UseQuickLockReturn {
     options?: LockGameOptions
   ): Promise<SaveGameResponse> {
     const adminKey = getAdminKey()
+    console.log('lockGame', { adminKey, canLock: canLock.value, tournament, teamScores, playerResults, options });
     if (!adminKey) {
       return { success: false, error: 'Not authenticated' }
     }

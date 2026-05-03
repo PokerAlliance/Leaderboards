@@ -114,6 +114,26 @@ export const LEAGUES: Record<LeagueSlug, LeagueConfig> = {
     },
     backgroundImage: `${BASE}assets/backgrounds/anarchy-background.png`,
   },
+  donks: {
+    slug: 'donks',
+    name: "Badonk's Donks League",
+    shortName: 'DONKS',
+    replayLeagueId: 14,
+    scoringStrategy: 'donks',
+    seasonType: 'quarterly',
+    gameFormat: 'mtt',
+    gameDays: ['monday', 'wednesday', 'sunday'],
+    theme: 'donks',
+    description: 'The toughest private poker tournaments on ReplayPoker. Individual play across 6 weekly cups with quarterly standings.',
+    isActive: true,
+    scoringRules: {
+      pointsTable: [],
+      monthPointsTable: [],
+      gameStartTime: 'Mon 1PM / 5:30PM ET · Wed 1PM / 7PM ET · Sun 2PM / 6PM ET',
+      rulesDescription: 'Points = (1000 × √Runners / √Position) × (1 + log₁₀(BuyIn)). Top 9 scores counted per leaderboard. 6 cup leaderboards + 2 composite medals per quarter.',
+    },
+    backgroundImage: `${BASE}assets/backgrounds/donks-background.png`,
+  },
 }
 
 export function getLeagueConfig(slug: LeagueSlug): LeagueConfig {
