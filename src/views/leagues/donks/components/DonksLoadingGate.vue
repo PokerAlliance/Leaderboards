@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useDonksStore } from '@/composables/useDonksStore'
 import { DONKS_CUPS, DONKS_MEDALS } from '@/config/donks'
+import DonksHighLow from './DonksHighLow.vue'
 
 const store = useDonksStore()
 
@@ -11,7 +12,9 @@ const SLOW_THRESHOLD_MS = 3000
 const animationStarted = ref(0)
 const animationFinished = ref(false)
 const showSlowMessage = ref(false)
+const showGame = ref(false)
 let slowTimer: ReturnType<typeof setTimeout> | null = null
+let gameTimer: ReturnType<typeof setTimeout> | null = null
 
 const leaderboardNames = computed(() => [
   ...DONKS_CUPS.map((c) => c.shortName),
@@ -30,6 +33,7 @@ function startAnimation() {
   animationStarted.value = Date.now()
   currentMessage.value = 0
   showSlowMessage.value = false
+  showGame.value = false
 
   messageTimer = setInterval(() => {
     currentMessage.value = (currentMessage.value + 1) % progressMessages.length
@@ -38,6 +42,10 @@ function startAnimation() {
   slowTimer = setTimeout(() => {
     showSlowMessage.value = true
   }, SLOW_THRESHOLD_MS)
+
+  gameTimer = setTimeout(() => {
+    showGame.value = true
+  }, 1000)
 }
 
 function finishAnimation() {
@@ -53,6 +61,7 @@ function finishAnimation() {
 function cleanup() {
   if (messageTimer) { clearInterval(messageTimer); messageTimer = null }
   if (slowTimer) { clearTimeout(slowTimer); slowTimer = null }
+  if (gameTimer) { clearTimeout(gameTimer); gameTimer = null }
 }
 
 // Start animation when loading begins
@@ -123,6 +132,14 @@ onUnmounted(() => {
               Still loading... The first request may take a moment.
             </p>
           </Transition>
+
+          <!-- Higher or Lower mini-game -->
+          <Transition name="game-fade">
+            <div v-if="showGame" class="gate-game">
+              <p class="gate-game__prompt">While you wait...</p>
+              <DonksHighLow />
+            </div>
+          </Transition>
         </div>
       </div>
     </Transition>
@@ -146,8 +163,10 @@ onUnmounted(() => {
   inset: 0;
   z-index: 9999;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  overflow-y: auto;
+  padding: 3vh 0;
 }
 
 .gate-felt {
@@ -168,7 +187,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2.5rem;
+  gap: 1.5rem;
+  padding-top: 2rem;
 }
 
 /* Card fan animation */
@@ -289,6 +309,34 @@ onUnmounted(() => {
   color: rgba(255, 255, 255, 0.5);
   text-align: center;
 }
+
+/* Mini-game area */
+.gate-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem 1.25rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(201, 162, 39, 0.15);
+  width: 100%;
+  max-width: 340px;
+}
+
+.gate-game__prompt {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.game-fade-enter-active { transition: all 0.5s ease; }
+.game-fade-leave-active { transition: all 0.3s ease; }
+.game-fade-enter-from { opacity: 0; transform: translateY(12px); }
+.game-fade-leave-to { opacity: 0; }
 
 /* Slot content */
 .gate-slot {

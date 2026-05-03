@@ -10,6 +10,7 @@ import { format } from 'date-fns'
 
 const props = defineProps<{
   gameType: DonksGameType
+  cutoffDate?: Date | null
 }>()
 
 const emit = defineEmits<{
@@ -26,7 +27,7 @@ const AVATAR_R_TOP3 = 14
 
 const chartWrapper = ref<HTMLElement | null>(null)
 const svgRef = ref<SVGSVGElement | null>(null)
-const focusCount = ref(10)
+const focusCount = ref(5)
 const hoveredPlayer = ref<string | null>(null)
 const hoveredGameIdx = ref<number | null>(null)
 const animationKey = ref(0)
@@ -70,8 +71,17 @@ interface OvertakeEvent {
   newLeader: string
 }
 
+const filteredResults = computed(() => {
+  let results = store.playerResults.value.filter((r) => relevantCupSlugs.value.has(r.cupSlug))
+  if (props.cutoffDate) {
+    const cutoff = props.cutoffDate
+    results = results.filter((r) => r.gameDate <= cutoff)
+  }
+  return results
+})
+
 const gameSteps = computed<GameStep[]>(() => {
-  const results = store.playerResults.value.filter((r) => relevantCupSlugs.value.has(r.cupSlug))
+  const results = filteredResults.value
   const gameMap = new Map<string, DonksGame>()
   for (const r of results) {
     if (!gameMap.has(r.gameId)) {
@@ -104,7 +114,7 @@ const raceMatrix = computed(() => {
   const steps = gameSteps.value
   if (steps.length === 0) return { players: [], matrix: [], gamePoints: [] }
 
-  const results = store.playerResults.value.filter((r) => relevantCupSlugs.value.has(r.cupSlug))
+  const results = filteredResults.value
   const byGame = new Map<string, DonksPlayerResult[]>()
   for (const r of results) {
     if (!byGame.has(r.gameId)) byGame.set(r.gameId, [])
@@ -257,7 +267,7 @@ const yScale = computed(() => {
   return d3.scaleLinear().domain([0, maxPts * 1.08]).range([innerHeight.value, 0]).nice()
 })
 
-function linePath(points: (number | null)[]): string {
+function linePath(points: (number | null)[], username?: string): string {
   const lineGen = d3.line<[number, number]>()
     .x((d) => xScale.value(d[0]))
     .y((d) => yScale.value(d[1]))
@@ -267,6 +277,7 @@ function linePath(points: (number | null)[]): string {
   for (let i = 0; i < points.length; i++) {
     if (points[i] !== null) validPoints.push([i, points[i]!])
   }
+
   return lineGen(validPoints) ?? ''
 }
 
@@ -314,6 +325,7 @@ function resolveAvatarPositions() {
       }
     }
   }
+
   return positions
 }
 
@@ -421,10 +433,12 @@ function measurePathLengths() {
     if (key) map[key] = el.getTotalLength()
   })
   pathLengths.value = map
+
 }
 
 function getPathLength(username: string): number {
-  return pathLengths.value[username] ?? 1000
+  const measured = pathLengths.value[username]
+  return measured ?? 1000
 }
 
 function animationDelay(rank: number): number {
@@ -444,7 +458,13 @@ function animationDuration(rank: number): number {
 
 useResizeObserver(chartWrapper, (entries) => {
   const entry = entries[0]
-  if (entry) containerWidth.value = entry.contentRect.width
+  if (entry) {
+    const oldW = containerWidth.value
+    containerWidth.value = entry.contentRect.width
+    if (ready.value && Math.abs(oldW - entry.contentRect.width) > 5) {
+      nextTick(() => measurePathLengths())
+    }
+  }
 })
 
 // ─── Touch support ──────────────────────────────────────────────────────────
@@ -600,7 +620,7 @@ onMounted(() => {
             v-for="series in playerSeries"
             :key="'line-' + series.username"
             :data-username="series.username"
-            :d="linePath(series.points)"
+            :d="linePath(series.points, series.username)"
             fill="none"
             :stroke="series.finalRank <= 5 ? series.color : GHOST_COLOR"
             :stroke-width="getSeriesStyle(series).strokeWidth"

@@ -331,6 +331,39 @@ const allUsernames = computed(() => {
   return [...set].sort()
 })
 
+/**
+ * Build a leaderboard from an arbitrary pre-filtered set of results.
+ * Useful for views that apply their own cutoff filtering before scoring.
+ */
+function buildLeaderboardFromResults(results: DonksPlayerResult[]): DonksLeaderboardEntry[] {
+  return buildLeaderboard(results)
+}
+
+/**
+ * Build a leaderboard at a specific cutoff date with correct diff values.
+ * Diff = rank change compared to the leaderboard at the previous game date.
+ */
+function buildLeaderboardAtCutoff(
+  allResults: DonksPlayerResult[],
+  cutoffDate: Date,
+  allGamesForScope: DonksGame[]
+): DonksLeaderboardEntry[] {
+  const filtered = allResults.filter((r) => r.gameDate <= cutoffDate)
+  const gamesUpToCutoff = allGamesForScope
+    .filter((g) => g.gameDate <= cutoffDate)
+    .sort((a, b) => a.gameDate.getTime() - b.gameDate.getTime())
+
+  if (gamesUpToCutoff.length < 2) return buildLeaderboard(filtered)
+
+  const prevGame = gamesUpToCutoff[gamesUpToCutoff.length - 2]!
+  const prevResults = allResults.filter((r) => r.gameDate <= prevGame.gameDate)
+  const prevEntries = buildLeaderboard(prevResults)
+  const previousRanks: Record<string, number> = {}
+  for (const e of prevEntries) previousRanks[e.username] = e.rank
+
+  return buildLeaderboard(filtered, previousRanks)
+}
+
 // ─── Cup/Medal info pass-throughs ─────────────────────────────────────────────
 
 const cups = DONKS_CUPS
@@ -372,5 +405,7 @@ export function useDonksStore() {
     getDiff,
     getGamesForCup,
     getGameResults,
+    buildLeaderboardFromResults,
+    buildLeaderboardAtCutoff,
   }
 }

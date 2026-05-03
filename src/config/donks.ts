@@ -113,10 +113,10 @@ export const CUP_NAME_MAP: Record<string, DonksCupSlug> = {
 
 // ─── Data Cutoff ──────────────────────────────────────────────────────────────
 
-/** No data is tracked before this quarter. Quarter selector shows Q2 2026 as minimum. */
+/** No data is tracked before this quarter. Quarter selector shows Q4 2025 as minimum. */
 export const DATA_CUTOFF_QUARTER: DonksQuarterKey = {
-  quarter: 'Q2',
-  year: 2026,
+  quarter: 'Q4',
+  year: 2025,
 }
 
 // ─── Scoring Config ───────────────────────────────────────────────────────────
@@ -218,8 +218,8 @@ export function getSelectableQuarters(): DonksQuarterKey[] {
       quarter = quarterOrder[idx - 1]!
     }
 
-    // Safety: don't go before 2026
-    if (year < 2026) break
+    // Safety: don't go before 2025
+    if (year < 2025) break
   }
 
   return result

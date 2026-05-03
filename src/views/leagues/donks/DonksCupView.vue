@@ -46,9 +46,28 @@ const selectedQuarter = ref<DonksQuarterKey>(
   store.loadedQuarter.value ?? getCurrentDonksQuarter()
 )
 
-const cupEntries = computed(() =>
-  cup.value ? store.getCupLeaderboard(cup.value.slug) : []
-)
+const cutoffDate = computed<Date | null>(() => {
+  if (!selectedGameId.value || !cup.value) return null
+  const g = store.games.value.find((g) => g.gameId === selectedGameId.value)
+  return g?.gameDate ?? null
+})
+
+const isLatestSelected = computed(() => {
+  if (!cup.value || !selectedGameId.value) return true
+  const cupGames = store.getGamesForCup(cup.value.slug)
+  return cupGames.length > 0 && cupGames[0]!.gameId === selectedGameId.value
+})
+
+const cupEntries = computed(() => {
+  if (!cup.value) return []
+  if (!cutoffDate.value || isLatestSelected.value) {
+    return store.getCupLeaderboard(cup.value.slug)
+  }
+  const cutoff = cutoffDate.value
+  const allResults = store.playerResults.value.filter((r) => r.cupSlug === cup.value!.slug)
+  const allGames = store.games.value.filter((g) => g.cupSlug === cup.value!.slug)
+  return store.buildLeaderboardAtCutoff(allResults, cutoff, allGames)
+})
 
 const selectedGameId = ref<string | null>(null)
 const selectedTournamentId = ref<number | null>(null)
@@ -147,6 +166,7 @@ watch(() => props.cupSlug, () => {
             <DonksCompositeContextCard
               v-if="cup"
               :composite-slug="cup.compositeSlug"
+              :cutoff-date="isLatestSelected ? null : cutoffDate"
             />
           </div>
 
@@ -172,7 +192,12 @@ watch(() => props.cupSlug, () => {
         <section class="donks-cup__leaderboard donks-card">
           <div class="donks-cup__lb-header">
             <h2 class="donks-cup__lb-title">{{ cupName }} Leaderboard</h2>
-            <p class="donks-cup__lb-desc">Best 9 scores · This quarter</p>
+            <p class="donks-cup__lb-desc">
+              Best 9 scores · This quarter
+              <span v-if="cutoffDate && !isLatestSelected" class="donks-cup__cutoff-badge">
+                · Data up to {{ cutoffDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) }}
+              </span>
+            </p>
           </div>
           <DonksLeaderboardTable
             :entries="cupEntries"
@@ -320,6 +345,12 @@ watch(() => props.cupSlug, () => {
   margin: 0;
 }
 
+.donks-cup__cutoff-badge {
+  color: var(--color-donks-gold-dark);
+  font-weight: 600;
+  font-style: italic;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .donks-cup__grid {
@@ -331,8 +362,7 @@ watch(() => props.cupSlug, () => {
   }
 
   .donks-cup__header-top {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
   }
 }
 </style>

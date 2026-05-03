@@ -55,8 +55,8 @@ const backgroundStyle = computed(() => ({
         </div>
       </section>
 
-      <!-- Contact Row (outside hero card) -->
-      <div class="donks-home__contact-row">
+      <!-- Contact Row -->
+      <div class="donks-home__contact-row donks-home__frosted">
         <p class="donks-home__join-text">{{ HOW_TO_JOIN }}</p>
         <div class="donks-home__contact-links">
           <a
@@ -93,7 +93,7 @@ const backgroundStyle = computed(() => ({
       </section>
 
       <!-- Footer -->
-      <footer class="donks-home__footer">
+      <footer class="donks-home__footer donks-home__frosted">
         <div class="donks-home__footer-divider" />
         <RouterLink to="/" class="donks-btn donks-btn--outline donks-home__back">
           ← Back to Home
@@ -239,7 +239,16 @@ const backgroundStyle = computed(() => ({
   box-shadow: 0 5px 24px rgba(201, 162, 39, 0.4);
 }
 
-/* ─── Contact Row (outside hero card) ────────────────────── */
+/* ─── Frosted backdrop for elements on the background ──── */
+.donks-home__frosted {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(201, 162, 39, 0.15);
+  border-radius: 12px;
+}
+
+/* ─── Contact Row ──────────────────────────────────────── */
 .donks-home__contact-row {
   text-align: center;
   padding: 1.25rem 1rem;
@@ -247,7 +256,7 @@ const backgroundStyle = computed(() => ({
 
 .donks-home__join-text {
   font-size: 0.8rem;
-  color: var(--color-donks-text-muted);
+  color: var(--color-donks-text-secondary);
   margin-bottom: 0.6rem;
 }
 
@@ -286,7 +295,7 @@ const backgroundStyle = computed(() => ({
 .donks-home__footer-suits {
   color: var(--color-donks-gold);
   font-size: 1rem;
-  opacity: 0.35;
+  opacity: 0.55;
   letter-spacing: 0.5em;
 }
 

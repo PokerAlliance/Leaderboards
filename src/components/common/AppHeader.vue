@@ -1,8 +1,15 @@
 <script setup lang="ts">
   import { ref } from 'vue'
   import { RouterLink } from 'vue-router'
+  import { getCupsByGameType } from '@/config/donks'
 
   const isMobileMenuOpen = ref(false)
+  const donksOpen = ref(false)
+  const donksHoldemOpen = ref(false)
+  const donksOmahaOpen = ref(false)
+
+  const holdemCups = getCupsByGameType('holdem')
+  const omahaCups = getCupsByGameType('omaha')
 
   const toggleMobileMenu = () => {
     isMobileMenuOpen.value = !isMobileMenuOpen.value
@@ -10,6 +17,17 @@
 
   const closeMobileMenu = () => {
     isMobileMenuOpen.value = false
+    donksOpen.value = false
+    donksHoldemOpen.value = false
+    donksOmahaOpen.value = false
+  }
+
+  const toggleDonks = () => {
+    donksOpen.value = !donksOpen.value
+    if (!donksOpen.value) {
+      donksHoldemOpen.value = false
+      donksOmahaOpen.value = false
+    }
   }
 </script>
 
@@ -26,9 +44,93 @@
         <RouterLink to="/league/anarchy" class="app-header__link app-header__link--anarchy" @click="closeMobileMenu">
           Anarchy
         </RouterLink>
-        <RouterLink to="/league/donks" class="app-header__link app-header__link--donks" @click="closeMobileMenu">
-          The Donks
-        </RouterLink>
+        <!-- Desktop: hover dropdown; Mobile: accordion -->
+        <div class="app-header__link app-header__link--donks  donks-dropdown">
+          <RouterLink to="/league/donks" class="donks-dropdown__trigger" @click="closeMobileMenu">
+            The Donks <span class="donks-dropdown__caret">&#9662;</span>
+          </RouterLink>
+          <!-- Desktop flyout -->
+          <div class="donks-dropdown__menu">
+            <div class="donks-dropdown__group">
+              <RouterLink to="/league/donks/holdem" class="donks-dropdown__group-title" @click="closeMobileMenu">
+                ♠ Hold'em Leaderboards
+              </RouterLink>
+              <div class="donks-dropdown__submenu">
+                <RouterLink
+                  v-for="cup in holdemCups"
+                  :key="cup.slug"
+                  :to="{ name: 'donks-cup', params: { cupSlug: cup.slug } }"
+                  class="donks-dropdown__item"
+                  :style="{ '--cup-c': cup.color }"
+                  @click="closeMobileMenu"
+                >
+                  <span class="donks-dropdown__dot" />
+                  {{ cup.name }}
+                </RouterLink>
+              </div>
+            </div>
+            <div class="donks-dropdown__divider" />
+            <div class="donks-dropdown__group">
+              <RouterLink to="/league/donks/omaha" class="donks-dropdown__group-title" @click="closeMobileMenu">
+                ♦ Omaha Leaderboards
+              </RouterLink>
+              <div class="donks-dropdown__submenu">
+                <RouterLink
+                  v-for="cup in omahaCups"
+                  :key="cup.slug"
+                  :to="{ name: 'donks-cup', params: { cupSlug: cup.slug } }"
+                  class="donks-dropdown__item"
+                  :style="{ '--cup-c': cup.color }"
+                  @click="closeMobileMenu"
+                >
+                  <span class="donks-dropdown__dot" />
+                  {{ cup.name }}
+                </RouterLink>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile accordion (visible only in mobile open nav) -->
+        <div class="donks-accordion">
+          <button class="donks-accordion__trigger app-header__link app-header__link--donks" @click="toggleDonks">
+            The Donks <span class="donks-accordion__caret" :class="{ 'donks-accordion__caret--open': donksOpen }">&#9662;</span>
+          </button>
+          <div v-if="donksOpen" class="donks-accordion__body">
+            <button class="donks-accordion__sub-trigger" @click="donksHoldemOpen = !donksHoldemOpen">
+              ♠ Hold'em <span class="donks-accordion__caret" :class="{ 'donks-accordion__caret--open': donksHoldemOpen }">&#9662;</span>
+            </button>
+            <div v-if="donksHoldemOpen" class="donks-accordion__sub-body">
+              <RouterLink to="/league/donks/holdem" class="donks-accordion__link" @click="closeMobileMenu">All Hold'em</RouterLink>
+              <RouterLink
+                v-for="cup in holdemCups"
+                :key="cup.slug"
+                :to="{ name: 'donks-cup', params: { cupSlug: cup.slug } }"
+                class="donks-accordion__link"
+                :style="{ '--cup-c': cup.color }"
+                @click="closeMobileMenu"
+              >
+                <span class="donks-dropdown__dot" /> {{ cup.shortName }}
+              </RouterLink>
+            </div>
+            <button class="donks-accordion__sub-trigger" @click="donksOmahaOpen = !donksOmahaOpen">
+              ♦ Omaha <span class="donks-accordion__caret" :class="{ 'donks-accordion__caret--open': donksOmahaOpen }">&#9662;</span>
+            </button>
+            <div v-if="donksOmahaOpen" class="donks-accordion__sub-body">
+              <RouterLink to="/league/donks/omaha" class="donks-accordion__link" @click="closeMobileMenu">All Omaha</RouterLink>
+              <RouterLink
+                v-for="cup in omahaCups"
+                :key="cup.slug"
+                :to="{ name: 'donks-cup', params: { cupSlug: cup.slug } }"
+                class="donks-accordion__link"
+                :style="{ '--cup-c': cup.color }"
+                @click="closeMobileMenu"
+              >
+                <span class="donks-dropdown__dot" /> {{ cup.shortName }}
+              </RouterLink>
+            </div>
+          </div>
+        </div>
         <RouterLink to="/league/dreamweaver" class="app-header__link" @click="closeMobileMenu">
           Dreamweaver
         </RouterLink>
@@ -294,5 +396,177 @@
   .app-header__menu-btn--open .app-header__menu-icon::after {
     top: 0;
     transform: rotate(-45deg);
+  }
+
+  /* ─── Donks Desktop Dropdown ──────────────────────────── */
+  .donks-dropdown {
+    position: relative;
+  }
+
+  .donks-dropdown__caret {
+    font-size: 0.6em;
+    margin-left: 0.2em;
+    opacity: 0.6;
+    transition: transform 0.2s;
+  }
+
+  .donks-dropdown__menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 220px;
+    background: rgba(10, 15, 20, 0.97);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    animation: slideDown 0.2s ease-out;
+  }
+
+  .donks-dropdown:hover .donks-dropdown__menu {
+    display: block;
+  }
+
+  .donks-dropdown__group {
+    padding: 0.25rem 0;
+  }
+
+  .donks-dropdown__group-title {
+    display: block;
+    padding: 0.45rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #c9a227;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .donks-dropdown__group-title:hover {
+    background: rgba(212, 175, 55, 0.1);
+  }
+
+  .donks-dropdown__submenu {
+    padding-left: 0.5rem;
+  }
+
+  .donks-dropdown__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.35rem 1rem 0.35rem 1.2rem;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+
+  .donks-dropdown__item:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .donks-dropdown__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cup-c, #c9a227);
+    flex-shrink: 0;
+  }
+
+  .donks-dropdown__divider {
+    height: 1px;
+    margin: 0.3rem 0.75rem;
+    background: rgba(212, 175, 55, 0.15);
+  }
+
+  /* Hide desktop dropdown in mobile */
+  .donks-accordion {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .donks-accordion {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .donks-dropdown {
+      display: none;
+    }
+
+    .app-header__nav--open .donks-accordion {
+      display: block;
+      width: 100%;
+    }
+
+    .donks-accordion__trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .donks-accordion__caret {
+      font-size: 0.65em;
+      transition: transform 0.2s;
+      opacity: 0.6;
+    }
+
+    .donks-accordion__caret--open {
+      transform: rotate(180deg);
+    }
+
+    .donks-accordion__body {
+      padding-left: 1rem;
+    }
+
+    .donks-accordion__sub-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0.45rem 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #c9a227;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .donks-accordion__sub-body {
+      display: flex;
+      flex-direction: column;
+      padding-left: 0.75rem;
+      gap: 0.15rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .donks-accordion__link {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+
+    .donks-accordion__link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
   }
 </style>

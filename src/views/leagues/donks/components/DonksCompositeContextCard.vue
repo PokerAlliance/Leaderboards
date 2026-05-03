@@ -7,15 +7,25 @@ import { useDonksStore } from '@/composables/useDonksStore'
 
 const props = defineProps<{
   compositeSlug: DonksCompositeSlug
+  cutoffDate?: Date | null
 }>()
 
 const store = useDonksStore()
 
 const medal = computed(() => getDonksMedal(props.compositeSlug))
 
-const topEntries = computed(() =>
-  store.getCompositeLeaderboard(props.compositeSlug).slice(0, 10)
-)
+const topEntries = computed(() => {
+  if (props.cutoffDate) {
+    const medalInfo = medal.value
+    if (!medalInfo) return []
+    const cupSlugs = new Set(medalInfo.cupSlugs)
+    const cutoff = props.cutoffDate
+    const allResults = store.playerResults.value.filter((r) => cupSlugs.has(r.cupSlug))
+    const allGames = store.games.value.filter((g) => cupSlugs.has(g.cupSlug))
+    return store.buildLeaderboardAtCutoff(allResults, cutoff, allGames).slice(0, 10)
+  }
+  return store.getCompositeLeaderboard(props.compositeSlug).slice(0, 10)
+})
 
 const levelBRoute = computed(() =>
   props.compositeSlug === 'chuckcox'

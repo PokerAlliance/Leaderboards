@@ -80,6 +80,7 @@
   padding-left: 0.75rem;
   margin-bottom: var(--space-4);
   border-left: 3px solid var(--color-donks-gold);
+  text-shadow: 0 1px 4px rgba(245, 240, 232, 0.9);
 }
 
 /* Gold accent links */
@@ -153,11 +154,35 @@
   background: linear-gradient(135deg, var(--color-donks-gold) 0%, var(--color-donks-gold-light) 100%);
   color: #1a1a2e;
   box-shadow: 0 2px 12px rgba(201, 162, 39, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-donks .donks-btn--primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.45) 45%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.45) 55%,
+    transparent 65%
+  );
+  background-size: 250% 100%;
+  animation: goldSparkle 5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .theme-donks .donks-btn--primary:hover {
   box-shadow: 0 4px 20px rgba(201, 162, 39, 0.45);
   transform: translateY(-1px);
+}
+
+@keyframes goldSparkle {
+  0%, 100% { background-position: 200% center; }
+  50% { background-position: -200% center; }
 }
 
 .theme-donks .donks-btn--outline {

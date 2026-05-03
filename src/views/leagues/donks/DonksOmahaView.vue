@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { DonksQuarterKey } from '@/types/donks'
 import { getLeagueConfig } from '@/config/leagues'
-import { getCurrentDonksQuarter, getCupsByGameType, getMedalForGameType } from '@/config/donks'
+import { getCurrentDonksQuarter, getCupsByGameType, getMedalForGameType, DONKS_MEDALS } from '@/config/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
 import DonksLoadingGate from './components/DonksLoadingGate.vue'
 import DonksQuarterSelector from './components/DonksQuarterSelector.vue'
@@ -11,6 +11,7 @@ import DonksLeaderboardTable from './components/DonksLeaderboardTable.vue'
 import DonksCupCard from './components/DonksCupCard.vue'
 import DonksUserModal from './components/DonksUserModal.vue'
 import DonksRaceChart from './components/DonksRaceChart.vue'
+import DonksGameTypeTimeline from './components/DonksGameTypeTimeline.vue'
 
 const store = useDonksStore()
 const leagueConfig = getLeagueConfig('donks')
@@ -24,13 +25,28 @@ const selectedQuarter = ref<DonksQuarterKey>(
 
 const medal = getMedalForGameType('omaha')!
 const cups = getCupsByGameType('omaha')
+const omahaCupSlugs = new Set(DONKS_MEDALS.find((m) => m.gameType === 'omaha')!.cupSlugs)
 
-const compositeEntries = computed(() => store.getOmahaComposite())
+const timelineCutoffDate = ref<Date | null>(null)
+
+const compositeEntries = computed(() => {
+  if (!timelineCutoffDate.value) return store.getOmahaComposite()
+  const cutoff = timelineCutoffDate.value
+  const allResults = store.playerResults.value.filter((r) => omahaCupSlugs.has(r.cupSlug))
+  const allGames = store.games.value.filter((g) => omahaCupSlugs.has(g.cupSlug))
+  return store.buildLeaderboardAtCutoff(allResults, cutoff, allGames)
+})
+
 const cupEntries = computed(() =>
-  cups.map((cup) => ({
-    cup,
-    entries: store.getCupLeaderboard(cup.slug),
-  }))
+  cups.map((cup) => {
+    if (!timelineCutoffDate.value) {
+      return { cup, entries: store.getCupLeaderboard(cup.slug) }
+    }
+    const cutoff = timelineCutoffDate.value
+    const allResults = store.playerResults.value.filter((r) => r.cupSlug === cup.slug)
+    const allGames = store.games.value.filter((g) => g.cupSlug === cup.slug)
+    return { cup, entries: store.buildLeaderboardAtCutoff(allResults, cutoff, allGames) }
+  })
 )
 
 const selectedPlayer = ref<string | null>(null)
@@ -39,7 +55,12 @@ function onPlayerClick(username: string) {
   selectedPlayer.value = username
 }
 
+function onTimelineSelect(date: Date | null) {
+  timelineCutoffDate.value = date
+}
+
 watch(selectedQuarter, async (newQ) => {
+  timelineCutoffDate.value = null
   const loaded = store.loadedQuarter.value
   if (loaded && loaded.quarter === newQ.quarter && loaded.year === newQ.year) return
   await store.loadQuarter(newQ)
@@ -68,13 +89,27 @@ watch(selectedQuarter, async (newQ) => {
           <DonksQuarterSelector v-model="selectedQuarter" />
         </div>
 
+        <!-- Game-Type Timeline -->
+        <div class="donks-omaha__timeline donks-card">
+          <DonksGameTypeTimeline
+            game-type="omaha"
+            :selected-date="timelineCutoffDate"
+            @select="onTimelineSelect"
+          />
+        </div>
+
         <!-- Composite Medal Leaderboard -->
         <section class="donks-omaha__composite donks-card">
           <div class="composite-header">
             <div class="composite-icon">&#127941;</div>
             <div>
               <h2 class="composite-title">{{ medal.name }}</h2>
-              <p class="composite-desc">Best 9 scores across both PLO8 opens</p>
+              <p class="composite-desc">
+                Best 9 scores across both PLO8 opens
+                <span v-if="timelineCutoffDate" class="cutoff-badge">
+                  · Up to {{ timelineCutoffDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) }}
+                </span>
+              </p>
             </div>
           </div>
           <DonksLeaderboardTable
@@ -110,7 +145,7 @@ watch(selectedQuarter, async (newQ) => {
               <p class="race-desc">Cumulative best-9 total evolving game by game</p>
             </div>
           </div>
-          <DonksRaceChart game-type="omaha" @player-click="onPlayerClick" />
+          <DonksRaceChart game-type="omaha" :cutoff-date="timelineCutoffDate" @player-click="onPlayerClick" />
         </section>
         <!-- Player Modal -->
         <DonksUserModal
@@ -172,6 +207,18 @@ watch(selectedQuarter, async (newQ) => {
   font-size: 0.82rem;
   color: var(--color-donks-text-secondary);
   margin: 0;
+}
+
+/* Timeline */
+.donks-omaha__timeline {
+  padding: 0.5rem 1rem 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.cutoff-badge {
+  color: var(--color-donks-gold-dark);
+  font-weight: 600;
+  font-style: italic;
 }
 
 /* Composite Section */
@@ -266,8 +313,12 @@ watch(selectedQuarter, async (newQ) => {
   }
 
   .donks-omaha__header {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .donks-omaha__header-left {
+    width: 100%;
+    order: 1;
   }
 
   .donks-omaha__composite {

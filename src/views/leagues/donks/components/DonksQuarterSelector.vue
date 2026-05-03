@@ -45,7 +45,7 @@ function onChange(event: Event) {
       </select>
       <span class="quarter-sel__arrow">&#9662;</span>
     </div>
-    <span class="quarter-sel__note">Results available from Q2 2026 onwards</span>
+    <span class="quarter-sel__note">Results available from Q4 2025 onwards</span>
   </div>
 </template>
 
