@@ -267,7 +267,7 @@ const yScale = computed(() => {
   return d3.scaleLinear().domain([0, maxPts * 1.08]).range([innerHeight.value, 0]).nice()
 })
 
-function linePath(points: (number | null)[], username?: string): string {
+function linePath(points: (number | null)[]): string {
   const lineGen = d3.line<[number, number]>()
     .x((d) => xScale.value(d[0]))
     .y((d) => yScale.value(d[1]))
@@ -620,7 +620,7 @@ onMounted(() => {
             v-for="series in playerSeries"
             :key="'line-' + series.username"
             :data-username="series.username"
-            :d="linePath(series.points, series.username)"
+            :d="linePath(series.points)"
             fill="none"
             :stroke="series.finalRank <= 5 ? series.color : GHOST_COLOR"
             :stroke-width="getSeriesStyle(series).strokeWidth"
