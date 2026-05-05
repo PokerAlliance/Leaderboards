@@ -82,10 +82,6 @@
             <span class="league-card__stat-value">{{ league.teamCount }}</span>
             <span class="league-card__stat-label">Teams</span>
           </div>
-          <div v-else class="league-card__stat">
-            <span class="league-card__stat-value">?</span>
-            <span class="league-card__stat-label">Teams</span>
-          </div>
 
           <div v-if="league.nextGame && !isComingSoon" class="league-card__next">
             <span class="league-card__next-label">Next:</span>
