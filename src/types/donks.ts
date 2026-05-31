@@ -120,6 +120,85 @@ export interface DonksGameResultEntry {
   pointsEarned: number
 }
 
+// ─── Hall of Fame (Phase 2) ────────────────────────────────────────────────────
+
+export interface DonksHallOfFameEntry {
+  username: string
+  goldenCrowns: number
+  silverCrowns: number
+  bronzeCrowns: number
+  annualChampionship: number
+  tournamentOfChampions: number
+  allDonksInPlayoffs: number
+  omaha: number
+}
+
+// ─── All-Time Games Played (Phase 2) ───────────────────────────────────────────
+
+export interface DonksGamesPlayedEntry {
+  username: string
+  allTimeGamesPlayed: number
+}
+
+// ─── Playoffs (Phase 2) ────────────────────────────────────────────────────────
+
+export type DonksPlayoffPhase =
+  | 'pre_playoffs'
+  | 'playoffs_active'
+  | 'playoffs_complete'
+  | 'no_data'
+
+export interface DonksPlayoffQualifier {
+  username: string
+  qualifiedVia: DonksCupSlug | 'omaha_wildcard'
+  /** The player's rank in the qualifying cup at the cutoff snapshot */
+  qualifyingRank: number
+  /** Points in qualifying cup at cutoff */
+  qualifyingPoints: number
+}
+
+export interface DonksPlayoffLeaderboardEntry {
+  rank: number
+  username: string
+  /** Sum of best 2 playoff scores */
+  totalPoints: number
+  /** Number of playoff games played (0–4) */
+  gamesPlayed: number
+  /** Individual scores in each playoff game, keyed by gameId */
+  gameScores: Record<string, number>
+}
+
+export interface DonksPlayoffGameSummary {
+  gameId: string
+  gameDate: Date
+  cupSlug: DonksCupSlug
+  totalPlayers: number
+  /** Number of qualifiers who played in this game */
+  qualifiersPlayed: number
+  isLocked: boolean
+}
+
+export interface DonksPlayoffState {
+  phase: DonksPlayoffPhase
+  qualifiers: DonksPlayoffQualifier[]
+  /** The 4 games in the playoff window (some may not be locked yet) */
+  playoffGames: DonksPlayoffGameSummary[]
+  /** Playoff leaderboard — only populated when at least 1 playoff game is locked */
+  leaderboard: DonksPlayoffLeaderboardEntry[]
+  /** The game_id of the last regular-season game (cutoff for qualification) */
+  cutoffGameId: string | null
+}
+
+export interface DonksPlayoffConfig {
+  qualifiersPerCup: number
+  omahaWildCards: number
+  topNScores: number
+  playoffGames: number
+  medalName: string
+  medalShortName: string
+  medalColor: string
+}
+
 // ─── Store Shape ──────────────────────────────────────────────────────────────
 
 /** The full payload returned by GET_DONKS_DATA and cached in useDonksStore */
@@ -129,6 +208,10 @@ export interface DonksStoreData {
   avatarMap: Record<string, string>
   /** keyed by DonksCupSlug — recent/live/upcoming tournament info */
   recentTournaments: Partial<Record<DonksCupSlug, DonksRecentTournament>>
+  /** Phase 2: all-time award winners */
+  hallOfFame: DonksHallOfFameEntry[]
+  /** Phase 2: all-time games-played counters for every player */
+  gamesPlayedAllTime: DonksGamesPlayedEntry[]
 }
 
 // ─── Lock Payload ─────────────────────────────────────────────────────────────

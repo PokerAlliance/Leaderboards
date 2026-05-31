@@ -107,6 +107,15 @@ function getMedalRoute(medal: DonksMedalConfig) {
         </RouterLink>
       </div>
     </div>
+
+    <!-- Hall of Fame -->
+    <div class="diagram__divider" />
+    <RouterLink to="/league/donks/hall-of-fame" class="diagram__hof-node">
+      <span class="diagram__hof-icon">&#127942;</span>
+      <span class="diagram__hof-name">Hall of Fame</span>
+      <span class="diagram__hof-sub">All-time award winners</span>
+      <span class="diagram__medal-hint">View Hall of Fame →</span>
+    </RouterLink>
   </div>
 </template>
 
@@ -375,6 +384,65 @@ function getMedalRoute(medal: DonksMedalConfig) {
   height: 1px;
   margin: 1.5rem 2rem;
   background: linear-gradient(90deg, transparent, var(--color-donks-card-border), transparent);
+}
+
+/* Hall of Fame node */
+.diagram__hof-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem 1.5rem 0.85rem;
+  background: linear-gradient(
+    145deg,
+    rgba(201, 162, 39, 0.12) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(201, 162, 39, 0.08) 100%
+  );
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(201, 162, 39, 0.4);
+  border-top: 3px solid var(--color-donks-gold);
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--color-donks-text);
+  box-shadow: 0 4px 20px rgba(201, 162, 39, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  text-align: center;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.diagram__hof-node:hover {
+  box-shadow: 0 6px 28px rgba(201, 162, 39, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+  border-color: var(--color-donks-gold);
+}
+
+.diagram__hof-icon {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+  filter: drop-shadow(0 2px 4px rgba(201, 162, 39, 0.3));
+}
+
+.diagram__hof-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-donks-gold-dark);
+}
+
+.diagram__hof-sub {
+  font-size: 0.65rem;
+  color: var(--color-donks-text-muted);
+  margin-top: 0.1rem;
+}
+
+.diagram__hof-node:hover .diagram__medal-hint {
+  opacity: 0.8;
 }
 
 /* Responsive */

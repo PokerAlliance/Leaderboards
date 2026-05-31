@@ -52,6 +52,9 @@ const backgroundStyle = computed(() => ({
           <RouterLink to="/league/donks/omaha" class="donks-btn donks-btn--primary donks-hero__cta">
             ♦ Omaha Leaderboards
           </RouterLink>
+          <RouterLink to="/league/donks/hall-of-fame" class="donks-btn donks-btn--outline donks-hero__cta">
+            Hall of Fame
+          </RouterLink>
         </div>
       </section>
 

@@ -118,19 +118,22 @@ export const appScriptClient = {
    *   - Player results from donks_results_{year} sheet
    *   - Member avatars from Replay API league JSON
    *   - Recent/live tournament metadata from Replay API
+   *   - Hall of Fame award history
+   *   - All-time games-played counters
    */
   async getDonksData(quarter: DonksQuarter, year: number): Promise<DonksStoreData> {
     const raw = await fetchFromAppScript<{
       playerResults: Array<Record<string, unknown>>
       avatarMap: Record<string, string>
       recentTournaments: Record<string, unknown>
+      hallOfFame: Array<Record<string, unknown>>
+      gamesPlayedAllTime: Array<Record<string, unknown>>
     }>({
       action: 'GET_DONKS_DATA',
       quarter,
       year: String(year),
     })
 
-    // Normalise playerResults: coerce strings to proper types
     const playerResults = (raw.playerResults ?? []).map((r) => ({
       gameId: String(r.game_id ?? ''),
       gameDate: new Date(String(r.game_date ?? '')),
@@ -144,10 +147,28 @@ export const appScriptClient = {
       lockedAt: new Date(String(r.locked_at ?? '')),
     }))
 
+    const hallOfFame = (raw.hallOfFame ?? []).map((r) => ({
+      username: String(r.username ?? ''),
+      goldenCrowns: Number(r.golden_crowns ?? 0),
+      silverCrowns: Number(r.silver_crowns ?? 0),
+      bronzeCrowns: Number(r.bronze_crowns ?? 0),
+      annualChampionship: Number(r.annual_championship ?? 0),
+      tournamentOfChampions: Number(r.tournament_of_champions ?? 0),
+      allDonksInPlayoffs: Number(r.all_donks_in_playoffs ?? 0),
+      omaha: Number(r.omaha ?? 0),
+    }))
+
+    const gamesPlayedAllTime = (raw.gamesPlayedAllTime ?? []).map((r) => ({
+      username: String(r.username ?? ''),
+      allTimeGamesPlayed: Number(r.all_time_games_played ?? 0),
+    }))
+
     return {
       playerResults,
       avatarMap: raw.avatarMap ?? {},
       recentTournaments: (raw.recentTournaments ?? {}) as DonksStoreData['recentTournaments'],
+      hallOfFame,
+      gamesPlayedAllTime,
     }
   },
 

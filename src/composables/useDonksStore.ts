@@ -17,6 +17,8 @@ import type {
   DonksQuarterKey,
   DonksCupSlug,
   DonksCompositeSlug,
+  DonksHallOfFameEntry,
+  DonksGamesPlayedEntry,
 } from '@/types/donks'
 import { DONKS_CUPS, DONKS_MEDALS, TOP_N_SCORES, getCurrentDonksQuarter, quarterLabel } from '@/config/donks'
 import { calculateTopN, getCountedGameIds } from '@/services/scoring/strategies/donks'
@@ -33,6 +35,8 @@ const loadedQuarter = ref<DonksQuarterKey | null>(null)
 const _playerResults = ref<DonksPlayerResult[]>([])
 const _avatarMap = ref<Record<string, string>>({})
 const _recentTournaments = ref<DonksStoreData['recentTournaments']>({})
+const _hallOfFame = ref<DonksHallOfFameEntry[]>([])
+const _gamesPlayedAllTime = ref<DonksGamesPlayedEntry[]>([])
 
 // ─── Derived: Games List ──────────────────────────────────────────────────────
 
@@ -277,6 +281,8 @@ function populateStore(data: DonksStoreData): void {
   _playerResults.value = data.playerResults
   _avatarMap.value = data.avatarMap
   _recentTournaments.value = data.recentTournaments
+  _hallOfFame.value = data.hallOfFame
+  _gamesPlayedAllTime.value = data.gamesPlayedAllTime
 }
 
 /**
@@ -364,6 +370,53 @@ function buildLeaderboardAtCutoff(
   return buildLeaderboard(filtered, previousRanks)
 }
 
+// ─── Phase 2: Hall of Fame & Games Played Queries ─────────────────────────────
+
+const HALL_OF_FAME_WEIGHTS = {
+  goldenCrowns: 10,
+  silverCrowns: 5,
+  bronzeCrowns: 2,
+  annualChampionship: 8,
+  tournamentOfChampions: 6,
+  allDonksInPlayoffs: 4,
+  omaha: 3,
+} as const
+
+function computeMerit(e: DonksHallOfFameEntry): number {
+  return (e.goldenCrowns * HALL_OF_FAME_WEIGHTS.goldenCrowns)
+    + (e.silverCrowns * HALL_OF_FAME_WEIGHTS.silverCrowns)
+    + (e.bronzeCrowns * HALL_OF_FAME_WEIGHTS.bronzeCrowns)
+    + (e.annualChampionship * HALL_OF_FAME_WEIGHTS.annualChampionship)
+    + (e.tournamentOfChampions * HALL_OF_FAME_WEIGHTS.tournamentOfChampions)
+    + (e.allDonksInPlayoffs * HALL_OF_FAME_WEIGHTS.allDonksInPlayoffs)
+    + (e.omaha * HALL_OF_FAME_WEIGHTS.omaha)
+}
+
+/** Full hall of fame list, sorted by weighted merit score (descending) */
+function getHallOfFame(): DonksHallOfFameEntry[] {
+  return [..._hallOfFame.value].sort((a, b) => computeMerit(b) - computeMerit(a))
+}
+
+/** Lookup all-time games played for a single player */
+function getAllTimeGamesPlayed(username: string): number {
+  const entry = _gamesPlayedAllTime.value.find((e) => e.username === username)
+  return entry?.allTimeGamesPlayed ?? 0
+}
+
+/** Full map for batch lookups (e.g. leaderboard table rendering) */
+function getGamesPlayedMap(): Map<string, number> {
+  const map = new Map<string, number>()
+  for (const e of _gamesPlayedAllTime.value) {
+    map.set(e.username, e.allTimeGamesPlayed)
+  }
+  return map
+}
+
+/** Check if a player has any Hall of Fame awards, returns entry or null */
+function getHallOfFameEntry(username: string): DonksHallOfFameEntry | null {
+  return _hallOfFame.value.find((e) => e.username === username) ?? null
+}
+
 // ─── Cup/Medal info pass-throughs ─────────────────────────────────────────────
 
 const cups = DONKS_CUPS
@@ -384,6 +437,8 @@ export function useDonksStore() {
     playerResults: _playerResults,
     avatarMap: _avatarMap,
     recentTournaments: _recentTournaments,
+    hallOfFame: _hallOfFame,
+    gamesPlayedAllTime: _gamesPlayedAllTime,
 
     // Config
     cups,
@@ -407,5 +462,11 @@ export function useDonksStore() {
     getGameResults,
     buildLeaderboardFromResults,
     buildLeaderboardAtCutoff,
+
+    // Phase 2 queries
+    getHallOfFame,
+    getAllTimeGamesPlayed,
+    getGamesPlayedMap,
+    getHallOfFameEntry,
   }
 }

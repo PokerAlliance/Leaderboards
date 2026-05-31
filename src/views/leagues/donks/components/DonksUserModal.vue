@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import type { DonksGameType, DonksCupSlug, DonksLeaderboardEntry, DonksGameHistory } from '@/types/donks'
+import type { DonksGameType, DonksCupSlug, DonksLeaderboardEntry, DonksGameHistory, DonksHallOfFameEntry } from '@/types/donks'
 import { getCupsByGameType } from '@/config/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
 
@@ -44,6 +44,9 @@ const tabHistory = computed<DonksGameHistory[]>(() => {
   if (!props.username || !activeTab.value) return []
   return store.getPlayerHistory(props.username, activeTab.value)
 })
+
+const allTimeGames = computed(() => store.getAllTimeGamesPlayed(props.username ?? ''))
+const hofEntry = computed<DonksHallOfFameEntry | null>(() => store.getHallOfFameEntry(props.username ?? ''))
 
 watch(
   () => props.username,
@@ -107,6 +110,24 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
                 {{ formatPoints(playerCompositeEntry.totalPoints) }} pts
               </span>
               <span v-else class="modal-header__rank">Not ranked</span>
+            </div>
+          </div>
+
+          <!-- All-Time Stats -->
+          <div v-if="allTimeGames > 0 || hofEntry" class="modal-section modal-section--stats">
+            <div class="modal-stats-row">
+              <div v-if="allTimeGames > 0" class="modal-stat">
+                <span class="modal-stat__value">{{ allTimeGames.toLocaleString() }}</span>
+                <span class="modal-stat__label">All-Time Games</span>
+              </div>
+              <div v-if="hofEntry" class="modal-stat modal-stat--hof">
+                <span class="modal-stat__value">Hall of Fame</span>
+                <span class="modal-stat__label">
+                  {{ hofEntry.goldenCrowns + hofEntry.silverCrowns + hofEntry.bronzeCrowns
+                     + hofEntry.annualChampionship + hofEntry.tournamentOfChampions
+                     + hofEntry.allDonksInPlayoffs + hofEntry.omaha }} awards
+                </span>
+              </div>
             </div>
           </div>
 
@@ -265,6 +286,53 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
   font-size: 0.8rem;
   color: var(--color-donks-text-secondary);
   font-weight: 600;
+}
+
+/* All-Time Stats */
+.modal-section--stats {
+  margin-bottom: 1.25rem;
+}
+
+.modal-stats-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.modal-stat {
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(201, 162, 39, 0.06);
+  border: 1px solid rgba(201, 162, 39, 0.12);
+}
+
+.modal-stat__value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-donks-text);
+}
+
+.modal-stat__label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-donks-text-muted);
+}
+
+.modal-stat--hof {
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.1) 0%, rgba(201, 162, 39, 0.04) 100%);
+  border-color: rgba(201, 162, 39, 0.25);
+}
+
+.modal-stat--hof .modal-stat__value {
+  color: var(--color-donks-gold, #c9a227);
 }
 
 /* Section */
