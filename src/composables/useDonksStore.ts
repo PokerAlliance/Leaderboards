@@ -19,9 +19,12 @@ import type {
   DonksCompositeSlug,
   DonksHallOfFameEntry,
   DonksGamesPlayedEntry,
+  DonksPlayoffState,
+  DonksPlayoffConfig,
 } from '@/types/donks'
-import { DONKS_CUPS, DONKS_MEDALS, TOP_N_SCORES, getCurrentDonksQuarter, quarterLabel } from '@/config/donks'
+import { DONKS_CUPS, DONKS_MEDALS, DONKS_PLAYOFF_DEFAULTS, TOP_N_SCORES, getCurrentDonksQuarter, quarterLabel } from '@/config/donks'
 import { calculateTopN, getCountedGameIds } from '@/services/scoring/strategies/donks'
+import { computePlayoffState } from '@/services/scoring/playoffs'
 import { appScriptClient } from '@/services/appscript'
 
 // ─── Module-Level State ───────────────────────────────────────────────────────
@@ -37,6 +40,7 @@ const _avatarMap = ref<Record<string, string>>({})
 const _recentTournaments = ref<DonksStoreData['recentTournaments']>({})
 const _hallOfFame = ref<DonksHallOfFameEntry[]>([])
 const _gamesPlayedAllTime = ref<DonksGamesPlayedEntry[]>([])
+const _playoffConfig = ref<Partial<DonksPlayoffConfig> | null>(null)
 
 // ─── Derived: Games List ──────────────────────────────────────────────────────
 
@@ -59,6 +63,19 @@ const games = computed<DonksGame[]>(() => {
   }
   return result.sort((a, b) => a.gameDate.getTime() - b.gameDate.getTime())
 })
+
+// ─── Derived: Effective Playoff Config ───────────────────────────────────────
+
+const effectivePlayoffConfig = computed<DonksPlayoffConfig>(() => ({
+  ...DONKS_PLAYOFF_DEFAULTS,
+  ...(_playoffConfig.value ?? {}),
+}))
+
+// ─── Derived: Playoff State ──────────────────────────────────────────────────
+
+const playoffState = computed<DonksPlayoffState>(() =>
+  computePlayoffState(_playerResults.value, games.value, effectivePlayoffConfig.value)
+)
 
 // ─── Core Leaderboard Computation ────────────────────────────────────────────
 
@@ -283,6 +300,7 @@ function populateStore(data: DonksStoreData): void {
   _recentTournaments.value = data.recentTournaments
   _hallOfFame.value = data.hallOfFame
   _gamesPlayedAllTime.value = data.gamesPlayedAllTime
+  _playoffConfig.value = data.playoffConfig
 }
 
 /**
@@ -417,6 +435,12 @@ function getHallOfFameEntry(username: string): DonksHallOfFameEntry | null {
   return _hallOfFame.value.find((e) => e.username === username) ?? null
 }
 
+// ─── Phase 2: Playoffs ────────────────────────────────────────────────────────
+
+function getPlayoffState(): DonksPlayoffState {
+  return playoffState.value
+}
+
 // ─── Cup/Medal info pass-throughs ─────────────────────────────────────────────
 
 const cups = DONKS_CUPS
@@ -468,5 +492,9 @@ export function useDonksStore() {
     getAllTimeGamesPlayed,
     getGamesPlayedMap,
     getHallOfFameEntry,
+
+    // Phase 2: Playoffs
+    getPlayoffState,
+    effectivePlayoffConfig,
   }
 }

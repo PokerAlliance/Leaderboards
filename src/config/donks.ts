@@ -12,6 +12,7 @@ import type {
   DonksQuarterKey,
   DonksQuarter,
   DonksGameType,
+  DonksPlayoffConfig,
 } from '@/types/donks'
 
 // ─── Cup Definitions ──────────────────────────────────────────────────────────
@@ -126,6 +127,21 @@ export const TOP_N_SCORES = 9
 
 /** Constant buy-in value used in points formula */
 export const DONKS_BUY_IN = 100_000
+
+// ─── Playoff Config ──────────────────────────────────────────────────────────
+
+export const DONKS_PLAYOFF_DEFAULTS: DonksPlayoffConfig = {
+  qualifiersPerCup: 15,
+  omahaWildCards: 3,
+  topNScores: 2,
+  playoffGames: 4,
+  medalName: 'The FatnSassy Playoffs Medal',
+  medalShortName: 'Playoffs',
+  medalColor: '#d4a017',
+}
+
+export const HOLDEM_CUP_SLUGS: ReadonlySet<DonksCupSlug> =
+  new Set(DONKS_MEDALS.find((m) => m.gameType === 'holdem')!.cupSlugs)
 
 // ─── Static Content ───────────────────────────────────────────────────────────
 

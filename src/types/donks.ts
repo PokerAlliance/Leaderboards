@@ -212,6 +212,8 @@ export interface DonksStoreData {
   hallOfFame: DonksHallOfFameEntry[]
   /** Phase 2: all-time games-played counters for every player */
   gamesPlayedAllTime: DonksGamesPlayedEntry[]
+  /** Phase 2: sheet-configurable playoff parameters (null if sheet missing) */
+  playoffConfig: Partial<DonksPlayoffConfig> | null
 }
 
 // ─── Lock Payload ─────────────────────────────────────────────────────────────

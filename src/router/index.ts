@@ -78,6 +78,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/leagues/donks/DonksHallOfFameView.vue'),
     meta: { donksRoute: true },
   },
+  {
+    path: '/league/donks/playoffs',
+    name: 'donks-playoffs',
+    component: () => import('@/views/leagues/donks/DonksPlayoffsView.vue'),
+    meta: { donksRoute: true },
+  },
 
   // Muckers League — parent layout wraps Vanta.js background across all sub-routes
   {

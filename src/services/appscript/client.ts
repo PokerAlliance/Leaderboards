@@ -128,6 +128,7 @@ export const appScriptClient = {
       recentTournaments: Record<string, unknown>
       hallOfFame: Array<Record<string, unknown>>
       gamesPlayedAllTime: Array<Record<string, unknown>>
+      playoffConfig: Record<string, unknown> | null
     }>({
       action: 'GET_DONKS_DATA',
       quarter,
@@ -163,12 +164,20 @@ export const appScriptClient = {
       allTimeGamesPlayed: Number(r.all_time_games_played ?? 0),
     }))
 
+    const playoffConfig = raw.playoffConfig ? {
+      qualifiersPerCup: Number(raw.playoffConfig.qualifiers_per_cup ?? 15),
+      omahaWildCards: Number(raw.playoffConfig.omaha_wild_cards ?? 3),
+      topNScores: Number(raw.playoffConfig.top_n_scores ?? 2),
+      playoffGames: Number(raw.playoffConfig.playoff_games ?? 4),
+    } : null
+
     return {
       playerResults,
       avatarMap: raw.avatarMap ?? {},
       recentTournaments: (raw.recentTournaments ?? {}) as DonksStoreData['recentTournaments'],
       hallOfFame,
       gamesPlayedAllTime,
+      playoffConfig,
     }
   },
 
