@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useMuckersStore } from '@/composables/useMuckersStore'
 import { MUCKERS_GAME_SLOTS, MUCKERS_SCHEDULE } from '@/config/muckers'
 import type { MuckersTeamSlug, MuckersWeekData, MuckersPrimarySlot } from '@/types/muckers'
@@ -33,7 +33,7 @@ function getSlotGame(slot: MuckersPrimarySlot) {
 function ordinal(n: number): string {
   const s = ['th', 'st', 'nd', 'rd']
   const v = n % 100
-  return n + (s[(v - 20) % 10] || s[v] || s[0])
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0] ?? 'th')
 }
 
 function updatePosition() {
