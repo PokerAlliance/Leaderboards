@@ -44,6 +44,9 @@
         <RouterLink to="/league/anarchy" class="app-header__link app-header__link--anarchy" @click="closeMobileMenu">
           Anarchy
         </RouterLink>
+        <RouterLink to="/league/muckers" class="app-header__link app-header__link--muckers" @click="closeMobileMenu">
+          Muckers
+        </RouterLink>
         <!-- Desktop: hover dropdown; Mobile: accordion -->
         <div class="app-header__link app-header__link--donks  donks-dropdown">
           <RouterLink to="/league/donks" class="donks-dropdown__trigger" @click="closeMobileMenu">
@@ -317,6 +320,23 @@
   .app-header__link--anarchy.router-link-active {
     color: #ef4444;
     background: rgba(239, 68, 68, 0.1);
+  }
+
+  .app-header__link--muckers {
+    color: #00B4D8;
+  }
+
+  .app-header__link--muckers:hover {
+    color: #48CAE4;
+  }
+
+  .app-header__link--muckers::after {
+    background: #00B4D8;
+  }
+
+  .app-header__link--muckers.router-link-active {
+    color: #00B4D8;
+    background: rgba(0, 180, 216, 0.1);
   }
 
   .app-header__link--donks {

@@ -6,6 +6,7 @@
 import { ofetch } from 'ofetch'
 import type { ApiLeagueResponse, ApiTournamentResponse } from '@/types'
 import type { DonksStoreData, DonksQuarter } from '@/types/donks'
+import type { MuckersStoreData, MuckersQuarter } from '@/types/muckers'
 
 function getAppScriptUrl(): string | null {
   const url = import.meta.env.VITE_APPSCRIPT_URL as string | undefined
@@ -147,6 +148,60 @@ export const appScriptClient = {
       playerResults,
       avatarMap: raw.avatarMap ?? {},
       recentTournaments: (raw.recentTournaments ?? {}) as DonksStoreData['recentTournaments'],
+    }
+  },
+
+  /**
+   * Fetch all Muckers league data for a specific quarter.
+   * Calls GET_MUCKERS_DATA on AppScript which aggregates:
+   *   - Game summaries from muckers_games sheet
+   *   - Player results from muckers_player_results sheet
+   *   - Team roster from muckers_teams sheet
+   *   - Member avatars from Replay API league JSON
+   */
+  async getMuckersData(quarter: MuckersQuarter, year: number): Promise<MuckersStoreData> {
+    const raw = await fetchFromAppScript<{
+      games: Array<Record<string, unknown>>
+      playerResults: Array<Record<string, unknown>>
+      teams: Array<Record<string, unknown>>
+      avatarMap: Record<string, string>
+    }>({
+      action: 'GET_MUCKERS_DATA',
+      quarter,
+      year: String(year),
+    })
+
+    const games = (raw.games ?? []).map((r) => ({
+      gameId: String(r.game_id ?? ''),
+      tournamentId: Number(r.tournament_id ?? 0),
+      gameDate: new Date(String(r.game_date ?? '')),
+      gameSlot: String(r.game_slot ?? '') as import('@/types/muckers').MuckersPrimarySlot,
+      totalPlayers: Number(r.total_players ?? 0),
+      lockedBy: String(r.locked_by ?? ''),
+      lockedAt: new Date(String(r.locked_at ?? '')),
+    }))
+
+    const playerResults = (raw.playerResults ?? []).map((r) => ({
+      gameId: String(r.game_id ?? ''),
+      username: String(r.username ?? ''),
+      teamSlug: String(r.team_slug ?? '') as import('@/types/muckers').MuckersTeamSlug,
+      finishPosition: Number(r.finish_position ?? 0),
+      pointsEarned: Number(r.points_earned ?? 0),
+      gameSlot: String(r.game_slot ?? '') as import('@/types/muckers').MuckersPrimarySlot,
+    }))
+
+    const teams = (raw.teams ?? []).map((r) => ({
+      username: String(r.username ?? ''),
+      teamSlug: String(r.team_slug ?? '') as import('@/types/muckers').MuckersTeamSlug,
+      isCaptain: Boolean(r.is_captain),
+      isActive: Boolean(r.is_active),
+    }))
+
+    return {
+      games,
+      playerResults,
+      teams,
+      avatarMap: raw.avatarMap ?? {},
     }
   },
 }

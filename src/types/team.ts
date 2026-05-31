@@ -3,7 +3,7 @@
  */
 
 export type DreamweaverTeamSlug = 'pirates' | 'con' | 'outlaws' | 'renegades'
-export type LeagueSlug = 'dreamweaver' | 'tpp' | 'fpl' | 'anarchy' | 'donks'
+export type LeagueSlug = 'dreamweaver' | 'tpp' | 'fpl' | 'anarchy' | 'donks' | 'muckers'
 
 export interface Team {
   id: string

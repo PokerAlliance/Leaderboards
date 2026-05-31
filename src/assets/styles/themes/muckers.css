@@ -1,0 +1,392 @@
+/* Muckers League Theme — "Frost Circuit"
+ * Futuristic PRO League / GTO Analyst aesthetic
+ *
+ * Color Palette:
+ * - Base: Cool ice-white surfaces with frosted glass cards
+ * - Primary accent: Electric cyan (analytical, data-viz)
+ * - Secondary: Deep navy (headers, authority)
+ * - Tertiary: Violet (highlights, badges, interactive)
+ * - Text: Blue-black charcoal for maximum readability
+ *
+ * Aesthetic: High-tech poker HUD meets esports analytics dashboard
+ */
+
+:root {
+  /* Muckers base surface */
+  --color-mk-bg: #F4F6FA;
+  --color-mk-bg-alt: #EDF0F7;
+
+  /* Primary — electric cyan */
+  --color-mk-cyan: #00B4D8;
+  --color-mk-cyan-light: #48CAE4;
+  --color-mk-cyan-dark: #0096B7;
+
+  /* Secondary — deep navy */
+  --color-mk-navy: #1B2A4A;
+  --color-mk-navy-light: #2D3F65;
+
+  /* Tertiary — violet */
+  --color-mk-violet: #7C3AED;
+  --color-mk-violet-light: #A78BFA;
+
+  /* Semantic */
+  --color-mk-success: #10B981;
+  --color-mk-danger: #EF4444;
+  --color-mk-gold: #D4AF37;
+
+  /* Text (blue-black undertone) */
+  --color-mk-text: #0F172A;
+  --color-mk-text-secondary: #475569;
+  --color-mk-text-muted: #94A3B8;
+
+  /* Card surfaces (frosted glass) */
+  --color-mk-card-bg: rgba(255, 255, 255, 0.85);
+  --color-mk-card-bg-hover: rgba(255, 255, 255, 0.92);
+  --color-mk-card-border: rgba(100, 120, 160, 0.20);
+  --shadow-mk-card: 0 4px 24px rgba(15, 23, 42, 0.08),
+                     0 0 0 1px rgba(100, 120, 160, 0.12);
+  --shadow-mk-card-hover: 0 8px 32px rgba(15, 23, 42, 0.12),
+                           0 0 0 1px rgba(0, 180, 216, 0.25);
+
+  /* Team colors */
+  --color-mk-team-maniac_muckers: #E05D1B;
+  --color-mk-team-moosicians: #2563EB;
+  --color-mk-team-barnstormers: #DC2626;
+  --color-mk-team-final_straw: #CA8A04;
+  --color-mk-team-desperados: #0F766E;
+  --color-mk-team-shameless: #9333EA;
+  --color-mk-team-mucker_luckers: #16A34A;
+  --color-mk-team-howlers: #B45309;
+  --color-mk-team-cobra_chickens: #1D4ED8;
+}
+
+.theme-muckers {
+  --league-primary: var(--color-mk-bg);
+  --league-secondary: var(--color-mk-bg-alt);
+  --league-accent: var(--color-mk-cyan);
+  color: var(--color-mk-text);
+}
+
+/* Card styling — frosted glass panels */
+.theme-muckers .mk-card {
+  background: var(--color-mk-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-mk-card-border);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-mk-card);
+  color: var(--color-mk-text);
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.theme-muckers .mk-card:hover {
+  box-shadow: var(--shadow-mk-card-hover);
+  background: var(--color-mk-card-bg-hover);
+}
+
+/* Section headers — clean, analytical */
+.theme-muckers .mk-section-title {
+  font-family: var(--font-display);
+  color: var(--color-mk-navy);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  border-bottom: 2px solid var(--color-mk-cyan);
+  padding-bottom: var(--space-2);
+  padding-left: 0.75rem;
+  margin-bottom: var(--space-4);
+  border-left: 3px solid var(--color-mk-cyan);
+}
+
+/* Links — cyan accent */
+.theme-muckers a {
+  color: var(--color-mk-cyan-dark);
+  transition: color 0.2s ease;
+}
+
+.theme-muckers a:hover {
+  color: var(--color-mk-cyan);
+}
+
+/* Badges */
+.theme-muckers .mk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.theme-muckers .mk-badge--cyan {
+  background: linear-gradient(135deg, #00B4D8 0%, #48CAE4 100%);
+  color: #fff;
+}
+
+.theme-muckers .mk-badge--navy {
+  background: linear-gradient(135deg, #1B2A4A 0%, #2D3F65 100%);
+  color: #fff;
+}
+
+.theme-muckers .mk-badge--violet {
+  background: linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%);
+  color: #fff;
+}
+
+.theme-muckers .mk-badge--muted {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--color-mk-text-muted);
+}
+
+/* Rank diff indicators */
+.theme-muckers .mk-diff--up {
+  color: var(--color-mk-success);
+  font-weight: 700;
+}
+
+.theme-muckers .mk-diff--down {
+  color: var(--color-mk-danger);
+  font-weight: 700;
+}
+
+.theme-muckers .mk-diff--same {
+  color: var(--color-mk-text-muted);
+}
+
+.theme-muckers .mk-diff--new {
+  color: var(--color-mk-violet);
+  font-weight: 700;
+}
+
+/* Buttons */
+.theme-muckers .mk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.65em 1.5em;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s ease;
+}
+
+.theme-muckers .mk-btn--primary {
+  background: linear-gradient(135deg, var(--color-mk-cyan) 0%, var(--color-mk-cyan-light) 100%);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(0, 180, 216, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-muckers .mk-btn--primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 45%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.35) 55%,
+    transparent 65%
+  );
+  background-size: 250% 100%;
+  animation: mk-shimmer 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.theme-muckers .mk-btn--primary:hover {
+  box-shadow: 0 4px 20px rgba(0, 180, 216, 0.45);
+  transform: translateY(-1px);
+}
+
+@keyframes mk-shimmer {
+  0%, 100% { background-position: 200% center; }
+  50% { background-position: -200% center; }
+}
+
+.theme-muckers .mk-btn--outline {
+  background: transparent;
+  color: var(--color-mk-navy);
+  border: 1.5px solid var(--color-mk-card-border);
+}
+
+.theme-muckers .mk-btn--outline:hover {
+  background: rgba(0, 180, 216, 0.06);
+  border-color: var(--color-mk-cyan);
+  color: var(--color-mk-cyan-dark);
+}
+
+/* Datatable styling */
+.theme-muckers .mk-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+
+.theme-muckers .mk-table th {
+  color: var(--color-mk-text-muted);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 2px solid rgba(100, 120, 160, 0.15);
+  text-align: left;
+}
+
+.theme-muckers .mk-table th.mk-th--clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.theme-muckers .mk-table th.mk-th--clickable:hover {
+  color: var(--color-mk-cyan);
+}
+
+.theme-muckers .mk-table td {
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid rgba(100, 120, 160, 0.08);
+  vertical-align: middle;
+}
+
+.theme-muckers .mk-table tr:hover td {
+  background: rgba(0, 180, 216, 0.03);
+}
+
+/* Podium accents (1st/2nd/3rd row) */
+.theme-muckers .mk-table tr.mk-row--1st td:first-child {
+  border-left: 3px solid var(--color-mk-gold);
+}
+
+.theme-muckers .mk-table tr.mk-row--2nd td:first-child {
+  border-left: 3px solid #94A3B8;
+}
+
+.theme-muckers .mk-table tr.mk-row--3rd td:first-child {
+  border-left: 3px solid #B45309;
+}
+
+/* Score cell popover */
+.theme-muckers .mk-popover {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(100, 120, 160, 0.18);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12),
+              0 0 0 1px rgba(0, 180, 216, 0.10);
+  padding: 1rem 1.25rem;
+}
+
+.theme-muckers .mk-popover__title {
+  font-weight: 700;
+  color: var(--color-mk-navy);
+  font-size: 0.85rem;
+}
+
+.theme-muckers .mk-popover__subtitle {
+  color: var(--color-mk-cyan-dark);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+/* Modal overlay */
+.theme-muckers .mk-modal-overlay {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.theme-muckers .mk-modal-panel {
+  background: var(--color-mk-bg);
+  border: 1px solid var(--color-mk-card-border);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18),
+              0 0 0 1px rgba(0, 180, 216, 0.08);
+}
+
+.theme-muckers .mk-modal-panel__header {
+  border-bottom: 2px solid rgba(0, 180, 216, 0.15);
+  padding: 1.25rem 1.5rem;
+}
+
+.theme-muckers .mk-modal-panel__header h2 {
+  color: var(--color-mk-navy);
+  font-weight: 700;
+}
+
+/* Background overlay for pages */
+.theme-muckers .mk-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.theme-muckers .mk-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(244, 246, 250, 0.82) 0%,
+    rgba(244, 246, 250, 0.75) 40%,
+    rgba(244, 246, 250, 0.85) 100%
+  );
+}
+
+/* Subtle circuit-trace decorative lines on cards */
+.theme-muckers .mk-card--accent {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-muckers .mk-card--accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-mk-cyan) 30%,
+    var(--color-mk-violet-light) 70%,
+    transparent 100%
+  );
+  opacity: 0.6;
+}
+
+/* Team color row accents */
+.theme-muckers .mk-team-row {
+  border-left: 3px solid var(--team-color, var(--color-mk-cyan));
+}
+
+.theme-muckers .mk-team-row:hover {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--team-color, var(--color-mk-cyan)) 6%, transparent) 0%,
+    transparent 40%
+  );
+}
+
+/* Frosted glass container — more transparent than .mk-card for layering over Vanta backgrounds */
+.theme-muckers .mk-glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(100, 120, 160, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+}

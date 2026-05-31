@@ -134,6 +134,26 @@ export const LEAGUES: Record<LeagueSlug, LeagueConfig> = {
     },
     backgroundImage: `${BASE}assets/backgrounds/donks-background.png`,
   },
+  muckers: {
+    slug: 'muckers',
+    name: 'Barnyard Muckers',
+    shortName: 'Muckers',
+    replayLeagueId: 35,
+    scoringStrategy: 'muckers',
+    seasonType: 'quarterly',
+    gameFormat: 'sng',
+    gameDays: ['thursday', 'friday', 'saturday'],
+    theme: 'muckers',
+    description: 'Team-based SNG league where teams of up to 6 compete across 3 weekly tables for quarterly supremacy.',
+    isActive: true,
+    scoringRules: {
+      pointsTable: [25, 18, 16, 14, 12, 10, 8, 6, 4, 2],
+      monthPointsTable: [],
+      gameStartTime: 'Thu 7PM · Fri 10AM · Sat 1PM EST',
+      rulesDescription: 'Points awarded by finishing position (1st: 25, 2nd: 18, 3rd: 16...). Each team fields 3 different players per week. Quarterly champion = highest cumulative team total.',
+    },
+    backgroundImage: `${BASE}assets/backgrounds/muckers-background.png`,
+  },
 }
 
 export function getLeagueConfig(slug: LeagueSlug): LeagueConfig {

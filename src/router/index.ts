@@ -2,11 +2,14 @@ import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-rou
 import { useAuth } from '@/composables'
 import { useDonksStore } from '@/composables/useDonksStore'
 import { getCurrentDonksQuarter } from '@/config/donks'
+import { useMuckersStore } from '@/composables/useMuckersStore'
+import { getCurrentMuckersQuarter } from '@/config/muckers'
 
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
     donksRoute?: boolean
+    muckersRoute?: boolean
   }
 }
 
@@ -68,6 +71,37 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/leagues/donks/DonksCupView.vue'),
     props: true,
     meta: { donksRoute: true },
+  },
+
+  // Muckers League — parent layout wraps Vanta.js background across all sub-routes
+  {
+    path: '/league/muckers',
+    component: () => import('@/views/leagues/muckers/MuckersLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'muckers-home',
+        component: () => import('@/views/leagues/muckers/MuckersHomeView.vue'),
+      },
+      {
+        path: 'standings',
+        name: 'muckers-standings',
+        component: () => import('@/views/leagues/muckers/MuckersLeagueView.vue'),
+        meta: { muckersRoute: true },
+      },
+      {
+        path: 'players',
+        name: 'muckers-players',
+        component: () => import('@/views/leagues/muckers/MuckersPlayerStandingsView.vue'),
+        meta: { muckersRoute: true },
+      },
+      {
+        path: 'teams',
+        name: 'muckers-teams',
+        component: () => import('@/views/leagues/muckers/MuckersTeamsView.vue'),
+        meta: { muckersRoute: true },
+      },
+    ],
   },
 
   // TPP League - Coming Soon
@@ -142,6 +176,16 @@ router.beforeEach(async (to, _from, next) => {
       // store.isLoading to display the animated loading screen.
       store.loadQuarter(getCurrentDonksQuarter()).catch((err) => {
         console.error('[router] Donks data load failed:', err)
+      })
+    }
+  }
+
+  // Muckers guard: kick off data load when entering any Muckers route
+  if (to.meta.muckersRoute) {
+    const store = useMuckersStore()
+    if (!store.loadedQuarter.value) {
+      store.loadQuarter(getCurrentMuckersQuarter()).catch((err) => {
+        console.error('[router] Muckers data load failed:', err)
       })
     }
   }

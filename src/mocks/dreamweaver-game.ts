@@ -475,6 +475,16 @@ export const mockLeagues: MockLeague[] = [
     themeColor: '#c9a227',
   },
   {
+    slug: 'muckers',
+    name: 'Barnyard Muckers',
+    description: 'Team-based SNG league with 9 teams competing across 3 weekly tables for quarterly supremacy.',
+    teamCount: 9,
+    format: 'Team SNG',
+    isActive: true,
+    isNew: true,
+    themeColor: '#00B4D8',
+  },
+  {
     slug: 'dreamweaver',
     name: 'Dreamweavers',
     description: 'Team poker league with 4 legendary teams competing weekly.',

@@ -1,0 +1,5 @@
+export { default as MuckersLayout } from './MuckersLayout.vue'
+export { default as MuckersHomeView } from './MuckersHomeView.vue'
+export { default as MuckersLeagueView } from './MuckersLeagueView.vue'
+export { default as MuckersPlayerStandingsView } from './MuckersPlayerStandingsView.vue'
+export { default as MuckersTeamsView } from './MuckersTeamsView.vue'
