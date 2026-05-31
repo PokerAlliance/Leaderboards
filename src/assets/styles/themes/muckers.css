@@ -37,7 +37,7 @@
   /* Text (blue-black undertone) */
   --color-mk-text: #0F172A;
   --color-mk-text-secondary: #475569;
-  --color-mk-text-muted: #94A3B8;
+  --color-mk-text-muted: #64748B;
 
   /* Card surfaces (frosted glass) */
   --color-mk-card-bg: rgba(255, 255, 255, 0.85);

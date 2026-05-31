@@ -106,7 +106,7 @@ function podiumClass(rank: number): string {
 /* ─── Headers ────────────────────── */
 
 .mk-ptable th {
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   text-transform: uppercase;
   font-size: 0.65rem;
   font-weight: 700;
@@ -198,7 +198,7 @@ function podiumClass(rank: number): string {
 
 /* Podium accents */
 .mk-row--1st .mk-ptd--rank { color: #D4AF37; }
-.mk-row--2nd .mk-ptd--rank { color: #94A3B8; }
+.mk-row--2nd .mk-ptd--rank { color: #64748B; }
 .mk-row--3rd .mk-ptd--rank { color: #B45309; }
 
 /* ─── Player Cell ────────────────── */
@@ -235,7 +235,7 @@ function podiumClass(rank: number): string {
 
 .mk-player-cell__team {
   font-size: 0.65rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   line-height: 1.2;
 }
 
@@ -252,7 +252,7 @@ function podiumClass(rank: number): string {
 }
 
 .mk-score--empty {
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   font-weight: 400;
 }
 
@@ -277,7 +277,7 @@ function podiumClass(rank: number): string {
 
 .mk-total-cell__avg {
   font-size: 0.6rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
 }
 
 /* ─── Games Played ───────────────── */

@@ -42,6 +42,7 @@ const _games = ref<MuckersGame[]>([])
 const _playerResults = ref<MuckersPlayerResult[]>([])
 const _teams = ref<MuckersTeamRoster[]>([])
 const _avatarMap = ref<Record<string, string>>({})
+const _weekOffset = ref(0)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -67,12 +68,21 @@ function getQuarterStart(): Date {
   return getMuckersQuarterDateRange(q).start
 }
 
-/** Build a gameId → weekNumber lookup map */
+/** Build a gameId → weekNumber lookup map (normalised so first played week = 1) */
 function buildGameWeekMap(): Map<string, number> {
   const qStart = getQuarterStart()
   const map = new Map<string, number>()
   for (const g of _games.value) {
     map.set(g.gameId, getWeekNumber(g.gameDate, qStart))
+  }
+  const rawWeeks = [...map.values()]
+  const minWeek = rawWeeks.length > 0 ? Math.min(...rawWeeks) : 1
+  const offset = minWeek - 1
+  _weekOffset.value = offset
+  if (offset > 0) {
+    for (const [id, wk] of map) {
+      map.set(id, wk - offset)
+    }
   }
   return map
 }
@@ -86,15 +96,16 @@ function buildGameMap(): Map<string, MuckersGame> {
   return map
 }
 
-/** Get the Thursday date for a given week number */
+/** Get the Thursday date for a given (normalised) week number */
 function getWeekStartDate(weekNumber: number): Date {
+  const actualWeek = weekNumber + _weekOffset.value
   const qStart = getQuarterStart()
   const firstThursday = new Date(qStart)
   while (firstThursday.getDay() !== 4) {
     firstThursday.setDate(firstThursday.getDate() + 1)
   }
   const d = new Date(firstThursday)
-  d.setDate(d.getDate() + (weekNumber - 1) * 7)
+  d.setDate(d.getDate() + (actualWeek - 1) * 7)
   return d
 }
 
@@ -478,6 +489,7 @@ export function useMuckersStore() {
 
     // Queries
     getWeekDetail,
+    getWeekStartDate,
     getTeamDetail,
     getAvatar,
     getTeamMemberCount,

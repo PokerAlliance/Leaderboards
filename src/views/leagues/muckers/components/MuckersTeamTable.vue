@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useMuckersStore } from '@/composables/useMuckersStore'
 import { getMuckersTeam } from '@/config/teams'
 import type { MuckersTeamStanding, MuckersTeamSlug } from '@/types/muckers'
@@ -91,12 +91,23 @@ function onTeamClick(slug: MuckersTeamSlug) {
   selectedTeamSlug.value = slug
 }
 
+const scrollRef = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+  nextTick(() => {
+    const el = scrollRef.value
+    if (el && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft = el.scrollWidth - el.clientWidth
+    }
+  })
+})
+
 onBeforeUnmount(() => { clearTimers() })
 </script>
 
 <template>
   <div class="mk-table-wrapper mk-glass">
-    <div class="mk-table-scroll">
+    <div ref="scrollRef" class="mk-table-scroll">
       <table class="mk-table">
         <thead>
           <tr>
@@ -211,7 +222,7 @@ onBeforeUnmount(() => { clearTimers() })
 /* ─── Headers ────────────────────────────── */
 
 .mk-table th {
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   text-transform: uppercase;
   font-size: 0.68rem;
   font-weight: 700;
@@ -281,7 +292,7 @@ onBeforeUnmount(() => { clearTimers() })
 }
 
 .mk-row--2nd td:first-child {
-  border-left: 3px solid #94A3B8;
+  border-left: 3px solid #64748B;
 }
 
 .mk-row--3rd td:first-child {
@@ -337,7 +348,7 @@ onBeforeUnmount(() => { clearTimers() })
 
 .mk-team-cell__members {
   font-size: 0.68rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
 }
 
 /* ─── Week Score Cells ───────────────────── */
@@ -354,7 +365,7 @@ onBeforeUnmount(() => { clearTimers() })
 }
 
 .mk-score--empty {
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   font-weight: 400;
 }
 
@@ -379,7 +390,7 @@ onBeforeUnmount(() => { clearTimers() })
 
 .mk-total-cell__avg {
   font-size: 0.65rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
 }
 
 /* ─── Diff Cell ──────────────────────────── */

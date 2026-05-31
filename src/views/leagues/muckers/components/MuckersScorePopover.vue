@@ -155,7 +155,7 @@ onMounted(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #94A3B8;
+  color: #64748B;
   margin-bottom: 0.2rem;
 }
 
@@ -192,7 +192,7 @@ onMounted(() => {
 
 .mk-popover__pos {
   font-size: 0.68rem;
-  color: #94A3B8;
+  color: #64748B;
   white-space: nowrap;
 }
 

@@ -94,7 +94,7 @@ function onSelect(event: Event) {
   position: absolute;
   right: 0.65rem;
   font-size: 0.6rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   pointer-events: none;
 }
 </style>

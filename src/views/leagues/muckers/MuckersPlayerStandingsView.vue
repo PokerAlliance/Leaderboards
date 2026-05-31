@@ -88,7 +88,7 @@ const store = useMuckersStore()
 
 .mk-players__subtitle {
   font-size: 0.78rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   margin: 0;
 }
 

@@ -163,7 +163,7 @@ const accentColor = computed(() => teamConfig.value?.color ?? '#64748B')
   display: flex;
   gap: 0.75rem;
   font-size: 0.72rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   flex-wrap: wrap;
 }
 
@@ -189,14 +189,14 @@ const accentColor = computed(() => teamConfig.value?.color ?? '#64748B')
 
 .mk-tcard__points-label {
   font-size: 0.6rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
 .mk-tcard__rank {
   font-size: 0.68rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   font-weight: 600;
   margin-top: 0.15rem;
 }
@@ -277,13 +277,13 @@ const accentColor = computed(() => teamConfig.value?.color ?? '#64748B')
 }
 
 .mk-tcard__member-gp {
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   font-size: 0.7rem;
   white-space: nowrap;
 }
 
 .mk-tcard__member-avg {
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   font-size: 0.65rem;
   white-space: nowrap;
 }

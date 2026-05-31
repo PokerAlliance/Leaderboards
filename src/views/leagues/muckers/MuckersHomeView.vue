@@ -5,7 +5,6 @@ import {
   MUCKERS_POINTS_TABLE,
   MUCKERS_SCHEDULE,
   LEAGUE_DESCRIPTION,
-  RULES_SUMMARY,
 } from '@/config/muckers'
 
 const pointsEntries = computed(() =>
@@ -46,6 +45,13 @@ const localSchedule = computed(() =>
     }
   })
 )
+
+function podiumClass(pos: number): string {
+  if (pos === 1) return 'mk-bp__pts-cell--gold'
+  if (pos === 2) return 'mk-bp__pts-cell--silver'
+  if (pos === 3) return 'mk-bp__pts-cell--bronze'
+  return ''
+}
 </script>
 
 <template>
@@ -83,53 +89,7 @@ const localSchedule = computed(() =>
         </div>
       </section>
 
-      <!-- How It Works -->
-      <section class="mk-card mk-home__section">
-        <h2 class="mk-section-title">How It Works</h2>
-        <div class="mk-home__how-grid">
-          <div class="mk-home__how-item">
-            <div class="mk-home__how-icon">3</div>
-            <h3 class="mk-home__how-label">Games Per Week</h3>
-            <p class="mk-home__how-desc">Thursday, Friday &amp; Saturday tables run each week throughout the quarter.</p>
-          </div>
-          <div class="mk-home__how-item">
-            <div class="mk-home__how-icon">1</div>
-            <h3 class="mk-home__how-label">Player Per Team</h3>
-            <p class="mk-home__how-desc">Each team fields one player per table. No player can play twice in the same week.</p>
-          </div>
-          <div class="mk-home__how-item">
-            <div class="mk-home__how-icon">+</div>
-            <h3 class="mk-home__how-label">Points Per Finish</h3>
-            <p class="mk-home__how-desc">Points are awarded by finishing position. Team totals accumulate across the quarter.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Scoring Table -->
-      <section class="mk-card mk-home__section">
-        <h2 class="mk-section-title">Scoring Table</h2>
-        <div class="mk-home__scoring-grid">
-          <div
-            v-for="entry in pointsEntries"
-            :key="entry.position"
-            class="mk-home__scoring-cell"
-            :class="{
-              'mk-home__scoring-cell--gold': entry.position === 1,
-              'mk-home__scoring-cell--silver': entry.position === 2,
-              'mk-home__scoring-cell--bronze': entry.position === 3,
-            }"
-          >
-            <span class="mk-home__scoring-pos">{{ ordinal(entry.position) }}</span>
-            <span class="mk-home__scoring-pts">{{ entry.points }}</span>
-            <span class="mk-home__scoring-label">pts</span>
-          </div>
-        </div>
-        <p class="mk-home__scoring-note">
-          Team's weekly total = sum of 3 players' scores. Quarterly champion = highest cumulative team total.
-        </p>
-      </section>
-
-      <!-- Schedule -->
+      <!-- Schedule (moved here, right below hero) -->
       <section class="mk-card mk-home__section">
         <h2 class="mk-section-title">Weekly Schedule</h2>
         <div class="mk-home__schedule">
@@ -151,15 +111,104 @@ const localSchedule = computed(() =>
         </div>
       </section>
 
-      <!-- Rules -->
-      <section class="mk-card mk-home__section">
-        <h2 class="mk-section-title">Rules</h2>
-        <ul class="mk-home__rules">
-          <li v-for="(rule, i) in RULES_SUMMARY" :key="i" class="mk-home__rules-item">
-            <span class="mk-home__rules-marker" />
-            {{ rule }}
-          </li>
-        </ul>
+      <!-- League Blueprint -->
+      <section class="mk-card mk-home__section mk-bp">
+        <h2 class="mk-section-title">League Blueprint</h2>
+
+        <div class="mk-bp__flow">
+          <!-- Stage 1: The Teams -->
+          <div class="mk-bp__stage">
+            <div class="mk-bp__stage-card">
+              <h3 class="mk-bp__stage-heading">The Teams</h3>
+              <p class="mk-bp__stage-text">
+                9 teams compete, each with up to 6 members.
+                Every week, teams select 3 different players &mdash; one for each table.
+                No player may repeat in the same week.
+              </p>
+            </div>
+          </div>
+
+          <div class="mk-bp__connector">
+            <span class="mk-bp__node" />
+          </div>
+
+          <!-- Stage 2: Weekly Tables -->
+          <div class="mk-bp__stage">
+            <div class="mk-bp__stage-card">
+              <h3 class="mk-bp__stage-heading">Weekly Tables</h3>
+              <div class="mk-bp__tables-grid">
+                <div class="mk-bp__table-mini">
+                  <span class="mk-bp__table-badge">A</span>
+                  <span class="mk-bp__table-day">Thursday</span>
+                  <span class="mk-bp__table-time">7:00 PM EST</span>
+                </div>
+                <div class="mk-bp__table-mini">
+                  <span class="mk-bp__table-badge">B</span>
+                  <span class="mk-bp__table-day">Friday</span>
+                  <span class="mk-bp__table-time">10:00 AM EST</span>
+                </div>
+                <div class="mk-bp__table-mini">
+                  <span class="mk-bp__table-badge">D</span>
+                  <span class="mk-bp__table-day">Saturday</span>
+                  <span class="mk-bp__table-time">1:00 PM EST</span>
+                </div>
+              </div>
+              <p class="mk-bp__stage-note">1 player per team per table &middot; 9 players per game</p>
+            </div>
+          </div>
+
+          <div class="mk-bp__connector">
+            <span class="mk-bp__node" />
+          </div>
+
+          <!-- Stage 3: Scoring -->
+          <div class="mk-bp__stage">
+            <div class="mk-bp__stage-card">
+              <h3 class="mk-bp__stage-heading">Points Per Finish</h3>
+              <div class="mk-bp__pts-grid">
+                <div
+                  v-for="entry in pointsEntries"
+                  :key="entry.position"
+                  class="mk-bp__pts-cell"
+                  :class="podiumClass(entry.position)"
+                >
+                  <span class="mk-bp__pts-pos">{{ ordinal(entry.position) }}</span>
+                  <span class="mk-bp__pts-val">{{ entry.points }}</span>
+                </div>
+              </div>
+              <p class="mk-bp__stage-note">Team weekly total = sum of 3 players' scores</p>
+            </div>
+          </div>
+
+          <div class="mk-bp__connector">
+            <span class="mk-bp__node" />
+          </div>
+
+          <!-- Stage 4: Champion -->
+          <div class="mk-bp__stage">
+            <div class="mk-bp__stage-card mk-bp__stage-card--champion">
+              <h3 class="mk-bp__stage-heading">Quarterly Champion</h3>
+              <p class="mk-bp__stage-text">
+                Points stack across every week of the quarter.
+                The team with the highest cumulative total at season end is crowned champion.
+                Season resets at the start of each new quarter.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Founders Tribute -->
+      <section class="mk-card mk-home__founders">
+        <div class="mk-founders__ornament">&diams;</div>
+        <span class="mk-founders__label">Founded by</span>
+        <h3 class="mk-founders__name">John Danner</h3>
+        <span class="mk-founders__handle">12beat22</span>
+        <p class="mk-founders__tribute">From a simple idea to nine teams strong.</p>
+        <div class="mk-founders__divider">
+          <span>Co-Organizers</span>
+        </div>
+        <p class="mk-founders__co">Saratogatom &middot; Mystrygirl &middot; MCCats</p>
       </section>
 
       <!-- Footer -->
@@ -280,148 +329,6 @@ const localSchedule = computed(() =>
   padding: 2rem 2rem;
 }
 
-/* ─── How It Works ─────────────────────────────── */
-
-.mk-home__how-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
-@media (max-width: 640px) {
-  .mk-home__how-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.mk-home__how-item {
-  text-align: center;
-  padding: 1rem;
-}
-
-.mk-home__how-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(0, 180, 216, 0.12) 0%, rgba(124, 58, 237, 0.08) 100%);
-  border: 1.5px solid rgba(0, 180, 216, 0.2);
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--color-mk-cyan-dark);
-  margin-bottom: 0.75rem;
-}
-
-.mk-home__how-label {
-  font-weight: 700;
-  color: var(--color-mk-navy);
-  font-size: 0.95rem;
-  margin-bottom: 0.4rem;
-}
-
-.mk-home__how-desc {
-  font-size: 0.82rem;
-  color: var(--color-mk-text-secondary);
-  line-height: 1.5;
-}
-
-/* ─── Scoring Table ────────────────────────────── */
-
-.mk-home__scoring-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-@media (max-width: 640px) {
-  .mk-home__scoring-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 380px) {
-  .mk-home__scoring-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.mk-home__scoring-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  padding: 0.75rem 0.5rem;
-  background: rgba(15, 23, 42, 0.03);
-  border: 1px solid rgba(100, 120, 160, 0.1);
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
-
-.mk-home__scoring-cell:hover {
-  background: rgba(0, 180, 216, 0.06);
-  border-color: rgba(0, 180, 216, 0.2);
-}
-
-.mk-home__scoring-cell--gold {
-  background: rgba(212, 175, 55, 0.08);
-  border-color: rgba(212, 175, 55, 0.25);
-}
-
-.mk-home__scoring-cell--silver {
-  background: rgba(148, 163, 184, 0.08);
-  border-color: rgba(148, 163, 184, 0.25);
-}
-
-.mk-home__scoring-cell--bronze {
-  background: rgba(180, 83, 9, 0.08);
-  border-color: rgba(180, 83, 9, 0.2);
-}
-
-.mk-home__scoring-pos {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-mk-text-muted);
-}
-
-.mk-home__scoring-pts {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--color-mk-navy);
-  line-height: 1;
-}
-
-.mk-home__scoring-label {
-  font-size: 0.6rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-mk-text-muted);
-}
-
-.mk-home__scoring-cell--gold .mk-home__scoring-pts {
-  color: var(--color-mk-gold);
-}
-
-.mk-home__scoring-cell--silver .mk-home__scoring-pts {
-  color: #64748B;
-}
-
-.mk-home__scoring-cell--bronze .mk-home__scoring-pts {
-  color: #B45309;
-}
-
-.mk-home__scoring-note {
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--color-mk-text-muted);
-  font-style: italic;
-}
-
 /* ─── Schedule ─────────────────────────────────── */
 
 .mk-home__schedule {
@@ -507,33 +414,309 @@ const localSchedule = computed(() =>
   color: var(--color-mk-text-muted);
 }
 
-/* ─── Rules ────────────────────────────────────── */
+/* ─── League Blueprint ────────────────────────── */
 
-.mk-home__rules {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.mk-bp {
+  padding: 2rem 2rem 2.5rem;
+}
+
+.mk-bp__flow {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  align-items: center;
+  position: relative;
 }
 
-.mk-home__rules-item {
+.mk-bp__connector {
   display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  font-size: 0.88rem;
-  color: var(--color-mk-text);
-  line-height: 1.5;
+  align-items: center;
+  justify-content: center;
+  width: 2px;
+  height: 32px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 180, 216, 0.15),
+    rgba(0, 180, 216, 0.35)
+  );
+  position: relative;
 }
 
-.mk-home__rules-marker {
-  flex-shrink: 0;
-  width: 6px;
-  height: 6px;
+.mk-bp__node {
+  position: absolute;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: var(--color-mk-cyan);
-  margin-top: 0.45rem;
+  background: var(--color-mk-cyan, #00B4D8);
+  border: 2px solid #fff;
+  box-shadow: 0 0 6px rgba(0, 180, 216, 0.3);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.mk-bp__stage {
+  width: 100%;
+}
+
+.mk-bp__stage-card {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(100, 120, 160, 0.12);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  transition: border-color 0.2s ease;
+}
+
+.mk-bp__stage-card:hover {
+  border-color: rgba(0, 180, 216, 0.2);
+}
+
+.mk-bp__stage-card--champion {
+  border-bottom: 2px solid rgba(212, 175, 55, 0.35);
+}
+
+.mk-bp__stage-heading {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-mk-navy, #1B2A4A);
+  margin: 0 0 0.6rem;
+}
+
+.mk-bp__stage-text {
+  font-size: 0.85rem;
+  color: var(--color-mk-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.mk-bp__stage-note {
+  font-size: 0.78rem;
+  color: var(--color-mk-text-muted);
+  text-align: center;
+  margin: 0.75rem 0 0;
+  font-style: italic;
+}
+
+/* Blueprint: Tables Grid */
+
+.mk-bp__tables-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 540px) {
+  .mk-bp__tables-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mk-bp__table-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.75rem 0.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 180, 216, 0.15);
+  border-radius: 10px;
+  transition: border-color 0.2s ease;
+}
+
+.mk-bp__table-mini:hover {
+  border-color: rgba(0, 180, 216, 0.35);
+}
+
+.mk-bp__table-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--color-mk-cyan, #00B4D8);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.mk-bp__table-day {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-mk-navy, #1B2A4A);
+}
+
+.mk-bp__table-time {
+  font-size: 0.7rem;
+  color: var(--color-mk-text-muted);
+  font-weight: 600;
+}
+
+/* Blueprint: Points Grid */
+
+.mk-bp__pts-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .mk-bp__pts-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 380px) {
+  .mk-bp__pts-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.mk-bp__pts-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.55rem 0.25rem;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(100, 120, 160, 0.1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.mk-bp__pts-cell:hover {
+  background: rgba(0, 180, 216, 0.06);
+  border-color: rgba(0, 180, 216, 0.2);
+}
+
+.mk-bp__pts-cell--gold {
+  background: rgba(212, 175, 55, 0.08);
+  border-color: rgba(212, 175, 55, 0.25);
+}
+
+.mk-bp__pts-cell--silver {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.mk-bp__pts-cell--bronze {
+  background: rgba(180, 83, 9, 0.08);
+  border-color: rgba(180, 83, 9, 0.2);
+}
+
+.mk-bp__pts-pos {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-mk-text-muted);
+}
+
+.mk-bp__pts-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-mk-navy, #1B2A4A);
+  line-height: 1;
+}
+
+.mk-bp__pts-cell--gold .mk-bp__pts-val {
+  color: var(--color-mk-gold, #D4AF37);
+}
+
+.mk-bp__pts-cell--silver .mk-bp__pts-val {
+  color: #64748B;
+}
+
+.mk-bp__pts-cell--bronze .mk-bp__pts-val {
+  color: #B45309;
+}
+
+/* ─── Founders Tribute ─────────────────────────── */
+
+.mk-home__founders {
+  text-align: center;
+  padding: 2.5rem 2rem;
+  max-width: 520px;
+  margin: 0 auto;
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, transparent 15%, rgba(212, 175, 55, 0.4) 50%, transparent 85%) 1;
+}
+
+.mk-founders__ornament {
+  font-size: 1rem;
+  color: rgba(212, 175, 55, 0.5);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.5em;
+}
+
+.mk-founders__label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--color-mk-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.mk-founders__name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-mk-navy, #1B2A4A);
+  margin: 0 0 0.15rem;
+}
+
+.mk-founders__handle {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-mk-cyan, #00B4D8);
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+
+.mk-founders__tribute {
+  font-size: 0.88rem;
+  color: var(--color-mk-text-secondary);
+  line-height: 1.5;
+  font-style: italic;
+  margin: 0 0 1.25rem;
+}
+
+.mk-founders__divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.mk-founders__divider::before,
+.mk-founders__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(212, 175, 55, 0.2);
+}
+
+.mk-founders__divider span {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-mk-text-muted);
+  white-space: nowrap;
+}
+
+.mk-founders__co {
+  font-size: 0.82rem;
+  color: var(--color-mk-text-secondary);
+  margin: 0;
+  letter-spacing: 0.02em;
 }
 
 /* ─── Footer ───────────────────────────────────── */

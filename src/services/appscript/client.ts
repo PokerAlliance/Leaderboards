@@ -171,15 +171,23 @@ export const appScriptClient = {
       year: String(year),
     })
 
-    const games = (raw.games ?? []).map((r) => ({
-      gameId: String(r.game_id ?? ''),
-      tournamentId: Number(r.tournament_id ?? 0),
-      gameDate: new Date(String(r.game_date ?? '')),
-      gameSlot: String(r.game_slot ?? '') as import('@/types/muckers').MuckersPrimarySlot,
-      totalPlayers: Number(r.total_players ?? 0),
-      lockedBy: String(r.locked_by ?? ''),
-      lockedAt: new Date(String(r.locked_at ?? '')),
-    }))
+    const games = (raw.games ?? []).map((r) => {
+      const gameId = String(r.game_id ?? '')
+      const idParts = gameId.split('_')
+      const [y, m, d] = [Number(idParts[0]), Number(idParts[1]), Number(idParts[2])]
+      const gameDate = (!isNaN(y) && !isNaN(m) && !isNaN(d))
+        ? new Date(y, m - 1, d)
+        : new Date(String(r.game_date ?? ''))
+      return {
+        gameId,
+        tournamentId: Number(r.tournament_id ?? 0),
+        gameDate,
+        gameSlot: String(r.game_slot ?? '') as import('@/types/muckers').MuckersPrimarySlot,
+        totalPlayers: Number(r.total_players ?? 0),
+        lockedBy: String(r.locked_by ?? ''),
+        lockedAt: new Date(String(r.locked_at ?? '')),
+      }
+    })
 
     const playerResults = (raw.playerResults ?? []).map((r) => ({
       gameId: String(r.game_id ?? ''),
@@ -189,6 +197,7 @@ export const appScriptClient = {
       pointsEarned: Number(r.points_earned ?? 0),
       gameSlot: String(r.game_slot ?? '') as import('@/types/muckers').MuckersPrimarySlot,
     }))
+
 
     const teams = (raw.teams ?? []).map((r) => ({
       username: String(r.username ?? ''),

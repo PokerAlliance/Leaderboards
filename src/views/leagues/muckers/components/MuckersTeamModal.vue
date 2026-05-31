@@ -125,7 +125,7 @@ onBeforeUnmount(() => {
   background: none;
   border: none;
   font-size: 1.6rem;
-  color: #94A3B8;
+  color: #64748B;
   cursor: pointer;
   line-height: 1;
   padding: 0.25rem;
@@ -176,7 +176,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 0.75rem;
   font-size: 0.75rem;
-  color: #94A3B8;
+  color: #64748B;
   margin-bottom: 0.45rem;
 }
 
@@ -194,7 +194,7 @@ onBeforeUnmount(() => {
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #94A3B8;
+  color: #64748B;
   font-weight: 700;
 }
 
@@ -268,7 +268,7 @@ onBeforeUnmount(() => {
 
 .mk-tm-member-avg {
   font-size: 0.68rem;
-  color: #94A3B8;
+  color: #64748B;
 }
 
 .mk-tm-member-stats {
@@ -287,7 +287,7 @@ onBeforeUnmount(() => {
 
 .mk-tm-member-games {
   font-size: 0.68rem;
-  color: #94A3B8;
+  color: #64748B;
 }
 
 /* ─── Modal Transition ─────── */

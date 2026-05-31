@@ -237,7 +237,7 @@ onBeforeUnmount(() => {
   background: none;
   border: none;
   font-size: 1.6rem;
-  color: #94A3B8;
+  color: #64748B;
   cursor: pointer;
   line-height: 1;
   padding: 0.25rem;
@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
 .mk-modal-subtitle {
   font-size: 0.78rem;
   font-weight: 400;
-  color: #94A3B8;
+  color: #64748B;
   margin-left: 0.5rem;
 }
 
@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #94A3B8;
+  color: #64748B;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -371,7 +371,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #94A3B8;
+  color: #64748B;
   padding: 0.3rem 0.4rem;
   border-bottom: 1px solid rgba(100, 120, 160, 0.1);
 }
@@ -402,7 +402,7 @@ onBeforeUnmount(() => {
 .mk-wk-td--pos {
   width: 50px;
   text-align: right;
-  color: #94A3B8;
+  color: #64748B;
   font-size: 0.72rem;
 }
 
@@ -438,13 +438,13 @@ onBeforeUnmount(() => {
 
 .mk-wk-player-team {
   font-size: 0.65rem;
-  color: #94A3B8;
+  color: #64748B;
   line-height: 1.2;
 }
 
 /* Podium accents */
 .mk-medal--gold .mk-wk-td--rank { color: #D4AF37; }
-.mk-medal--silver .mk-wk-td--rank { color: #94A3B8; }
+.mk-medal--silver .mk-wk-td--rank { color: #64748B; }
 .mk-medal--bronze .mk-wk-td--rank { color: #B45309; }
 
 /* ─── RIGHT: Weekly Summary ─────── */
@@ -492,7 +492,7 @@ onBeforeUnmount(() => {
   font-size: 0.58rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #94A3B8;
+  color: #64748B;
   font-weight: 700;
 }
 
@@ -533,7 +533,7 @@ onBeforeUnmount(() => {
 .mk-wk-rank-pos {
   width: 20px;
   font-weight: 700;
-  color: #94A3B8;
+  color: #64748B;
   text-align: right;
   flex-shrink: 0;
   font-size: 0.72rem;

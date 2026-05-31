@@ -3,6 +3,7 @@ import { useMuckersStore } from '@/composables/useMuckersStore'
 import MuckersLoadingGate from './components/MuckersLoadingGate.vue'
 import MuckersQuarterSelector from './components/MuckersQuarterSelector.vue'
 import MuckersTeamTable from './components/MuckersTeamTable.vue'
+import MuckersTimeline from './components/MuckersTimeline.vue'
 import { RouterLink } from 'vue-router'
 
 const store = useMuckersStore()
@@ -47,6 +48,9 @@ const store = useMuckersStore()
 
         <!-- Team Table -->
         <MuckersTeamTable />
+
+        <!-- Quarter Timeline -->
+        <MuckersTimeline />
 
       </div>
     </main>
@@ -94,7 +98,7 @@ const store = useMuckersStore()
 
 .mk-standings__subtitle {
   font-size: 0.78rem;
-  color: var(--color-mk-text-muted, #94A3B8);
+  color: var(--color-mk-text-muted, #64748B);
   margin: 0;
 }
 

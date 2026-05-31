@@ -17,7 +17,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="bgRef" id="muckers-bg" class="muckers-layout theme-muckers">
+  <div class="muckers-layout theme-muckers">
+    <div ref="bgRef" id="muckers-bg" class="muckers-bg" />
     <div class="muckers-layout__content">
       <router-view />
     </div>
@@ -30,8 +31,14 @@ onBeforeUnmount(() => {
   min-height: 100vh;
 }
 
+.muckers-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
 .muckers-layout__content {
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 </style>
