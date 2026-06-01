@@ -20,7 +20,6 @@ import type {
   MuckersTeamDetail,
   MuckersPlayerWeekScore,
   MuckersTeamSlug,
-  MuckersPrimarySlot,
 } from '@/types/muckers'
 import {
   getCurrentMuckersQuarter,
@@ -127,14 +126,10 @@ function buildTeamStandingsFromResults(
   games: MuckersGame[],
   teams: MuckersTeamRoster[],
 ): Omit<MuckersTeamStanding, 'rankDiff'>[] {
-  const qStart = getQuarterStart()
   const gameMap = new Map<string, MuckersGame>()
   for (const g of games) gameMap.set(g.gameId, g)
 
-  const gameWeekMap = new Map<string, number>()
-  for (const g of games) {
-    gameWeekMap.set(g.gameId, getWeekNumber(g.gameDate, qStart))
-  }
+  const gameWeekMap = buildGameWeekMap()
 
   const uniqueSlugs = new Set<MuckersTeamSlug>()
   for (const t of teams) {
@@ -203,7 +198,7 @@ const teamStandings = computed<MuckersTeamStanding[]>(() => {
   )
 
   const maxWeek = weekNumbers.value.length > 0
-    ? weekNumbers.value[weekNumbers.value.length - 1]
+    ? weekNumbers.value[weekNumbers.value.length - 1]!
     : 0
 
   const gameWeekMap = buildGameWeekMap()
@@ -299,7 +294,6 @@ const playerStandings = computed<MuckersPlayerStanding[]>(() => {
 
 function getWeekDetail(weekNum: number): MuckersWeekDetail | null {
   const gameWeekMap = buildGameWeekMap()
-  const gameMap = buildGameMap()
 
   const weekResults = _playerResults.value.filter((r) => gameWeekMap.get(r.gameId) === weekNum)
   if (weekResults.length === 0) return null

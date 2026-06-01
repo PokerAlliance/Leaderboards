@@ -79,6 +79,7 @@ function showMonthDivider(entry: TimelineEntry, idx: number): boolean {
   if (!date) return false
   if (idx === 0) return true
   const prev = entries.value[idx - 1]
+  if (!prev) return true
   const prevDate = getEntryDate(prev)
   if (!prevDate) return true
   return date.getMonth() !== prevDate.getMonth() || date.getFullYear() !== prevDate.getFullYear()
