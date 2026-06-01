@@ -126,14 +126,10 @@ function buildTeamStandingsFromResults(
   games: MuckersGame[],
   teams: MuckersTeamRoster[],
 ): Omit<MuckersTeamStanding, 'rankDiff'>[] {
-  const qStart = getQuarterStart()
   const gameMap = new Map<string, MuckersGame>()
   for (const g of games) gameMap.set(g.gameId, g)
 
-  const gameWeekMap = new Map<string, number>()
-  for (const g of games) {
-    gameWeekMap.set(g.gameId, getWeekNumber(g.gameDate, qStart))
-  }
+  const gameWeekMap = buildGameWeekMap()
 
   const uniqueSlugs = new Set<MuckersTeamSlug>()
   for (const t of teams) {
