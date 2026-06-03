@@ -38,16 +38,6 @@ interface ArrowPath {
 
 const arrows = ref<ArrowPath[]>([])
 
-function getCenter(el: HTMLElement | null, container: HTMLElement): { x: number; y: number } {
-  if (!el || !container) return { x: 0, y: 0 }
-  const elRect = el.getBoundingClientRect()
-  const cRect = container.getBoundingClientRect()
-  return {
-    x: elRect.left - cRect.left + elRect.width / 2,
-    y: elRect.top - cRect.top + elRect.height / 2,
-  }
-}
-
 function getRightCenter(el: HTMLElement | null, container: HTMLElement): { x: number; y: number } {
   if (!el || !container) return { x: 0, y: 0 }
   const elRect = el.getBoundingClientRect()

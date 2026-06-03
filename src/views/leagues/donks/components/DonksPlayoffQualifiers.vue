@@ -6,7 +6,7 @@ import type {
   DonksPlayoffPhase,
   DonksCupSlug,
 } from '@/types/donks'
-import { getDonksCup, DONKS_CUPS } from '@/config/donks'
+import { getDonksCup } from '@/config/donks'
 
 const HOLDEM_CUP_ORDER: DonksCupSlug[] = ['badonkidonk', 'puggywug', 'blackwidow', 'ladycon']
 

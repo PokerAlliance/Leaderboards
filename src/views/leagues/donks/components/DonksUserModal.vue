@@ -3,7 +3,6 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import type {
   DonksGameType,
   DonksCupSlug,
-  DonksLeaderboardEntry,
   DonksGameHistory,
   DonksHallOfFameEntry,
   DonksPlayoffLeaderboardEntry,
@@ -37,10 +36,6 @@ const holdemEntry = computed(() =>
 )
 const omahaEntry = computed(() =>
   omahaComposite.value.find((e) => e.username === props.username) ?? null
-)
-
-const primaryCompositeEntry = computed(() =>
-  props.gameType === 'omaha' ? omahaEntry.value : holdemEntry.value
 )
 
 const holdemCupRecap = computed(() =>
@@ -121,13 +116,9 @@ const seasonStats = computed(() => {
   const allResults = store.getPlayerHistory(props.username)
   if (allResults.length === 0) return null
 
-  const topThreeCount = allResults.filter((g) => g.finishPosition <= 3).length
+  const topThreeCount = allResults.filter((r) => r.finishPosition <= 3).length
   const winRate = Math.round((topThreeCount / allResults.length) * 100)
-  const bestFinish = Math.max(...allResults.map((g) => g.pointsEarned))
-  const cupsPlayed = new Set(allResults.map((g) => {
-    const game = DONKS_CUPS.find((c) => store.getPlayerHistory(props.username!, c.slug).length > 0)
-    return game?.slug
-  }))
+  const bestFinish = Math.max(...allResults.map((r) => r.pointsEarned))
   const cupSlugsPlayed = new Set<string>()
   for (const cup of DONKS_CUPS) {
     if (store.getPlayerHistory(props.username, cup.slug).length > 0) {
@@ -175,11 +166,6 @@ watch(
   { immediate: true }
 )
 
-function setHistoryGameType(gt: DonksGameType) {
-  const cups = getCupsByGameType(gt)
-  if (cups.length > 0) activeTab.value = cups[0]!.slug
-}
-
 function formatPoints(pts: number): string {
   return Math.round(pts).toLocaleString()
 }
@@ -195,12 +181,6 @@ function onClickOutside(event: MouseEvent) {
 
 function onEscape(event: KeyboardEvent) {
   if (event.key === 'Escape') emit('close')
-}
-
-function activeHistoryGameType(): DonksGameType {
-  if (!activeTab.value || activeTab.value === 'playoffs') return 'holdem'
-  const cup = getDonksCup(activeTab.value)
-  return cup?.gameType ?? 'holdem'
 }
 
 onMounted(() => document.addEventListener('keydown', onEscape))

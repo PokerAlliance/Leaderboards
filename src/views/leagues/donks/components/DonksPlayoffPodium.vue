@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import confetti from 'canvas-confetti'
 import type { DonksPlayoffLeaderboardEntry } from '@/types/donks'
 
-defineProps<{
+const props = defineProps<{
   entries: DonksPlayoffLeaderboardEntry[]
   getAvatar: (username: string) => string
 }>()
+
+const first = computed(() => props.entries[0]!)
+const second = computed(() => props.entries[1]!)
+const third = computed(() => props.entries[2]!)
 
 function formatPts(pts: number): string {
   return pts.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -62,11 +66,11 @@ onBeforeUnmount(() => {
       <!-- 2nd place — left -->
       <div class="podium__slot podium__slot--silver">
         <div class="podium__avatar-area podium__avatar-area--silver">
-          <img :src="getAvatar(entries[1].username)" :alt="entries[1].username" class="podium__avatar podium__avatar--silver" />
+          <img :src="getAvatar(second.username)" :alt="second.username" class="podium__avatar podium__avatar--silver" />
         </div>
         <div class="podium__block podium__block--silver">
-          <span class="podium__name">{{ entries[1].username }}</span>
-          <span class="podium__pts">{{ formatPts(entries[1].totalPoints) }}</span>
+          <span class="podium__name">{{ second.username }}</span>
+          <span class="podium__pts">{{ formatPts(second.totalPoints) }}</span>
           <span class="podium__medal podium__medal--silver">SILVER</span>
         </div>
       </div>
@@ -75,12 +79,12 @@ onBeforeUnmount(() => {
       <div class="podium__slot podium__slot--gold">
         <div class="podium__avatar-area podium__avatar-area--gold">
           <svg class="podium__crown" viewBox="0 0 24 24" fill="none"><path d="M2 18L4.5 7L8.5 12L12 4L15.5 12L19.5 7L22 18H2Z" fill="currentColor"/></svg>
-          <img :src="getAvatar(entries[0].username)" :alt="entries[0].username" class="podium__avatar podium__avatar--gold" />
+          <img :src="getAvatar(first.username)" :alt="first.username" class="podium__avatar podium__avatar--gold" />
         </div>
         <div class="podium__block podium__block--gold">
           <div class="podium__shimmer" />
-          <span class="podium__name podium__name--gold">{{ entries[0].username }}</span>
-          <span class="podium__pts podium__pts--gold">{{ formatPts(entries[0].totalPoints) }}</span>
+          <span class="podium__name podium__name--gold">{{ first.username }}</span>
+          <span class="podium__pts podium__pts--gold">{{ formatPts(first.totalPoints) }}</span>
           <span class="podium__medal podium__medal--gold">GOLD</span>
         </div>
       </div>
@@ -88,11 +92,11 @@ onBeforeUnmount(() => {
       <!-- 3rd place — right -->
       <div class="podium__slot podium__slot--bronze">
         <div class="podium__avatar-area podium__avatar-area--bronze">
-          <img :src="getAvatar(entries[2].username)" :alt="entries[2].username" class="podium__avatar podium__avatar--bronze" />
+          <img :src="getAvatar(third.username)" :alt="third.username" class="podium__avatar podium__avatar--bronze" />
         </div>
         <div class="podium__block podium__block--bronze">
-          <span class="podium__name">{{ entries[2].username }}</span>
-          <span class="podium__pts">{{ formatPts(entries[2].totalPoints) }}</span>
+          <span class="podium__name">{{ third.username }}</span>
+          <span class="podium__pts">{{ formatPts(third.totalPoints) }}</span>
           <span class="podium__medal podium__medal--bronze">BRONZE</span>
         </div>
       </div>

@@ -5,7 +5,6 @@ import { getLeagueConfig } from '@/config/leagues'
 import { useDonksStore } from '@/composables/useDonksStore'
 import DonksLoadingGate from './components/DonksLoadingGate.vue'
 import DonksHallOfFameGrid from './components/DonksHallOfFameGrid.vue'
-import DonksHallOfFameExplainer from './components/DonksHallOfFameExplainer.vue'
 import DonksHallOfFameStatsBar from './components/DonksHallOfFameStatsBar.vue'
 import DonksUserModal from './components/DonksUserModal.vue'
 

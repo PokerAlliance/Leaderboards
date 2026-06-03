@@ -17,8 +17,6 @@ const gamesCompleted = computed(() =>
 
 const totalGames = computed(() => props.playoffState.playoffGames.length)
 
-const gamesRemaining = computed(() => totalGames.value - gamesCompleted.value)
-
 const leader = computed(() => {
   const lb = props.playoffState.leaderboard
   if (lb.length === 0 || lb[0]!.rank === 0) return null
