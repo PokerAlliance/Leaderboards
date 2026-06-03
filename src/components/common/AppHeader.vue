@@ -91,6 +91,27 @@
                 </RouterLink>
               </div>
             </div>
+            <div class="donks-dropdown__divider" />
+            <div class="donks-dropdown__group">
+              <RouterLink
+                :to="{ name: 'donks-playoffs' }"
+                class="donks-dropdown__item"
+                :style="{ '--cup-c': '#c9a227' }"
+                @click="closeMobileMenu"
+              >
+                <i class="i-lucide-swords donks-dropdown__icon" />
+                Playoffs
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'donks-hall-of-fame' }"
+                class="donks-dropdown__item"
+                :style="{ '--cup-c': '#c9a227' }"
+                @click="closeMobileMenu"
+              >
+                <i class="i-lucide-trophy donks-dropdown__icon" />
+                Hall of Fame
+              </RouterLink>
+            </div>
           </div>
         </div>
 
@@ -132,6 +153,13 @@
                 <span class="donks-dropdown__dot" /> {{ cup.shortName }}
               </RouterLink>
             </div>
+            <div class="donks-accordion__divider" />
+            <RouterLink :to="{ name: 'donks-playoffs' }" class="donks-accordion__link donks-accordion__link--special" @click="closeMobileMenu">
+              <i class="i-lucide-swords donks-accordion__icon" /> Playoffs
+            </RouterLink>
+            <RouterLink :to="{ name: 'donks-hall-of-fame' }" class="donks-accordion__link donks-accordion__link--special" @click="closeMobileMenu">
+              <i class="i-lucide-trophy donks-accordion__icon" /> Hall of Fame
+            </RouterLink>
           </div>
         </div>
         <RouterLink to="/league/dreamweaver" class="app-header__link" @click="closeMobileMenu">
@@ -503,6 +531,13 @@
     background: rgba(212, 175, 55, 0.15);
   }
 
+  .donks-dropdown__icon {
+    width: 12px;
+    height: 12px;
+    color: #c9a227;
+    flex-shrink: 0;
+  }
+
   /* Hide desktop dropdown in mobile */
   .donks-accordion {
     display: none;
@@ -587,6 +622,23 @@
     .donks-accordion__link:hover {
       background: rgba(255, 255, 255, 0.05);
       color: #fff;
+    }
+
+    .donks-accordion__divider {
+      height: 1px;
+      margin: 0.35rem 0.5rem;
+      background: rgba(212, 175, 55, 0.15);
+    }
+
+    .donks-accordion__link--special {
+      color: #c9a227;
+      font-weight: 600;
+    }
+
+    .donks-accordion__icon {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
     }
   }
 </style>

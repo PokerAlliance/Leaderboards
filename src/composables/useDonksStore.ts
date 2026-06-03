@@ -73,9 +73,10 @@ const effectivePlayoffConfig = computed<DonksPlayoffConfig>(() => ({
 
 // ─── Derived: Playoff State ──────────────────────────────────────────────────
 
-const playoffState = computed<DonksPlayoffState>(() =>
-  computePlayoffState(_playerResults.value, games.value, effectivePlayoffConfig.value)
-)
+const playoffState = computed<DonksPlayoffState>(() => {
+  const qk = loadedQuarter.value ?? getCurrentDonksQuarter()
+  return computePlayoffState(_playerResults.value, games.value, effectivePlayoffConfig.value, qk)
+})
 
 // ─── Core Leaderboard Computation ────────────────────────────────────────────
 

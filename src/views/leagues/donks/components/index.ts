@@ -16,3 +16,7 @@ export { default as DonksHallOfFameStatsBar } from './DonksHallOfFameStatsBar.vu
 export { default as DonksPlayoffExplainer } from './DonksPlayoffExplainer.vue'
 export { default as DonksPlayoffTimeline } from './DonksPlayoffTimeline.vue'
 export { default as DonksPlayoffLeaderboard } from './DonksPlayoffLeaderboard.vue'
+export { default as DonksPlayoffPodium } from './DonksPlayoffPodium.vue'
+export { default as DonksPlayoffQualifiers } from './DonksPlayoffQualifiers.vue'
+export { default as DonksPlayoffGameResults } from './DonksPlayoffGameResults.vue'
+export { default as DonksPlayoffBanner } from './DonksPlayoffBanner.vue'

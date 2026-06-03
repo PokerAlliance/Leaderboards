@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { DonksQuarterKey } from '@/types/donks'
 import { getLeagueConfig } from '@/config/leagues'
@@ -10,6 +10,9 @@ import DonksQuarterSelector from './components/DonksQuarterSelector.vue'
 import DonksPlayoffExplainer from './components/DonksPlayoffExplainer.vue'
 import DonksPlayoffTimeline from './components/DonksPlayoffTimeline.vue'
 import DonksPlayoffLeaderboard from './components/DonksPlayoffLeaderboard.vue'
+import DonksPlayoffPodium from './components/DonksPlayoffPodium.vue'
+import DonksPlayoffGameResults from './components/DonksPlayoffGameResults.vue'
+import DonksPlayoffQualifiers from './components/DonksPlayoffQualifiers.vue'
 import DonksUserModal from './components/DonksUserModal.vue'
 
 const store = useDonksStore()
@@ -27,6 +30,14 @@ const config = computed(() => store.effectivePlayoffConfig.value)
 
 const selectedGameId = ref<string | null>(null)
 const selectedUsername = ref<string | null>(null)
+const gameResultsEl = ref<HTMLElement | null>(null)
+
+function onGameSelect(gameId: string) {
+  selectedGameId.value = gameId
+  nextTick(() => {
+    gameResultsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  })
+}
 
 watch(selectedQuarter, async (newQ) => {
   selectedGameId.value = null
@@ -89,9 +100,29 @@ const phaseBadge = computed(() => {
             <DonksPlayoffTimeline
               :games="playoffState.playoffGames"
               :selected-game-id="selectedGameId"
-              @select="selectedGameId = $event"
+              @select="onGameSelect"
             />
           </section>
+
+          <!-- Game Results (when a game is selected) -->
+          <section v-if="selectedGameId" ref="gameResultsEl" class="donks-card po-page__section">
+            <h2 class="po-page__section-title">Game Results</h2>
+            <DonksPlayoffGameResults
+              :game-id="selectedGameId"
+              :games="playoffState.playoffGames"
+              :qualifiers="playoffState.qualifiers"
+              :config="config"
+              :get-avatar="store.getAvatar"
+              @row-click="selectedUsername = $event"
+            />
+          </section>
+
+          <!-- Podium (completed quarters) -->
+          <DonksPlayoffPodium
+            v-if="playoffState.phase === 'playoffs_complete' && playoffState.leaderboard.length >= 3"
+            :entries="playoffState.leaderboard.slice(0, 3)"
+            :get-avatar="store.getAvatar"
+          />
 
           <!-- Leaderboard -->
           <section class="donks-card po-page__section">
@@ -102,6 +133,19 @@ const phaseBadge = computed(() => {
               :phase="playoffState.phase"
               :config="config"
               :get-avatar="store.getAvatar"
+              :qualifiers="playoffState.qualifiers"
+              @row-click="selectedUsername = $event"
+            />
+          </section>
+
+          <!-- Qualification Breakdown -->
+          <section class="donks-card po-page__section">
+            <h2 class="po-page__section-title">How They Qualified</h2>
+            <DonksPlayoffQualifiers
+              :qualifiers="playoffState.qualifiers"
+              :config="config"
+              :phase="playoffState.phase"
+              :get-avatar="store.getAvatar"
               @row-click="selectedUsername = $event"
             />
           </section>
@@ -110,9 +154,6 @@ const phaseBadge = computed(() => {
         <!-- Footer -->
         <footer class="po-page__footer donks-home__frosted">
           <div class="po-page__footer-divider" />
-          <RouterLink to="/league/donks" class="donks-btn donks-btn--outline po-page__back">
-            ← Back to Donks
-          </RouterLink>
           <div class="po-page__footer-suits">♠ ♥ ♦ ♣</div>
         </footer>
       </div>

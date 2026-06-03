@@ -12,6 +12,7 @@ import DonksCupCard from './components/DonksCupCard.vue'
 import DonksUserModal from './components/DonksUserModal.vue'
 import DonksRaceChart from './components/DonksRaceChart.vue'
 import DonksGameTypeTimeline from './components/DonksGameTypeTimeline.vue'
+import DonksPlayoffBanner from './components/DonksPlayoffBanner.vue'
 
 const store = useDonksStore()
 const leagueConfig = getLeagueConfig('donks')
@@ -48,6 +49,9 @@ const cupEntries = computed(() =>
     return { cup, entries: store.buildLeaderboardAtCutoff(allResults, cutoff, allGames) }
   })
 )
+
+const playoffState = computed(() => store.getPlayoffState())
+const effectivePlayoffConfig = computed(() => store.effectivePlayoffConfig.value)
 
 const selectedPlayer = ref<string | null>(null)
 
@@ -98,6 +102,14 @@ watch(selectedQuarter, async (newQ) => {
           />
         </div>
 
+        <!-- Playoff Banner -->
+        <DonksPlayoffBanner
+          v-if="playoffState.phase !== 'no_data'"
+          :playoff-state="playoffState"
+          :config="effectivePlayoffConfig"
+          :get-avatar="store.getAvatar"
+        />
+
         <!-- Composite Medal Leaderboard -->
         <section class="donks-holdem__composite donks-card">
           <div class="composite-header">
@@ -116,11 +128,11 @@ watch(selectedQuarter, async (newQ) => {
             :entries="compositeEntries"
             :get-avatar="store.getAvatar"
             :collapsible="5"
+            :qualifiers="playoffState.qualifiers"
             @row-click="onPlayerClick"
           />
         </section>
 
-        
         <!-- Cup Cards Grid -->
         <section class="donks-holdem__cups">
           <h2 class="donks-section-title">Individual Cup Standings</h2>
@@ -131,6 +143,7 @@ watch(selectedQuarter, async (newQ) => {
               :cup="cup"
               :entries="entries"
               :get-avatar="store.getAvatar"
+              :qualifiers="playoffState.qualifiers"
               @player-click="onPlayerClick"
             />
           </div>

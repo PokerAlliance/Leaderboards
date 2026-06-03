@@ -46,7 +46,7 @@ function formatDate(d: Date): string {
             'po-timeline__node--upcoming': !game.isLocked,
             'po-timeline__node--selected': selectedGameId === game.gameId,
           }"
-          :style="{ '--cup-color': cupColor(game.cupSlug) }"
+          :style="{ '--cup-color': cupColor(game.cupSlug), '--ni': idx }"
           @click="emit('select', game.gameId)"
         >
           <div class="po-timeline__node-header">
@@ -139,6 +139,8 @@ function formatDate(d: Date): string {
   align-items: flex-start;
   gap: 0.3rem;
   padding: 0.85rem 1rem;
+  animation: tlNodePopIn 0.3s ease both;
+  animation-delay: calc(var(--ni, 0) * 0.1s);
   min-width: 145px;
   border-radius: 10px;
   cursor: pointer;
@@ -233,6 +235,15 @@ function formatDate(d: Date): string {
 }
 
 /* ─── Mobile scroll snap ────────────────────────────────── */
+
+@keyframes tlNodePopIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .po-timeline__node { animation: none; }
+}
 
 @media (max-width: 700px) {
   .po-timeline {

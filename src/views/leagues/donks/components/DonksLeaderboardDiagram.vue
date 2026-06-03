@@ -108,6 +108,38 @@ function getMedalRoute(medal: DonksMedalConfig) {
       </div>
     </div>
 
+    <!-- Playoffs Pathway -->
+    <div class="diagram__divider" />
+    <div class="diagram__playoffs-section">
+      <div class="diagram__playoffs-label">Season-End Playoffs</div>
+      <div class="diagram__playoffs-flow">
+        <!-- Qualifier paths -->
+        <div class="diagram__qual-paths">
+          <div class="diagram__qual-path">
+            <span class="diagram__qual-dots">
+              <span v-for="cup in holdemCups" :key="cup.slug" class="diagram__qual-dot" :style="{ background: cup.color }" />
+            </span>
+            <span class="diagram__qual-label">Top 15 each</span>
+          </div>
+          <div class="diagram__qual-connector" />
+          <div class="diagram__qual-path diagram__qual-path--omaha">
+            <span class="diagram__qual-dots">
+              <span v-for="cup in omahaCups" :key="cup.slug" class="diagram__qual-dot" :style="{ background: cup.color }" />
+            </span>
+            <span class="diagram__qual-label">3 Wild Cards</span>
+          </div>
+        </div>
+
+        <!-- Playoffs node -->
+        <RouterLink to="/league/donks/playoffs" class="diagram__playoffs-node">
+          <i class="i-lucide-swords diagram__playoffs-icon" />
+          <span class="diagram__playoffs-name">FatnSassy Playoffs</span>
+          <span class="diagram__playoffs-sub">Top qualifiers compete for the Medal</span>
+          <span class="diagram__medal-hint">View Playoffs →</span>
+        </RouterLink>
+      </div>
+    </div>
+
     <!-- Hall of Fame -->
     <div class="diagram__divider" />
     <RouterLink to="/league/donks/hall-of-fame" class="diagram__hof-node">
@@ -445,6 +477,133 @@ function getMedalRoute(medal: DonksMedalConfig) {
   opacity: 0.8;
 }
 
+/* Playoffs Section */
+.diagram__playoffs-section {
+  margin-bottom: 0.5rem;
+}
+
+.diagram__playoffs-label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-donks-text-secondary);
+  margin-bottom: 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--color-donks-gold);
+}
+
+.diagram__playoffs-flow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.diagram__qual-paths {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.diagram__qual-path {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px dashed rgba(201, 162, 39, 0.25);
+}
+
+.diagram__qual-path--omaha {
+  border-color: rgba(45, 106, 79, 0.25);
+}
+
+.diagram__qual-dots {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.diagram__qual-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.diagram__qual-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-donks-text-muted);
+  white-space: nowrap;
+}
+
+.diagram__qual-connector {
+  display: none;
+}
+
+.diagram__playoffs-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem 1.4rem 0.85rem;
+  background: linear-gradient(
+    145deg,
+    rgba(212, 160, 23, 0.14) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(212, 160, 23, 0.1) 100%
+  );
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(201, 162, 39, 0.4);
+  border-top: 3px solid var(--color-donks-gold);
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--color-donks-text);
+  box-shadow: 0 4px 20px rgba(201, 162, 39, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  text-align: center;
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+.diagram__playoffs-node:hover {
+  box-shadow: 0 6px 28px rgba(201, 162, 39, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+  border-color: var(--color-donks-gold);
+}
+
+.diagram__playoffs-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--color-donks-gold);
+  margin-bottom: 0.3rem;
+  filter: drop-shadow(0 2px 4px rgba(201, 162, 39, 0.3));
+}
+
+.diagram__playoffs-name {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-donks-gold-dark);
+}
+
+.diagram__playoffs-sub {
+  font-size: 0.65rem;
+  color: var(--color-donks-text-muted);
+  margin-top: 0.15rem;
+}
+
+.diagram__playoffs-node:hover .diagram__medal-hint {
+  opacity: 0.8;
+}
+
 /* Responsive */
 @media (max-width: 700px) {
   .diagram__row {
@@ -482,6 +641,16 @@ function getMedalRoute(medal: DonksMedalConfig) {
 
   .diagram__cup-name {
     font-size: 0.75rem;
+  }
+
+  .diagram__playoffs-flow {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .diagram__playoffs-node {
+    min-width: auto;
+    padding: 0.85rem;
   }
 }
 </style>

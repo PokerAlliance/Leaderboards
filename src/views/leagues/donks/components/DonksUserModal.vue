@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import type { DonksGameType, DonksCupSlug, DonksLeaderboardEntry, DonksGameHistory, DonksHallOfFameEntry } from '@/types/donks'
-import { getCupsByGameType } from '@/config/donks'
+import type {
+  DonksGameType,
+  DonksCupSlug,
+  DonksLeaderboardEntry,
+  DonksGameHistory,
+  DonksHallOfFameEntry,
+  DonksPlayoffLeaderboardEntry,
+  DonksPlayoffQualifier,
+  DonksPlayoffGameSummary,
+} from '@/types/donks'
+import { getCupsByGameType, getDonksCup } from '@/config/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
 
 const props = defineProps<{
@@ -14,7 +23,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useDonksStore()
-const activeTab = ref<DonksCupSlug | null>(null)
+const activeTab = ref<DonksCupSlug | 'playoffs' | null>(null)
 
 const relevantCups = computed(() => getCupsByGameType(props.gameType))
 
@@ -47,6 +56,46 @@ const tabHistory = computed<DonksGameHistory[]>(() => {
 
 const allTimeGames = computed(() => store.getAllTimeGamesPlayed(props.username ?? ''))
 const hofEntry = computed<DonksHallOfFameEntry | null>(() => store.getHallOfFameEntry(props.username ?? ''))
+
+const playoffState = computed(() => store.getPlayoffState())
+const playoffConfig = computed(() => store.effectivePlayoffConfig.value)
+
+const playerQualifier = computed<DonksPlayoffQualifier | null>(() =>
+  playoffState.value.qualifiers.find((q) => q.username === props.username) ?? null
+)
+
+const isPlayoffQualifier = computed(() => !!playerQualifier.value)
+
+const playerPlayoffEntry = computed<DonksPlayoffLeaderboardEntry | null>(() =>
+  playoffState.value.leaderboard.find((e) => e.username === props.username) ?? null
+)
+
+const playoffGames = computed<DonksPlayoffGameSummary[]>(() => playoffState.value.playoffGames)
+
+function qualViaLabel(q: DonksPlayoffQualifier): string {
+  if (q.qualifiedVia === 'omaha_wildcard') return 'Omaha Wild Card'
+  const cup = getDonksCup(q.qualifiedVia)
+  return cup?.name ?? q.qualifiedVia
+}
+
+function isCountedScore(gameId: string): boolean {
+  const entry = playerPlayoffEntry.value
+  if (!entry) return false
+  const scores = Object.entries(entry.gameScores)
+    .filter(([, s]) => s > 0)
+    .sort((a, b) => b[1] - a[1])
+  const topN = scores.slice(0, playoffConfig.value.topNScores)
+  return topN.some(([id]) => id === gameId)
+}
+
+function gameCupLabel(game: DonksPlayoffGameSummary): string {
+  const cup = getDonksCup(game.cupSlug)
+  return cup?.shortName ?? game.cupSlug
+}
+
+function formatGameDate(d: Date): string {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
 
 watch(
   () => props.username,
@@ -171,34 +220,103 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
               >
                 {{ cup.shortName }}
               </button>
+              <button
+                v-if="isPlayoffQualifier"
+                class="tab-btn tab-btn--playoffs"
+                :class="{ 'tab-btn--active': activeTab === 'playoffs' }"
+                :style="activeTab === 'playoffs' ? { '--tab-color': '#c9a227' } : {}"
+                @click="activeTab = 'playoffs'"
+              >
+                <i class="i-lucide-swords tab-btn__icon" /> Playoffs
+              </button>
             </div>
 
-            <div class="history-scroll">
-              <table v-if="tabHistory.length > 0" class="history-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Pos</th>
-                    <th>Players</th>
-                    <th>Points</th>
-                    <th>Best 9?</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="g in tabHistory" :key="g.gameId">
-                    <td>{{ formatDate(g.gameDate) }}</td>
-                    <td class="history-pos">{{ g.finishPosition }} / {{ g.totalPlayers }}</td>
-                    <td>{{ g.totalPlayers }}</td>
-                    <td class="history-pts">{{ formatPoints(g.pointsEarned) }}</td>
-                    <td class="history-counted">
-                      <span v-if="g.countedInBest9" class="counted-yes">&#10003;</span>
-                      <span v-else class="counted-no">&mdash;</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <p v-else class="history-empty">No games played in this cup yet.</p>
-            </div>
+            <!-- Cup history content -->
+            <template v-if="activeTab !== 'playoffs'">
+              <div class="history-scroll">
+                <table v-if="tabHistory.length > 0" class="history-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Pos</th>
+                      <th>Players</th>
+                      <th>Points</th>
+                      <th>Best 9?</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="g in tabHistory" :key="g.gameId">
+                      <td>{{ formatDate(g.gameDate) }}</td>
+                      <td class="history-pos">{{ g.finishPosition }} / {{ g.totalPlayers }}</td>
+                      <td>{{ g.totalPlayers }}</td>
+                      <td class="history-pts">{{ formatPoints(g.pointsEarned) }}</td>
+                      <td class="history-counted">
+                        <span v-if="g.countedInBest9" class="counted-yes">&#10003;</span>
+                        <span v-else class="counted-no">&mdash;</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p v-else class="history-empty">No games played in this cup yet.</p>
+              </div>
+            </template>
+
+            <!-- Playoff tab content -->
+            <template v-else>
+              <div class="playoff-tab">
+                <div v-if="playerQualifier" class="playoff-tab__qual">
+                  <i class="i-lucide-swords playoff-tab__qual-icon" />
+                  <span>
+                    Qualified via <strong>{{ qualViaLabel(playerQualifier) }}</strong>
+                    (Rank #{{ playerQualifier.qualifyingRank }})
+                  </span>
+                </div>
+
+                <div v-if="playoffState.phase === 'pre_playoffs'" class="playoff-tab__note">
+                  Projected qualifier — playoffs haven't started yet.
+                </div>
+
+                <template v-else>
+                  <table class="history-table">
+                    <thead>
+                      <tr>
+                        <th>Game</th>
+                        <th>Date</th>
+                        <th>Points</th>
+                        <th>Counted?</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="game in playoffGames" :key="game.gameId">
+                        <td>{{ gameCupLabel(game) }}</td>
+                        <td>{{ formatGameDate(game.gameDate) }}</td>
+                        <td class="history-pts">
+                          <template v-if="playerPlayoffEntry?.gameScores[game.gameId]">
+                            {{ formatPoints(playerPlayoffEntry.gameScores[game.gameId]!) }}
+                          </template>
+                          <span v-else class="counted-no">&mdash;</span>
+                        </td>
+                        <td class="history-counted">
+                          <span v-if="isCountedScore(game.gameId)" class="counted-yes">&#9733;</span>
+                          <span v-else class="counted-no">&mdash;</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div v-if="playerPlayoffEntry" class="playoff-tab__summary">
+                    <span class="playoff-tab__rank">
+                      Playoff Rank: <strong>#{{ playerPlayoffEntry.rank || '—' }}</strong>
+                    </span>
+                    <span class="playoff-tab__total">
+                      Best {{ playoffConfig.topNScores }} Total:
+                      <strong>{{ formatPoints(playerPlayoffEntry.totalPoints) }} pts</strong>
+                    </span>
+                  </div>
+                  <p v-else class="history-empty">No playoff games played yet.</p>
+                </template>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -473,6 +591,67 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
   padding: 1.5rem 0;
   color: var(--color-donks-text-muted);
   font-size: 0.78rem;
+}
+
+/* Playoffs tab button */
+.tab-btn--playoffs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tab-btn__icon {
+  width: 11px;
+  height: 11px;
+}
+
+/* Playoff tab content */
+.playoff-tab__qual {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  background: rgba(201, 162, 39, 0.08);
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  font-size: 0.75rem;
+  color: var(--color-donks-text);
+  margin-bottom: 0.65rem;
+}
+
+.playoff-tab__qual-icon {
+  width: 14px;
+  height: 14px;
+  color: #c9a227;
+  flex-shrink: 0;
+}
+
+.playoff-tab__qual strong {
+  color: #b8941e;
+}
+
+.playoff-tab__note {
+  font-size: 0.72rem;
+  color: var(--color-donks-text-muted);
+  font-style: italic;
+  padding: 0.75rem 0;
+  text-align: center;
+}
+
+.playoff-tab__summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: rgba(201, 162, 39, 0.06);
+  font-size: 0.72rem;
+  color: var(--color-donks-text-secondary);
+}
+
+.playoff-tab__summary strong {
+  color: var(--color-donks-text);
 }
 
 /* Transition */

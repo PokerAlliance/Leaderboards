@@ -73,6 +73,15 @@ const selectedGameId = ref<string | null>(null)
 const selectedTournamentId = ref<number | null>(null)
 const showFutureMessage = ref(false)
 
+const playoffGameIds = computed(() => {
+  const ps = store.getPlayoffState()
+  return new Set(ps.playoffGames.map((g) => g.gameId))
+})
+const isPlayoffGame = computed(() =>
+  !!selectedGameId.value && playoffGameIds.value.has(selectedGameId.value)
+)
+const playoffQualifiers = computed(() => store.getPlayoffState().qualifiers)
+
 function selectMostRecent() {
   showFutureMessage.value = false
   if (!cup.value) return
@@ -184,6 +193,8 @@ watch(() => props.cupSlug, () => {
               :cup-slug="cup.slug"
               :selected-game-id="selectedGameId"
               :selected-tournament-id="selectedTournamentId"
+              :is-playoff-game="isPlayoffGame"
+              :qualifiers="playoffQualifiers"
             />
           </div>
         </div>

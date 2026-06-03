@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type {
   DonksPlayoffLeaderboardEntry,
   DonksPlayoffGameSummary,
   DonksPlayoffPhase,
   DonksPlayoffConfig,
+  DonksPlayoffQualifier,
 } from '@/types/donks'
 import { getDonksCup } from '@/config/donks'
+
+const VISIBLE_LIMIT = 10
 
 const props = defineProps<{
   entries: DonksPlayoffLeaderboardEntry[]
@@ -14,14 +17,40 @@ const props = defineProps<{
   phase: DonksPlayoffPhase
   config: DonksPlayoffConfig
   getAvatar: (username: string) => string
+  qualifiers: DonksPlayoffQualifier[]
 }>()
 
 const emit = defineEmits<{
   'row-click': [username: string]
 }>()
 
+const qualifierMap = computed(() => {
+  const m = new Map<string, DonksPlayoffQualifier>()
+  for (const q of props.qualifiers) m.set(q.username, q)
+  return m
+})
+
+const isPrePlayoffs = computed(() => props.phase === 'pre_playoffs')
+
+const expanded = ref(false)
+
+watch(() => props.phase, () => { expanded.value = false })
+
 const rankedEntries = computed(() => props.entries.filter((e) => e.rank > 0))
-const unrankedEntries = computed(() => props.entries.filter((e) => e.rank === 0))
+const unrankedEntries = computed(() =>
+  isPrePlayoffs.value ? props.entries : props.entries.filter((e) => e.rank === 0)
+)
+
+const visibleRanked = computed(() =>
+  expanded.value ? rankedEntries.value : rankedEntries.value.slice(0, VISIBLE_LIMIT)
+)
+const visibleUnranked = computed(() =>
+  expanded.value ? unrankedEntries.value : []
+)
+const hiddenCount = computed(() => {
+  const total = rankedEntries.value.length + unrankedEntries.value.length
+  return Math.max(0, total - VISIBLE_LIMIT)
+})
 
 function rankAccent(rank: number): string {
   if (rank === 1) return 'var(--color-gold, #c9a227)'
@@ -45,23 +74,25 @@ function getCountedGameIds(entry: DonksPlayoffLeaderboardEntry): Set<string> {
 function displayScore(score: number | undefined): string {
   return score && score > 0 ? score.toLocaleString() : '\u2014'
 }
+
+function qualLabel(q: DonksPlayoffQualifier): string {
+  if (q.qualifiedVia === 'omaha_wildcard') {
+    return `Omaha Wild Card (#${q.qualifyingRank})`
+  }
+  const cup = getDonksCup(q.qualifiedVia)
+  return `Qualified via ${cup?.name ?? q.qualifiedVia} (#${q.qualifyingRank})`
+}
+
+function qualColor(q: DonksPlayoffQualifier): string {
+  if (q.qualifiedVia === 'omaha_wildcard') return '#2d6a4f'
+  return getDonksCup(q.qualifiedVia)?.color ?? '#888'
+}
 </script>
 
 <template>
   <div class="po-lb">
-    <!-- Winner banner -->
-    <div v-if="phase === 'playoffs_complete' && rankedEntries.length > 0" class="po-winner-banner">
-      <span class="po-winner-icon">&#127942;</span>
-      <span>{{ rankedEntries[0].username }} wins {{ config.medalName }}!</span>
-    </div>
-
-    <!-- Pre-playoffs empty state -->
-    <div v-if="phase === 'pre_playoffs'" class="po-lb__empty">
-      <p>The playoff leaderboard will appear once the first playoff game is completed.</p>
-    </div>
-
-    <!-- Table -->
-    <div v-else-if="entries.length > 0" class="po-lb__scroll">
+    <!-- Table (renders for all phases except no_data) -->
+    <div v-if="entries.length > 0" class="po-lb__scroll">
       <table class="po-lb__table">
         <thead>
           <tr>
@@ -80,45 +111,61 @@ function displayScore(score: number | undefined): string {
         </thead>
 
         <tbody>
-          <!-- Ranked entries -->
-          <tr
-            v-for="entry in rankedEntries"
-            :key="entry.username"
-            class="po-row"
-            :style="{ '--rank-accent': rankAccent(entry.rank) }"
-            @click="emit('row-click', entry.username)"
-          >
-            <td class="po-cell po-cell--rank">{{ entry.rank }}</td>
-            <td class="po-cell po-cell--player">
-              <img :src="getAvatar(entry.username)" :alt="entry.username" class="po-cell__avatar" />
-              <span class="po-cell__name">{{ entry.username }}</span>
-            </td>
-            <td class="po-cell po-cell--pts" :class="{ 'po-cell--top3': entry.rank <= 3 }">
-              {{ entry.totalPoints.toLocaleString() }}
-            </td>
-            <td class="po-cell po-cell--games">
-              {{ entry.gamesPlayed }}/{{ games.length }}
-            </td>
-            <td
-              v-for="game in games"
-              :key="game.gameId"
-              class="po-cell po-cell--game"
-              :class="{ 'po-cell--counted': getCountedGameIds(entry).has(game.gameId) }"
+          <!-- Ranked entries (only when not pre_playoffs) -->
+          <template v-if="!isPrePlayoffs">
+            <tr
+              v-for="(entry, ri) in visibleRanked"
+              :key="entry.username"
+              class="po-row"
+              :style="{ '--rank-accent': rankAccent(entry.rank), '--ri': Math.min(ri, 8) }"
+              @click="emit('row-click', entry.username)"
             >
-              {{ displayScore(entry.gameScores[game.gameId]) }}
+              <td class="po-cell po-cell--rank">{{ entry.rank }}</td>
+              <td class="po-cell po-cell--player">
+                <img :src="getAvatar(entry.username)" :alt="entry.username" class="po-cell__avatar" />
+                <span class="po-cell__name">{{ entry.username }}</span>
+                <span v-if="qualifierMap.get(entry.username)" class="po-qual-wrap" tabindex="0">
+                  <svg class="po-qual-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                  <span class="po-qual-pop">
+                    <span class="po-qual-pop__dot" :style="{ background: qualColor(qualifierMap.get(entry.username)!) }" />
+                    {{ qualLabel(qualifierMap.get(entry.username)!) }}
+                  </span>
+                </span>
+              </td>
+              <td class="po-cell po-cell--pts" :class="{ 'po-cell--top3': entry.rank <= 3 }">
+                {{ entry.totalPoints.toLocaleString() }}
+              </td>
+              <td class="po-cell po-cell--games">
+                {{ entry.gamesPlayed }}/{{ games.length }}
+              </td>
+              <td
+                v-for="game in games"
+                :key="game.gameId"
+                class="po-cell po-cell--game"
+                :class="{ 'po-cell--counted': getCountedGameIds(entry).has(game.gameId) }"
+              >
+                {{ displayScore(entry.gameScores[game.gameId]) }}
+              </td>
+            </tr>
+
+            <!-- Unranked divider -->
+            <tr v-if="visibleUnranked.length > 0" class="po-row po-row--divider">
+              <td :colspan="4 + games.length" class="po-cell po-cell--divider-label">
+                Qualified but not yet played
+              </td>
+            </tr>
+          </template>
+
+          <!-- Pre-playoffs header label -->
+          <tr v-if="isPrePlayoffs" class="po-row po-row--divider">
+            <td :colspan="4 + games.length" class="po-cell po-cell--divider-label po-cell--divider-label-pre">
+              Qualified players &middot; standings will appear once playoff games are locked
             </td>
           </tr>
 
-          <!-- Unranked divider -->
-          <tr v-if="unrankedEntries.length > 0" class="po-row po-row--divider">
-            <td :colspan="4 + games.length" class="po-cell po-cell--divider-label">
-              Qualified but not yet played
-            </td>
-          </tr>
-
-          <!-- Unranked entries -->
+          <!-- Unranked / pre-playoffs entries -->
           <tr
-            v-for="entry in unrankedEntries"
+            v-for="entry in visibleUnranked"
             :key="entry.username"
             class="po-row po-row--unranked"
             @click="emit('row-click', entry.username)"
@@ -126,7 +173,14 @@ function displayScore(score: number | undefined): string {
             <td class="po-cell po-cell--rank po-cell--muted">&ndash;&ndash;</td>
             <td class="po-cell po-cell--player">
               <img :src="getAvatar(entry.username)" :alt="entry.username" class="po-cell__avatar" />
-              <span class="po-cell__name po-cell--muted">{{ entry.username }}</span>
+              <span class="po-cell__name" :class="{ 'po-cell--muted': !isPrePlayoffs }">{{ entry.username }}</span>
+              <span v-if="qualifierMap.get(entry.username)" class="po-qual-wrap" tabindex="0">
+                <svg class="po-qual-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                <span class="po-qual-pop">
+                  <span class="po-qual-pop__dot" :style="{ background: qualColor(qualifierMap.get(entry.username)!) }" />
+                  {{ qualLabel(qualifierMap.get(entry.username)!) }}
+                </span>
+              </span>
             </td>
             <td class="po-cell po-cell--pts po-cell--muted">&mdash;</td>
             <td class="po-cell po-cell--games po-cell--muted">0/{{ games.length }}</td>
@@ -141,49 +195,16 @@ function displayScore(score: number | undefined): string {
         </tbody>
       </table>
     </div>
+
+    <!-- Expand button -->
+    <button v-if="!expanded && hiddenCount > 0" class="po-lb__expand" @click="expanded = true">
+      <span>Show remaining {{ hiddenCount }} players</span>
+      <i class="i-heroicons-chevron-down-20-solid po-lb__expand-icon" />
+    </button>
   </div>
 </template>
 
 <style scoped>
-/* ─── Winner Banner ─────────────────────────────────────── */
-
-.po-winner-banner {
-  text-align: center;
-  padding: 0.85rem 1rem;
-  margin-bottom: 0.75rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(212, 160, 23, 0.12) 0%, rgba(201, 162, 39, 0.06) 100%);
-  border: 1px solid rgba(201, 162, 39, 0.25);
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--color-donks-text);
-  animation: slideDown 0.4s ease;
-}
-
-.po-winner-icon {
-  margin-right: 0.4rem;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ─── Empty State ───────────────────────────────────────── */
-
-.po-lb__empty {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: var(--color-donks-text-secondary);
-  font-size: 0.85rem;
-}
-
 /* ─── Table Container ───────────────────────────────────── */
 
 .po-lb__scroll {
@@ -240,6 +261,8 @@ function displayScore(score: number | undefined): string {
   cursor: pointer;
   transition: background 0.15s ease;
   border-left: 3px solid var(--rank-accent, transparent);
+  animation: poRowFadeIn 0.3s ease both;
+  animation-delay: calc(var(--ri, 0) * 0.04s);
 }
 
 .po-row:hover {
@@ -248,11 +271,11 @@ function displayScore(score: number | undefined): string {
 
 .po-row--unranked {
   border-left-color: transparent;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .po-row--unranked:hover {
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .po-row--divider {
@@ -286,6 +309,7 @@ function displayScore(score: number | undefined): string {
   align-items: center;
   gap: 0.45rem;
   text-align: left;
+  position: relative;
 }
 
 .po-cell__avatar {
@@ -341,6 +365,138 @@ function displayScore(score: number | undefined): string {
   color: var(--color-donks-text-muted);
   border-bottom: none;
   border-top: 1px solid var(--color-donks-card-border, rgba(0, 0, 0, 0.08));
+}
+
+.po-cell--divider-label-pre {
+  border-top: none;
+  padding-bottom: 0.5rem;
+}
+
+/* ─── Qualification Popover ─────────────────────────────── */
+
+.po-qual-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+  margin-left: 0.1rem;
+  flex-shrink: 0;
+}
+
+.po-qual-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--color-donks-text-muted);
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.po-qual-wrap:hover .po-qual-icon,
+.po-qual-wrap:focus-within .po-qual-icon {
+  opacity: 1;
+  color: var(--color-donks-gold);
+}
+
+.po-qual-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  background: var(--color-donks-card-bg, rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--color-donks-card-border, rgba(0, 0, 0, 0.08));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--color-donks-text);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.po-qual-pop::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--color-donks-card-border, rgba(0, 0, 0, 0.08));
+}
+
+.po-qual-pop::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% - 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--color-donks-card-bg, rgba(255, 255, 255, 0.95));
+}
+
+.po-qual-wrap:hover .po-qual-pop,
+.po-qual-wrap:focus-within .po-qual-pop {
+  opacity: 1;
+}
+
+.po-qual-pop__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ─── Row Entrance Animation ────────────────────────────── */
+
+@keyframes poRowFadeIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .po-row { animation: none; }
+}
+
+/* ─── Expand Button ─────────────────────────────────────── */
+
+.po-lb__expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-top: 0.25rem;
+  border: none;
+  border-top: 1px solid var(--color-donks-card-border, rgba(0, 0, 0, 0.06));
+  background: none;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-donks-text-muted);
+  transition: color 0.15s ease;
+}
+
+.po-lb__expand:hover {
+  color: var(--color-donks-gold, #c9a227);
+}
+
+.po-lb__expand-icon {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+
+.po-lb__expand:hover .po-lb__expand-icon {
+  transform: translateY(2px);
 }
 
 /* ─── Mobile ────────────────────────────────────────────── */

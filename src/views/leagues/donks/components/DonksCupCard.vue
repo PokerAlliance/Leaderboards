@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import type { DonksCupConfig, DonksLeaderboardEntry } from '@/types/donks'
+import type { DonksCupConfig, DonksLeaderboardEntry, DonksPlayoffQualifier } from '@/types/donks'
 import DonksLeaderboardTable from './DonksLeaderboardTable.vue'
 
-defineProps<{
+withDefaults(defineProps<{
   cup: DonksCupConfig
   entries: DonksLeaderboardEntry[]
   getAvatar: (username: string) => string
-}>()
+  qualifiers?: DonksPlayoffQualifier[]
+}>(), {
+  qualifiers: () => [],
+})
 
 const emit = defineEmits<{
   'player-click': [username: string]
@@ -37,6 +40,7 @@ const dayLabels: Record<string, string> = {
         :get-avatar="getAvatar"
         :limit="10"
         :compact="true"
+        :qualifiers="qualifiers"
         @row-click="(user) => emit('player-click', user)"
       />
     </div>

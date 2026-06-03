@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { DonksLeaderboardEntry } from '@/types/donks'
+import { RouterLink } from 'vue-router'
+import type { DonksLeaderboardEntry, DonksPlayoffQualifier } from '@/types/donks'
 import { computed, ref } from 'vue'
 
 const props = withDefaults(defineProps<{
@@ -8,11 +9,15 @@ const props = withDefaults(defineProps<{
   limit?: number
   compact?: boolean
   collapsible?: number
+  qualifiers?: DonksPlayoffQualifier[]
 }>(), {
   limit: 0,
   compact: false,
   collapsible: 0,
+  qualifiers: () => [],
 })
+
+const qualifierSet = computed(() => new Set(props.qualifiers.map((q) => q.username)))
 
 const emit = defineEmits<{
   'row-click': [username: string]
@@ -79,6 +84,12 @@ function rankAccent(rank: number): string {
               loading="lazy"
             />
             <span class="lb-table__username">{{ entry.username }}</span>
+            <RouterLink
+              v-if="qualifierSet.has(entry.username)"
+              to="/league/donks/playoffs"
+              class="lb-table__po-badge"
+              @click.stop
+            >PO</RouterLink>
           </td>
           <td class="lb-table__cell lb-table__cell--pts">{{ formatPoints(entry.totalPoints) }}</td>
           <td class="lb-table__cell lb-table__cell--games">{{ entry.gamesPlayed }}</td>
@@ -244,6 +255,27 @@ function rankAccent(rank: number): string {
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* PO (Playoff Qualifier) badge */
+.lb-table__po-badge {
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(201, 162, 39, 0.15);
+  color: #b8941e;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 8px;
+  padding: 0.05rem 0.35rem;
+  margin-left: 0.35rem;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lb-table__po-badge:hover {
+  background: rgba(201, 162, 39, 0.3);
+  color: #96790f;
 }
 
 /* Expand/Collapse toggle */

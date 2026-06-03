@@ -82,7 +82,7 @@ function toggle() {
   justify-content: space-between;
   width: 100%;
   padding: 0.65rem 1rem;
-  background: rgba(212, 160, 23, 0.06);
+  background: rgba(212, 160, 23, 0.8);
   border: 1px solid var(--color-donks-card-border, rgba(201, 162, 39, 0.2));
   border-radius: 10px;
   cursor: pointer;

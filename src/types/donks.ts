@@ -155,6 +155,8 @@ export interface DonksPlayoffQualifier {
   qualifyingRank: number
   /** Points in qualifying cup at cutoff */
   qualifyingPoints: number
+  /** Cross-qualification: all cups where this player ranks in the top N */
+  allCupRanks?: Partial<Record<DonksCupSlug, number>>
 }
 
 export interface DonksPlayoffLeaderboardEntry {

@@ -1,15 +1,36 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted, computed } from 'vue'
-import type { DonksCupSlug, DonksGameResultEntry } from '@/types/donks'
+import { RouterLink } from 'vue-router'
+import type { DonksCupSlug, DonksGameResultEntry, DonksPlayoffQualifier } from '@/types/donks'
+import { getDonksCup } from '@/config/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
 import { fetchTournamentWithProxy } from '@/services/api/corsProxy'
 import { calculateDonksPoints } from '@/services/scoring/strategies/donks'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   cupSlug: DonksCupSlug
   selectedGameId: string | null
   selectedTournamentId: number | null
-}>()
+  isPlayoffGame?: boolean
+  qualifiers?: DonksPlayoffQualifier[]
+}>(), {
+  isPlayoffGame: false,
+  qualifiers: () => [],
+})
+
+const qualifierMap = computed(() => {
+  const map = new Map<string, DonksPlayoffQualifier>()
+  for (const q of props.qualifiers) map.set(q.username, q)
+  return map
+})
+
+function qualBadgeLabel(username: string): string {
+  const q = qualifierMap.value.get(username)
+  if (!q) return ''
+  if (q.qualifiedVia === 'omaha_wildcard') return 'OMA'
+  const cup = getDonksCup(q.qualifiedVia)
+  return cup?.shortName ?? q.qualifiedVia.toUpperCase()
+}
 
 const store = useDonksStore()
 const results = ref<DonksGameResultEntry[]>([])
@@ -149,6 +170,17 @@ function formatPoints(pts: number): string {
       </div>
     </div>
 
+    <!-- Playoff Game Banner -->
+    <div v-if="isPlayoffGame" class="results-panel__playoff-banner">
+      <i class="i-lucide-swords results-panel__playoff-icon" />
+      <div class="results-panel__playoff-text">
+        <strong>PLAYOFF GAME</strong> — Results count toward the FatnSassy Playoffs Medal for qualified players
+      </div>
+      <RouterLink to="/league/donks/playoffs" class="results-panel__playoff-link">
+        View Playoff Standings &rarr;
+      </RouterLink>
+    </div>
+
     <div v-if="isLoadingGame" class="results-panel__loading">
       <div class="results-panel__spinner" />
       Loading results...
@@ -171,6 +203,7 @@ function formatPoints(pts: number): string {
           v-for="entry in visibleResults"
           :key="entry.username"
           class="results-panel__row"
+          :class="{ 'results-panel__row--qualifier': isPlayoffGame && qualifierMap.has(entry.username) }"
         >
           <td class="results-panel__cell results-panel__cell--rank">{{ entry.finishPosition }}</td>
           <td class="results-panel__cell results-panel__cell--player">
@@ -181,6 +214,10 @@ function formatPoints(pts: number): string {
               loading="lazy"
             />
             <span class="results-panel__username">{{ entry.username }}</span>
+            <span
+              v-if="isPlayoffGame && qualifierMap.has(entry.username)"
+              class="results-panel__qual-badge"
+            >{{ qualBadgeLabel(entry.username) }}</span>
           </td>
           <td class="results-panel__cell results-panel__cell--pts">{{ formatPoints(entry.pointsEarned) }}</td>
         </tr>
@@ -311,6 +348,69 @@ function formatPoints(pts: number): string {
   text-align: center;
   color: var(--color-donks-text-muted);
   font-size: 0.82rem;
+}
+
+/* Playoff Game Banner */
+.results-panel__playoff-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  background: rgba(201, 162, 39, 0.08);
+  border: 1px solid rgba(201, 162, 39, 0.2);
+}
+
+.results-panel__playoff-icon {
+  width: 18px;
+  height: 18px;
+  color: #c9a227;
+  flex-shrink: 0;
+}
+
+.results-panel__playoff-text {
+  font-size: 0.72rem;
+  color: var(--color-donks-text);
+  flex: 1;
+}
+
+.results-panel__playoff-text strong {
+  color: #b8941e;
+  letter-spacing: 0.04em;
+}
+
+.results-panel__playoff-link {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #b8941e;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.results-panel__playoff-link:hover {
+  color: #96790f;
+}
+
+/* Qualifier row styling */
+.results-panel__row--qualifier {
+  border-left: 3px solid #c9a227;
+}
+
+.results-panel__qual-badge {
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(201, 162, 39, 0.15);
+  color: #b8941e;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 6px;
+  padding: 0.05rem 0.3rem;
+  margin-left: 0.3rem;
+  flex-shrink: 0;
 }
 
 /* Table */

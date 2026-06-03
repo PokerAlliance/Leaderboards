@@ -56,9 +56,6 @@ function onRowClick(username: string) {
         <!-- Footer -->
         <footer class="hof-page__footer donks-home__frosted">
           <div class="hof-page__footer-divider" />
-          <RouterLink to="/league/donks" class="donks-btn donks-btn--outline hof-page__back">
-            ← Back to Donks
-          </RouterLink>
           <div class="hof-page__footer-suits">♠ ♥ ♦ ♣</div>
         </footer>
       </div>
