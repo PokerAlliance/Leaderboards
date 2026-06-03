@@ -87,6 +87,19 @@ const qualGroups = computed<QualGroup[]>(() => {
   // Omaha wild cards
   const wildcards = props.qualifiers.filter((q) => q.qualifiedVia === 'omaha_wildcard')
   if (wildcards.length > 0) {
+    const lastWcRank = Math.max(...wildcards.map((q) => q.omahaCompositeRank ?? q.qualifyingRank))
+    const omahaSkipped = props.qualifiers
+      .filter((q) =>
+        q.qualifiedVia !== 'omaha_wildcard' &&
+        q.omahaCompositeRank !== undefined &&
+        q.omahaCompositeRank <= lastWcRank
+      )
+      .sort((a, b) => (a.omahaCompositeRank ?? 0) - (b.omahaCompositeRank ?? 0))
+      .map((q) => {
+        const origCup = getDonksCup(q.qualifiedVia as DonksCupSlug)
+        return { qualifier: q, originalCup: origCup?.name ?? q.qualifiedVia }
+      })
+
     groups.push({
       key: 'omaha_wildcard',
       cupSlug: 'omaha_wildcard',
@@ -94,7 +107,7 @@ const qualGroups = computed<QualGroup[]>(() => {
       color: '#2d6a4f',
       icon: 'wildcard',
       newQualifiers: wildcards,
-      deduped: [],
+      deduped: omahaSkipped,
     })
   }
 
@@ -181,7 +194,7 @@ function otherCupPills(q: DonksPlayoffQualifier): Array<{ slug: DonksCupSlug; sh
             :key="dup.qualifier.username + '-dup'"
             class="pq__row pq__row--dedup"
           >
-            <span class="pq__rank pq__rank--dedup">#{{ dup.qualifier.allCupRanks?.[group.cupSlug as DonksCupSlug] ?? '—' }}</span>
+            <span class="pq__rank pq__rank--dedup">#{{ group.cupSlug === 'omaha_wildcard' ? (dup.qualifier.omahaCompositeRank ?? '—') : (dup.qualifier.allCupRanks?.[group.cupSlug as DonksCupSlug] ?? '—') }}</span>
             <img :src="getAvatar(dup.qualifier.username)" :alt="dup.qualifier.username" class="pq__avatar pq__avatar--dedup" />
             <span class="pq__name pq__name--dedup">{{ dup.qualifier.username }}</span>
             <span class="pq__dedup-note">already qualified via {{ dup.originalCup }}</span>

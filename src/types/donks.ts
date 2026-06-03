@@ -157,6 +157,8 @@ export interface DonksPlayoffQualifier {
   qualifyingPoints: number
   /** Cross-qualification: all cups where this player ranks in the top N */
   allCupRanks?: Partial<Record<DonksCupSlug, number>>
+  /** Player's rank in the Omaha composite (used for Wild Card dedup display) */
+  omahaCompositeRank?: number
 }
 
 export interface DonksPlayoffLeaderboardEntry {

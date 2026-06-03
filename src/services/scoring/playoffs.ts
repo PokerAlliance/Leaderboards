@@ -257,7 +257,8 @@ export function computePlayoffQualifiers(
     wildcardCount++
   }
 
-  // Attach allCupRanks to each qualifier
+  // Attach allCupRanks and omahaCompositeRank to each qualifier
+  const omahaRankMap = new Map(omahaLb.map((e) => [e.username, e.rank]))
   for (const q of qualifiers) {
     const ranks: Partial<Record<DonksCupSlug, number>> = {}
     for (const [cupSlug, lb] of cupLeaderboards.entries()) {
@@ -267,6 +268,8 @@ export function computePlayoffQualifiers(
       }
     }
     q.allCupRanks = ranks
+    const oRank = omahaRankMap.get(q.username)
+    if (oRank !== undefined) q.omahaCompositeRank = oRank
   }
 
   return { qualifiers, crossQualification }

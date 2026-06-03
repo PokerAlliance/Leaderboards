@@ -10,7 +10,7 @@ import type {
   DonksPlayoffQualifier,
   DonksPlayoffGameSummary,
 } from '@/types/donks'
-import { getCupsByGameType, getDonksCup } from '@/config/donks'
+import { getCupsByGameType, getDonksCup, DONKS_CUPS } from '@/config/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
 
 const props = defineProps<{
@@ -24,33 +24,49 @@ const emit = defineEmits<{
 
 const store = useDonksStore()
 const activeTab = ref<DonksCupSlug | 'playoffs' | null>(null)
+const cupGameType = ref<DonksGameType>('holdem')
 
-const relevantCups = computed(() => getCupsByGameType(props.gameType))
+const holdemCups = computed(() => getCupsByGameType('holdem'))
+const omahaCups = computed(() => getCupsByGameType('omaha'))
 
-const compositeLeaderboard = computed<DonksLeaderboardEntry[]>(() => {
-  if (props.gameType === 'holdem') return store.getHoldemComposite()
-  return store.getOmahaComposite()
-})
+const holdemComposite = computed(() => store.getHoldemComposite())
+const omahaComposite = computed(() => store.getOmahaComposite())
 
-const playerCompositeEntry = computed(() =>
-  compositeLeaderboard.value.find((e) => e.username === props.username) ?? null
+const holdemEntry = computed(() =>
+  holdemComposite.value.find((e) => e.username === props.username) ?? null
+)
+const omahaEntry = computed(() =>
+  omahaComposite.value.find((e) => e.username === props.username) ?? null
 )
 
-const cupRecap = computed(() =>
-  relevantCups.value.map((cup) => {
+const primaryCompositeEntry = computed(() =>
+  props.gameType === 'omaha' ? omahaEntry.value : holdemEntry.value
+)
+
+const holdemCupRecap = computed(() =>
+  holdemCups.value.map((cup) => {
     const lb = store.getCupLeaderboard(cup.slug)
     const entry = lb.find((e) => e.username === props.username)
-    return {
-      cup,
-      rank: entry?.rank ?? null,
-      points: entry?.totalPoints ?? 0,
-      games: entry?.gamesPlayed ?? 0,
-    }
+    return { cup, rank: entry?.rank ?? null, points: entry?.totalPoints ?? 0, games: entry?.gamesPlayed ?? 0 }
+  })
+)
+const omahaCupRecap = computed(() =>
+  omahaCups.value.map((cup) => {
+    const lb = store.getCupLeaderboard(cup.slug)
+    const entry = lb.find((e) => e.username === props.username)
+    return { cup, rank: entry?.rank ?? null, points: entry?.totalPoints ?? 0, games: entry?.gamesPlayed ?? 0 }
   })
 )
 
+const activeCupRecap = computed(() =>
+  cupGameType.value === 'omaha' ? omahaCupRecap.value : holdemCupRecap.value
+)
+const activeCompositeEntry = computed(() =>
+  cupGameType.value === 'omaha' ? omahaEntry.value : holdemEntry.value
+)
+
 const tabHistory = computed<DonksGameHistory[]>(() => {
-  if (!props.username || !activeTab.value) return []
+  if (!props.username || !activeTab.value || activeTab.value === 'playoffs') return []
   return store.getPlayerHistory(props.username, activeTab.value)
 })
 
@@ -63,14 +79,64 @@ const playoffConfig = computed(() => store.effectivePlayoffConfig.value)
 const playerQualifier = computed<DonksPlayoffQualifier | null>(() =>
   playoffState.value.qualifiers.find((q) => q.username === props.username) ?? null
 )
-
 const isPlayoffQualifier = computed(() => !!playerQualifier.value)
 
 const playerPlayoffEntry = computed<DonksPlayoffLeaderboardEntry | null>(() =>
   playoffState.value.leaderboard.find((e) => e.username === props.username) ?? null
 )
-
 const playoffGames = computed<DonksPlayoffGameSummary[]>(() => playoffState.value.playoffGames)
+
+// Trophy icon definitions
+const TROPHY_DEFS = [
+  { key: 'goldenCrowns', icon: 'i-lucide-crown', color: '#c9a227', label: 'Golden Crown' },
+  { key: 'silverCrowns', icon: 'i-lucide-crown', color: '#a8a8a8', label: 'Silver Crown' },
+  { key: 'bronzeCrowns', icon: 'i-lucide-crown', color: '#cd7f32', label: 'Bronze Crown' },
+  { key: 'annualChampionship', icon: 'i-lucide-gem', color: '#2563eb', label: 'Annual Championship Ring' },
+  { key: 'tournamentOfChampions', icon: 'i-lucide-award', color: '#7c3aed', label: 'Tournament of Champions' },
+  { key: 'allDonksInPlayoffs', icon: 'i-lucide-swords', color: '#c9a227', label: 'Playoffs Bracelet' },
+  { key: 'omaha', icon: 'i-lucide-clover', color: '#2d6a4f', label: 'Omaha Championship' },
+] as const
+
+const trophyItems = computed(() => {
+  if (!hofEntry.value) return []
+  return TROPHY_DEFS
+    .map((def) => ({
+      ...def,
+      count: (hofEntry.value as any)[def.key] as number,
+    }))
+    .filter((t) => t.count > 0)
+})
+
+const totalAwards = computed(() => {
+  if (!hofEntry.value) return 0
+  const h = hofEntry.value
+  return h.goldenCrowns + h.silverCrowns + h.bronzeCrowns
+    + h.annualChampionship + h.tournamentOfChampions
+    + h.allDonksInPlayoffs + h.omaha
+})
+
+// Season Stats
+const seasonStats = computed(() => {
+  if (!props.username) return null
+  const allResults = store.getPlayerHistory(props.username)
+  if (allResults.length === 0) return null
+
+  const topThreeCount = allResults.filter((g) => g.finishPosition <= 3).length
+  const winRate = Math.round((topThreeCount / allResults.length) * 100)
+  const bestFinish = Math.max(...allResults.map((g) => g.pointsEarned))
+  const cupsPlayed = new Set(allResults.map((g) => {
+    const game = DONKS_CUPS.find((c) => store.getPlayerHistory(props.username!, c.slug).length > 0)
+    return game?.slug
+  }))
+  const cupSlugsPlayed = new Set<string>()
+  for (const cup of DONKS_CUPS) {
+    if (store.getPlayerHistory(props.username, cup.slug).length > 0) {
+      cupSlugsPlayed.add(cup.slug)
+    }
+  }
+
+  return { winRate, bestFinish: Math.round(bestFinish), cupsPlayed: cupSlugsPlayed.size }
+})
 
 function qualViaLabel(q: DonksPlayoffQualifier): string {
   if (q.qualifiedVia === 'omaha_wildcard') return 'Omaha Wild Card'
@@ -100,12 +166,19 @@ function formatGameDate(d: Date): string {
 watch(
   () => props.username,
   (name) => {
-    if (name && relevantCups.value.length > 0) {
-      activeTab.value = relevantCups.value[0]!.slug
+    if (name) {
+      cupGameType.value = props.gameType
+      const cups = getCupsByGameType('holdem')
+      if (cups.length > 0) activeTab.value = cups[0]!.slug
     }
   },
   { immediate: true }
 )
+
+function setHistoryGameType(gt: DonksGameType) {
+  const cups = getCupsByGameType(gt)
+  if (cups.length > 0) activeTab.value = cups[0]!.slug
+}
 
 function formatPoints(pts: number): string {
   return Math.round(pts).toLocaleString()
@@ -117,13 +190,17 @@ function formatDate(d: Date): string {
 
 function onClickOutside(event: MouseEvent) {
   const target = event.target as HTMLElement
-  if (target.classList.contains('modal-overlay')) {
-    emit('close')
-  }
+  if (target.classList.contains('modal-overlay')) emit('close')
 }
 
 function onEscape(event: KeyboardEvent) {
   if (event.key === 'Escape') emit('close')
+}
+
+function activeHistoryGameType(): DonksGameType {
+  if (!activeTab.value || activeTab.value === 'playoffs') return 'holdem'
+  const cup = getDonksCup(activeTab.value)
+  return cup?.gameType ?? 'holdem'
 }
 
 onMounted(() => document.addEventListener('keydown', onEscape))
@@ -150,39 +227,89 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
             />
             <div class="modal-header__info">
               <h2 class="modal-header__name">{{ username }}</h2>
-              <span
-                v-if="playerCompositeEntry"
-                class="modal-header__rank"
-              >
-                Rank #{{ playerCompositeEntry.rank }}
-                &middot;
-                {{ formatPoints(playerCompositeEntry.totalPoints) }} pts
-              </span>
-              <span v-else class="modal-header__rank">Not ranked</span>
+              <div class="modal-header__ranks">
+                <span v-if="holdemEntry" class="modal-header__rank-pill">
+                  <span class="modal-header__rank-label">HE</span>
+                  #{{ holdemEntry.rank }} &middot; {{ formatPoints(holdemEntry.totalPoints) }}
+                </span>
+                <span v-if="omahaEntry" class="modal-header__rank-pill modal-header__rank-pill--omaha">
+                  <span class="modal-header__rank-label">OM</span>
+                  #{{ omahaEntry.rank }} &middot; {{ formatPoints(omahaEntry.totalPoints) }}
+                </span>
+                <span
+                  v-if="!holdemEntry && !omahaEntry"
+                  class="modal-header__rank"
+                >Not ranked</span>
+              </div>
             </div>
           </div>
 
-          <!-- All-Time Stats -->
-          <div v-if="allTimeGames > 0 || hofEntry" class="modal-section modal-section--stats">
+          <!-- All-Time Stats & HoF -->
+          <div v-if="allTimeGames > 0 || hofEntry || seasonStats" class="modal-section modal-section--stats">
             <div class="modal-stats-row">
               <div v-if="allTimeGames > 0" class="modal-stat">
                 <span class="modal-stat__value">{{ allTimeGames.toLocaleString() }}</span>
                 <span class="modal-stat__label">All-Time Games</span>
               </div>
-              <div v-if="hofEntry" class="modal-stat modal-stat--hof">
-                <span class="modal-stat__value">Hall of Fame</span>
-                <span class="modal-stat__label">
-                  {{ hofEntry.goldenCrowns + hofEntry.silverCrowns + hofEntry.bronzeCrowns
-                     + hofEntry.annualChampionship + hofEntry.tournamentOfChampions
-                     + hofEntry.allDonksInPlayoffs + hofEntry.omaha }} awards
+              <div v-if="seasonStats" class="modal-stat">
+                <span class="modal-stat__value">{{ seasonStats.winRate }}%</span>
+                <span class="modal-stat__label">Top-3 Rate</span>
+              </div>
+              <div v-if="seasonStats" class="modal-stat">
+                <span class="modal-stat__value">{{ seasonStats.bestFinish.toLocaleString() }}</span>
+                <span class="modal-stat__label">Best Score</span>
+              </div>
+              <div v-if="seasonStats" class="modal-stat">
+                <span class="modal-stat__value">{{ seasonStats.cupsPlayed }}</span>
+                <span class="modal-stat__label">Cups Played</span>
+              </div>
+            </div>
+
+            <!-- Hall of Fame -->
+            <div v-if="hofEntry" class="modal-hof">
+              <div class="modal-hof__header">
+                <i class="i-lucide-trophy modal-hof__icon" />
+                <span class="modal-hof__title">Hall of Fame Player</span>
+                <span class="modal-hof__total">{{ totalAwards }} award{{ totalAwards === 1 ? '' : 's' }}</span>
+              </div>
+              <div class="modal-hof__trophies">
+                <span
+                  v-for="t in trophyItems"
+                  :key="t.key"
+                  class="modal-trophy"
+                  :title="t.label"
+                >
+                  <i :class="t.icon" class="modal-trophy__icon" :style="{ color: t.color }" />
+                  <span class="modal-trophy__count">x{{ t.count }}</span>
                 </span>
               </div>
             </div>
           </div>
 
-          <!-- Cup Recap -->
+          <!-- Cup Summary with Game Type Tabs -->
           <div class="modal-section">
-            <h3 class="modal-section__title">Cup Summary</h3>
+            <div class="modal-section__header">
+              <h3 class="modal-section__title">Cup Summary</h3>
+              <div class="modal-gt-tabs">
+                <button
+                  class="modal-gt-tab"
+                  :class="{ 'modal-gt-tab--active': cupGameType === 'holdem' }"
+                  @click="cupGameType = 'holdem'"
+                >Hold'em</button>
+                <button
+                  class="modal-gt-tab"
+                  :class="{ 'modal-gt-tab--active': cupGameType === 'omaha' }"
+                  @click="cupGameType = 'omaha'"
+                >Omaha</button>
+              </div>
+            </div>
+
+            <div v-if="activeCompositeEntry" class="modal-composite-bar">
+              <span class="modal-composite-bar__label">{{ cupGameType === 'holdem' ? 'Hold\'em' : 'Omaha' }} Composite</span>
+              <span class="modal-composite-bar__rank">#{{ activeCompositeEntry.rank }}</span>
+              <span class="modal-composite-bar__pts">{{ formatPoints(activeCompositeEntry.totalPoints) }} pts</span>
+            </div>
+
             <table class="recap-table">
               <thead>
                 <tr>
@@ -193,7 +320,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in cupRecap" :key="row.cup.slug">
+                <tr v-for="row in activeCupRecap" :key="row.cup.slug">
                   <td>
                     <span class="recap-cup-dot" :style="{ background: row.cup.color }" />
                     {{ row.cup.shortName }}
@@ -206,20 +333,32 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
             </table>
           </div>
 
-          <!-- Game History Tabs -->
+          <!-- Game History Tabs (all cups + playoffs) -->
           <div class="modal-section">
             <h3 class="modal-section__title">Game History</h3>
             <div class="tab-bar">
-              <button
-                v-for="cup in relevantCups"
-                :key="cup.slug"
-                class="tab-btn"
-                :class="{ 'tab-btn--active': activeTab === cup.slug }"
-                :style="activeTab === cup.slug ? { '--tab-color': cup.color } : {}"
-                @click="activeTab = cup.slug"
-              >
-                {{ cup.shortName }}
-              </button>
+              <div class="tab-group">
+                <span class="tab-group__label">HE</span>
+                <button
+                  v-for="cup in holdemCups"
+                  :key="cup.slug"
+                  class="tab-btn"
+                  :class="{ 'tab-btn--active': activeTab === cup.slug }"
+                  :style="activeTab === cup.slug ? { '--tab-color': cup.color } : {}"
+                  @click="activeTab = cup.slug"
+                >{{ cup.shortName }}</button>
+              </div>
+              <div class="tab-group">
+                <span class="tab-group__label">OM</span>
+                <button
+                  v-for="cup in omahaCups"
+                  :key="cup.slug"
+                  class="tab-btn"
+                  :class="{ 'tab-btn--active': activeTab === cup.slug }"
+                  :style="activeTab === cup.slug ? { '--tab-color': cup.color } : {}"
+                  @click="activeTab = cup.slug"
+                >{{ cup.shortName }}</button>
+              </div>
               <button
                 v-if="isPlayoffQualifier"
                 class="tab-btn tab-btn--playoffs"
@@ -227,7 +366,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
                 :style="activeTab === 'playoffs' ? { '--tab-color': '#c9a227' } : {}"
                 @click="activeTab = 'playoffs'"
               >
-                <i class="i-lucide-swords tab-btn__icon" /> Playoffs
+                <i class="i-lucide-swords tab-btn__icon" /> PO
               </button>
             </div>
 
@@ -342,7 +481,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
 .modal-panel {
   position: relative;
   width: 100%;
-  max-width: 560px;
+  max-width: 580px;
   max-height: 85vh;
   overflow-y: auto;
   padding: 1.5rem;
@@ -392,12 +531,49 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
   flex-shrink: 0;
 }
 
+.modal-header__info {
+  flex: 1;
+  min-width: 0;
+}
+
 .modal-header__name {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--color-donks-text);
-  margin: 0 0 0.15rem;
+  margin: 0 0 0.3rem;
+}
+
+.modal-header__ranks {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.modal-header__rank-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(201, 162, 39, 0.1);
+  color: var(--color-donks-text);
+  border: 1px solid rgba(201, 162, 39, 0.2);
+}
+
+.modal-header__rank-pill--omaha {
+  background: rgba(45, 106, 79, 0.1);
+  border-color: rgba(45, 106, 79, 0.2);
+}
+
+.modal-header__rank-label {
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
 }
 
 .modal-header__rank {
@@ -412,50 +588,116 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
 }
 
 .modal-stats-row {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0.45rem;
 }
 
 .modal-stat {
-  flex: 1;
-  min-width: 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.6rem 0.75rem;
+  gap: 0.1rem;
+  padding: 0.5rem 0.4rem;
   border-radius: 8px;
-  background: rgba(201, 162, 39, 0.06);
-  border: 1px solid rgba(201, 162, 39, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .modal-stat__value {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--color-donks-text);
+  font-variant-numeric: tabular-nums;
 }
 
 .modal-stat__label {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-donks-text-muted);
 }
 
-.modal-stat--hof {
+/* Hall of Fame */
+.modal-hof {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
   background: linear-gradient(135deg, rgba(201, 162, 39, 0.1) 0%, rgba(201, 162, 39, 0.04) 100%);
-  border-color: rgba(201, 162, 39, 0.25);
+  border: 1px solid rgba(201, 162, 39, 0.25);
 }
 
-.modal-stat--hof .modal-stat__value {
+.modal-hof__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.modal-hof__icon {
+  width: 16px;
+  height: 16px;
   color: var(--color-donks-gold, #c9a227);
+  flex-shrink: 0;
+}
+
+.modal-hof__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-donks-gold, #c9a227);
+  flex: 1;
+}
+
+.modal-hof__total {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--color-donks-text-muted);
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.modal-hof__trophies {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modal-trophy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  cursor: default;
+  position: relative;
+}
+
+.modal-trophy__icon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.15s ease;
+}
+
+.modal-trophy:hover .modal-trophy__icon {
+  transform: scale(1.2);
+}
+
+.modal-trophy__count {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-donks-text-secondary);
 }
 
 /* Section */
 .modal-section {
   margin-bottom: 1.25rem;
+}
+
+.modal-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
 }
 
 .modal-section__title {
@@ -464,7 +706,67 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-donks-text-muted);
-  margin: 0 0 0.6rem;
+  margin: 0;
+}
+
+/* Game-type mini-tabs */
+.modal-gt-tabs {
+  display: flex;
+  gap: 0.15rem;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.modal-gt-tab {
+  padding: 0.2rem 0.55rem;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-donks-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modal-gt-tab--active {
+  background: white;
+  color: var(--color-donks-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.modal-gt-tab:hover:not(.modal-gt-tab--active) {
+  color: var(--color-donks-text-secondary);
+}
+
+/* Composite Bar */
+.modal-composite-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.025);
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+}
+
+.modal-composite-bar__label {
+  flex: 1;
+  font-weight: 600;
+  color: var(--color-donks-text-secondary);
+}
+
+.modal-composite-bar__rank {
+  font-weight: 800;
+  color: var(--color-donks-text);
+}
+
+.modal-composite-bar__pts {
+  font-weight: 600;
+  color: var(--color-donks-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Recap Table */
@@ -500,20 +802,37 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
   vertical-align: middle;
 }
 
-/* Tabs */
+/* Tab bar */
 .tab-bar {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.35rem;
   margin-bottom: 0.75rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.tab-group {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.tab-group__label {
+  font-size: 0.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-donks-text-muted);
+  opacity: 0.5;
+  margin-right: 0.1rem;
 }
 
 .tab-btn {
-  padding: 0.35em 0.75em;
+  padding: 0.35em 0.65em;
   border: 1.5px solid rgba(0, 0, 0, 0.08);
   border-radius: 6px;
   background: transparent;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--color-donks-text-muted);
   cursor: pointer;
@@ -695,8 +1014,12 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
   }
 
   .tab-btn {
-    font-size: 0.62rem;
-    padding: 0.3em 0.55em;
+    font-size: 0.58rem;
+    padding: 0.3em 0.45em;
+  }
+
+  .modal-stats-row {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

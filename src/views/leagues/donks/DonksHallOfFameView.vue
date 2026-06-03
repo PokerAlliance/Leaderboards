@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 import { getLeagueConfig } from '@/config/leagues'
 import { useDonksStore } from '@/composables/useDonksStore'
 import DonksLoadingGate from './components/DonksLoadingGate.vue'
-import DonksHallOfFameTable from './components/DonksHallOfFameTable.vue'
+import DonksHallOfFameGrid from './components/DonksHallOfFameGrid.vue'
 import DonksHallOfFameExplainer from './components/DonksHallOfFameExplainer.vue'
 import DonksHallOfFameStatsBar from './components/DonksHallOfFameStatsBar.vue'
 import DonksUserModal from './components/DonksUserModal.vue'
@@ -39,11 +39,11 @@ function onRowClick(username: string) {
         </div>
 
         <!-- Explainer -->
-        <DonksHallOfFameExplainer />
+        <!-- <DonksHallOfFameExplainer /> -->
 
-        <!-- Main table -->
-        <section class="donks-card hof-page__table-card">
-          <DonksHallOfFameTable
+        <!-- Hall of Fame Grid -->
+        <section class="hof-page__grid-section">
+          <DonksHallOfFameGrid
             :entries="entries"
             :get-avatar="store.getAvatar"
             @row-click="onRowClick"
@@ -109,9 +109,8 @@ function onRowClick(username: string) {
   margin: 0;
 }
 
-.hof-page__table-card {
-  padding: 0.75rem 0;
-  overflow: hidden;
+.hof-page__grid-section {
+  margin-bottom: 1rem;
 }
 
 .hof-page__footer {

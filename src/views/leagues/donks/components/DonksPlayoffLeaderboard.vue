@@ -44,10 +44,15 @@ const unrankedEntries = computed(() =>
 const visibleRanked = computed(() =>
   expanded.value ? rankedEntries.value : rankedEntries.value.slice(0, VISIBLE_LIMIT)
 )
-const visibleUnranked = computed(() =>
-  expanded.value ? unrankedEntries.value : []
-)
+const visibleUnranked = computed(() => {
+  if (expanded.value) return unrankedEntries.value
+  if (isPrePlayoffs.value) return unrankedEntries.value.slice(0, VISIBLE_LIMIT)
+  return []
+})
 const hiddenCount = computed(() => {
+  if (isPrePlayoffs.value) {
+    return Math.max(0, unrankedEntries.value.length - VISIBLE_LIMIT)
+  }
   const total = rankedEntries.value.length + unrankedEntries.value.length
   return Math.max(0, total - VISIBLE_LIMIT)
 })
@@ -378,6 +383,7 @@ function qualColor(q: DonksPlayoffQualifier): string {
   position: relative;
   display: inline-flex;
   align-items: center;
+  z-index: 1;
   cursor: help;
   margin-left: 0.1rem;
   flex-shrink: 0;
@@ -389,6 +395,11 @@ function qualColor(q: DonksPlayoffQualifier): string {
   color: var(--color-donks-text-muted);
   opacity: 0.5;
   transition: opacity 0.15s ease;
+}
+
+.po-qual-wrap:hover,
+.po-qual-wrap:focus-within {
+  z-index: 50;
 }
 
 .po-qual-wrap:hover .po-qual-icon,
@@ -419,7 +430,7 @@ function qualColor(q: DonksPlayoffQualifier): string {
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease;
-  z-index: 10;
+  z-index: 100;
 }
 
 .po-qual-pop::before {
