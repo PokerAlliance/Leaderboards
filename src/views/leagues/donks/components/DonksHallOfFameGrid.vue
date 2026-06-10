@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DonksHallOfFameEntry } from '@/types/donks'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 
 const props = defineProps<{
   entries: DonksHallOfFameEntry[]
@@ -60,11 +61,10 @@ function podiumClass(rank: number): string {
       <span class="hof-card__rank">#{{ idx + 1 }}</span>
 
       <!-- Avatar -->
-      <img
+      <PlayerAvatar
         :src="getAvatar(entry.username)"
-        :alt="entry.username"
+        :username="entry.username"
         class="hof-card__avatar"
-        loading="lazy"
       />
 
       <!-- Username -->

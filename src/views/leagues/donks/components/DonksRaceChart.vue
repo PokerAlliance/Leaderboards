@@ -6,6 +6,7 @@ import type { DonksCupSlug, DonksGameType, DonksPlayerResult, DonksGame } from '
 import { DONKS_CUPS, DONKS_MEDALS, TOP_N_SCORES } from '@/config/donks'
 import { calculateTopN } from '@/services/scoring/strategies/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import { format } from 'date-fns'
 
 const props = defineProps<{
@@ -782,7 +783,7 @@ onMounted(() => {
         }"
       >
         <div class="race-chart__tooltip-header">
-          <img :src="tooltipData.avatar" class="race-chart__tooltip-avatar" />
+          <PlayerAvatar :src="tooltipData.avatar" :username="tooltipData.username" class="race-chart__tooltip-avatar" />
           <div>
             <div class="race-chart__tooltip-name">{{ tooltipData.username }}</div>
             <div class="race-chart__tooltip-rank">#{{ tooltipData.rank }}</div>

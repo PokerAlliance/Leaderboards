@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import type { DonksCupSlug, DonksGameResultEntry, DonksPlayoffQualifier } from '@/types/donks'
 import { getDonksCup } from '@/config/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import { fetchTournamentWithProxy } from '@/services/api/corsProxy'
 import { calculateDonksPoints } from '@/services/scoring/strategies/donks'
 
@@ -207,11 +208,10 @@ function formatPoints(pts: number): string {
         >
           <td class="results-panel__cell results-panel__cell--rank">{{ entry.finishPosition }}</td>
           <td class="results-panel__cell results-panel__cell--player">
-            <img
+            <PlayerAvatar
               :src="store.getAvatar(entry.username)"
-              :alt="entry.username"
+              :username="entry.username"
               class="results-panel__avatar"
-              loading="lazy"
             />
             <span class="results-panel__username">{{ entry.username }}</span>
             <span

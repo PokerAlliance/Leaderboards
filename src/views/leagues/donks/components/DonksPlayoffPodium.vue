@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import confetti from 'canvas-confetti'
 import type { DonksPlayoffLeaderboardEntry } from '@/types/donks'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 
 const props = defineProps<{
   entries: DonksPlayoffLeaderboardEntry[]
@@ -66,7 +67,7 @@ onBeforeUnmount(() => {
       <!-- 2nd place — left -->
       <div class="podium__slot podium__slot--silver">
         <div class="podium__avatar-area podium__avatar-area--silver">
-          <img :src="getAvatar(second.username)" :alt="second.username" class="podium__avatar podium__avatar--silver" />
+          <PlayerAvatar :src="getAvatar(second.username)" :username="second.username" class="podium__avatar podium__avatar--silver" />
         </div>
         <div class="podium__block podium__block--silver">
           <span class="podium__name">{{ second.username }}</span>
@@ -79,7 +80,7 @@ onBeforeUnmount(() => {
       <div class="podium__slot podium__slot--gold">
         <div class="podium__avatar-area podium__avatar-area--gold">
           <svg class="podium__crown" viewBox="0 0 24 24" fill="none"><path d="M2 18L4.5 7L8.5 12L12 4L15.5 12L19.5 7L22 18H2Z" fill="currentColor"/></svg>
-          <img :src="getAvatar(first.username)" :alt="first.username" class="podium__avatar podium__avatar--gold" />
+          <PlayerAvatar :src="getAvatar(first.username)" :username="first.username" class="podium__avatar podium__avatar--gold" />
         </div>
         <div class="podium__block podium__block--gold">
           <div class="podium__shimmer" />
@@ -92,7 +93,7 @@ onBeforeUnmount(() => {
       <!-- 3rd place — right -->
       <div class="podium__slot podium__slot--bronze">
         <div class="podium__avatar-area podium__avatar-area--bronze">
-          <img :src="getAvatar(third.username)" :alt="third.username" class="podium__avatar podium__avatar--bronze" />
+          <PlayerAvatar :src="getAvatar(third.username)" :username="third.username" class="podium__avatar podium__avatar--bronze" />
         </div>
         <div class="podium__block podium__block--bronze">
           <span class="podium__name">{{ third.username }}</span>

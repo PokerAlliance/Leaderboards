@@ -17,6 +17,8 @@ import type {
   ParsedAnarchyGame,
   ParsedAnarchyPlayerResult,
   AnarchyTeamSlug,
+  LockTournamentResponse,
+  LockableLeague,
 } from '@/types'
 
 export class SheetsClientError extends Error {
@@ -373,6 +375,35 @@ export const sheetsClient = {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to save Anarchy game results',
+      }
+    }
+  },
+
+  /**
+   * Lock a tournament via the backend (admin only).
+   * Fetches tournament from Replay API, resolves league metadata, and locks results.
+   */
+  async lockTournament(
+    league: LockableLeague,
+    tournamentId: number,
+    adminKey: string
+  ): Promise<LockTournamentResponse> {
+    if (!adminKey) {
+      return { success: false, error: 'Admin key is required' }
+    }
+
+    try {
+      const response = await postToAppScript<LockTournamentResponse>({
+        action: 'lock_tournament',
+        key: adminKey,
+        league,
+        tournamentId,
+      })
+      return response
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to lock tournament',
       }
     }
   },

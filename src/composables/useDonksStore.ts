@@ -8,6 +8,7 @@
  */
 
 import { ref, computed } from 'vue'
+import { getLetterAvatarUrl } from '@/utils/avatars'
 import type {
   DonksPlayerResult,
   DonksGame,
@@ -256,10 +257,10 @@ function getGameResults(gameId: string): DonksPlayerResult[] {
 
 /**
  * Get avatar URL for a username.
- * Falls back to the Replay default avatar if not in the map.
+ * Falls back to a locally-generated letter avatar if not in the map.
  */
 function getAvatar(username: string): string {
-  return _avatarMap.value[username] ?? `https://www.replaypoker.com/assets/images/avatar-placeholder.svg`
+  return _avatarMap.value[username] || getLetterAvatarUrl(username)
 }
 
 /**

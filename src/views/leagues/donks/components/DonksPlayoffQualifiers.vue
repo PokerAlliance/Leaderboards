@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import type {
   DonksPlayoffQualifier,
   DonksPlayoffConfig,
@@ -172,7 +173,7 @@ function otherCupPills(q: DonksPlayoffQualifier): Array<{ slug: DonksCupSlug; sh
             @click="emit('row-click', q.username)"
           >
             <span class="pq__rank">#{{ q.qualifyingRank }}</span>
-            <img :src="getAvatar(q.username)" :alt="q.username" class="pq__avatar" />
+            <PlayerAvatar :src="getAvatar(q.username)" :username="q.username" class="pq__avatar" />
             <span class="pq__name">{{ q.username }}</span>
             <span class="pq__pts">{{ q.qualifyingPoints.toLocaleString() }} pts</span>
             <span class="pq__pills">
@@ -195,7 +196,7 @@ function otherCupPills(q: DonksPlayoffQualifier): Array<{ slug: DonksCupSlug; sh
             class="pq__row pq__row--dedup"
           >
             <span class="pq__rank pq__rank--dedup">#{{ group.cupSlug === 'omaha_wildcard' ? (dup.qualifier.omahaCompositeRank ?? '—') : (dup.qualifier.allCupRanks?.[group.cupSlug as DonksCupSlug] ?? '—') }}</span>
-            <img :src="getAvatar(dup.qualifier.username)" :alt="dup.qualifier.username" class="pq__avatar pq__avatar--dedup" />
+            <PlayerAvatar :src="getAvatar(dup.qualifier.username)" :username="dup.qualifier.username" class="pq__avatar pq__avatar--dedup" />
             <span class="pq__name pq__name--dedup">{{ dup.qualifier.username }}</span>
             <span class="pq__dedup-note">already qualified via {{ dup.originalCup }}</span>
           </div>

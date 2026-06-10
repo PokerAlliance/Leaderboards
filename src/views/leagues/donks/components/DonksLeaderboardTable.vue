@@ -2,6 +2,7 @@
 import { RouterLink } from 'vue-router'
 import type { DonksLeaderboardEntry, DonksPlayoffQualifier } from '@/types/donks'
 import { computed, ref } from 'vue'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 
 const props = withDefaults(defineProps<{
   entries: DonksLeaderboardEntry[]
@@ -77,11 +78,10 @@ function rankAccent(rank: number): string {
             <span class="lb-table__rank-num">{{ entry.rank }}</span>
           </td>
           <td class="lb-table__cell lb-table__cell--player">
-            <img
+            <PlayerAvatar
               :src="getAvatar(entry.username)"
-              :alt="entry.username"
+              :username="entry.username"
               class="lb-table__avatar"
-              loading="lazy"
             />
             <span class="lb-table__username">{{ entry.username }}</span>
             <RouterLink

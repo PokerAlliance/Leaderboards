@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import type { DonksCompositeSlug } from '@/types/donks'
 import { getDonksMedal } from '@/config/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 
 const props = defineProps<{
   compositeSlug: DonksCompositeSlug
@@ -57,11 +58,10 @@ const rankIcons = ['🥇', '🥈', '🥉']
         class="context-card__entry"
       >
         <span class="context-card__rank">{{ i < 3 ? rankIcons[i] : `${i + 1}` }}</span>
-        <img
+        <PlayerAvatar
           :src="store.getAvatar(entry.username)"
-          :alt="entry.username"
+          :username="entry.username"
           class="context-card__avatar"
-          loading="lazy"
         />
         <span class="context-card__username">{{ entry.username }}</span>
         <span class="context-card__points">{{ formatPoints(entry.totalPoints) }}</span>

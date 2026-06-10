@@ -11,6 +11,7 @@ import type {
 } from '@/types/donks'
 import { getCupsByGameType, getDonksCup, DONKS_CUPS } from '@/config/donks'
 import { useDonksStore } from '@/composables/useDonksStore'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 
 const props = defineProps<{
   username: string | null
@@ -200,9 +201,9 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
 
           <!-- Header -->
           <div class="modal-header">
-            <img
+            <PlayerAvatar
               :src="store.getAvatar(username)"
-              :alt="username"
+              :username="username"
               class="modal-avatar"
             />
             <div class="modal-header__info">

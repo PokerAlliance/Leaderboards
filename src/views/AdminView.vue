@@ -2,20 +2,33 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuth, useTournament, useTeamRoster, useScoring } from '@/composables'
 import { sheetsClient } from '@/services/sheets'
-import { LoginForm, ScoreEditor } from '@/components/admin'
+import { LoginForm, ScoreEditor, ConfirmDialog } from '@/components/admin'
+import LockResultModal from '@/components/admin/LockResultModal.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import type { LeagueSlug, GameSavePayload, Tournament } from '@/types'
+import type { LeagueSlug, GameSavePayload, Tournament, LockTournamentResponse, LockableLeague } from '@/types'
+
+const LOCKABLE_LEAGUES: LockableLeague[] = ['donks', 'anarchy', 'muckers']
 
 const auth = useAuth()
 const { isLoggedIn, username, leagueSlug: adminLeague, logout, initialize, getAdminKey } = auth
 
-const selectedLeague = ref<LeagueSlug>('dreamweaver')
+const selectedLeague = ref<LeagueSlug>('donks')
 const tournamentIdInput = ref('')
 const loadError = ref('')
 const saveError = ref('')
 const saveSuccess = ref(false)
 const isLoading = ref(false)
+
+const isQuickLockLeague = computed(() => LOCKABLE_LEAGUES.includes(selectedLeague.value as LockableLeague))
+
+const lockResult = ref<LockTournamentResponse | null>(null)
+const showLockModal = ref(false)
+const lockError = ref('')
+
+const showErrorDialog = ref(false)
+const errorDialogTitle = ref('')
+const errorDialogMessage = ref('')
 
 const scoreEditorRef = ref<InstanceType<typeof ScoreEditor> | null>(null)
 
@@ -38,18 +51,27 @@ const tournament = computed<Tournament | null>(() => tournamentData.value)
 const hasScores = computed(() => scoring.teamScores.value.length > 0)
 
 watch(selectedLeague, () => {
-  loadRoster()
+  tournamentIdInput.value = ''
+  loadError.value = ''
+  lockError.value = ''
+  saveError.value = ''
+  saveSuccess.value = false
+  if (!isQuickLockLeague.value) {
+    loadRoster()
+  }
 })
 
 onMounted(async () => {
   await initialize()
-  if (isLoggedIn.value) {
+  if (isLoggedIn.value && !isQuickLockLeague.value) {
     await loadRoster()
   }
 })
 
 async function handleLoginSuccess() {
-  await loadRoster()
+  if (!isQuickLockLeague.value) {
+    await loadRoster()
+  }
 }
 
 async function handleLoadTournament() {
@@ -74,6 +96,53 @@ async function handleLoadTournament() {
     loadError.value = tournamentError.value?.message || 'Failed to load tournament'
   } finally {
     isLoading.value = false
+  }
+}
+
+async function handleQuickLock() {
+  const id = parseInt(tournamentIdInput.value, 10)
+  if (isNaN(id) || id <= 0) {
+    lockError.value = 'Please enter a valid tournament ID'
+    return
+  }
+
+  const adminKey = getAdminKey()
+  if (!adminKey) {
+    lockError.value = 'Session expired. Please log in again.'
+    return
+  }
+
+  lockError.value = ''
+  isLoading.value = true
+
+  try {
+    const result = await sheetsClient.lockTournament(
+      selectedLeague.value as LockableLeague,
+      id,
+      adminKey
+    )
+
+    if (result.success) {
+      lockResult.value = result
+      showLockModal.value = true
+    } else {
+      errorDialogTitle.value = 'Lock Failed'
+      errorDialogMessage.value = result.error || 'Failed to lock tournament'
+      showErrorDialog.value = true
+    }
+  } catch (err) {
+    errorDialogTitle.value = 'Unexpected Error'
+    errorDialogMessage.value = err instanceof Error ? err.message : 'An unexpected error occurred'
+    showErrorDialog.value = true
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function handleCloseLockModal() {
+  showLockModal.value = false
+  if (lockResult.value && !lockResult.value.alreadyLocked) {
+    tournamentIdInput.value = ''
   }
 }
 
@@ -103,8 +172,16 @@ function handleLogout() {
   logout()
   tournamentIdInput.value = ''
   loadError.value = ''
+  lockError.value = ''
   saveError.value = ''
   saveSuccess.value = false
+}
+
+const leagueLabel: Record<string, string> = {
+  donks: 'Donks',
+  anarchy: 'Anarchy',
+  muckers: 'Muckers',
+  dreamweaver: 'Dreamweaver',
 }
 </script>
 
@@ -136,8 +213,11 @@ function handleLogout() {
           </div>
         </BaseCard>
 
+        <!-- Quick Lock section for Donks / Anarchy / Muckers -->
         <BaseCard class="admin-view__loader">
-          <h2 class="admin-view__section-title">Load Tournament</h2>
+          <h2 class="admin-view__section-title">
+            {{ isQuickLockLeague ? 'Quick Lock Tournament' : 'Load Tournament' }}
+          </h2>
 
           <div class="admin-view__form-row">
             <div class="admin-view__input-group">
@@ -148,9 +228,10 @@ function handleLogout() {
                 class="admin-view__select"
                 :disabled="adminLeague !== 'all'"
               >
+                <option value="donks">Donks</option>
+                <option value="anarchy">Anarchy</option>
+                <option value="muckers">Muckers</option>
                 <option value="dreamweaver">Dreamweaver</option>
-                <option value="tpp" disabled>TPP (coming soon)</option>
-                <option value="fpl" disabled>FPL (coming soon)</option>
               </select>
             </div>
 
@@ -161,12 +242,24 @@ function handleLogout() {
                 v-model="tournamentIdInput"
                 type="text"
                 class="admin-view__input"
-                placeholder="e.g., 8093458"
-                @keyup.enter="handleLoadTournament"
+                placeholder="e.g., 8323877"
+                @keyup.enter="isQuickLockLeague ? handleQuickLock() : handleLoadTournament()"
               />
             </div>
 
             <BaseButton
+              v-if="isQuickLockLeague"
+              variant="primary"
+              :loading="isLoading"
+              :disabled="!tournamentIdInput"
+              class="admin-view__load-btn"
+              @click="handleQuickLock"
+            >
+              <span class="admin-view__btn-icon">&#128274;</span>
+              Lock {{ leagueLabel[selectedLeague] || selectedLeague }}
+            </BaseButton>
+            <BaseButton
+              v-else
               variant="primary"
               :loading="isLoading || tournamentLoading || rosterLoading"
               :disabled="!tournamentIdInput"
@@ -177,43 +270,72 @@ function handleLogout() {
             </BaseButton>
           </div>
 
-          <div v-if="loadError" class="admin-view__error">
+          <p v-if="isQuickLockLeague" class="admin-view__hint admin-view__hint--info">
+            Enter a Replay tournament ID. The backend will fetch results, determine the
+            {{ selectedLeague === 'donks' ? 'cup' : 'slot' }}, and lock the game automatically.
+          </p>
+
+          <div v-if="loadError && !isQuickLockLeague" class="admin-view__error">
             {{ loadError }}
+          </div>
+          <div v-if="lockError && isQuickLockLeague" class="admin-view__error">
+            {{ lockError }}
           </div>
         </BaseCard>
 
-        <div v-if="saveSuccess" class="admin-view__success">
-          Results saved successfully!
-        </div>
+        <!-- Dreamweaver: existing ScoreEditor flow -->
+        <template v-if="!isQuickLockLeague">
+          <div v-if="saveSuccess" class="admin-view__success">
+            Results saved successfully!
+          </div>
 
-        <div v-if="saveError" class="admin-view__error">
-          {{ saveError }}
-        </div>
+          <div v-if="saveError" class="admin-view__error">
+            {{ saveError }}
+          </div>
 
-        <template v-if="tournament && hasScores">
-          <ScoreEditor
-            ref="scoreEditorRef"
-            :tournament="tournament"
-            :league-slug="selectedLeague"
-            :team-scores="scoring.teamScores.value"
-            :player-results="scoring.playerResults.value"
-            :unassigned-players="scoring.unassignedPlayers.value"
-            @save="handleSave"
-          />
-        </template>
+          <template v-if="tournament && hasScores">
+            <ScoreEditor
+              ref="scoreEditorRef"
+              :tournament="tournament"
+              :league-slug="selectedLeague"
+              :team-scores="scoring.teamScores.value"
+              :player-results="scoring.playerResults.value"
+              :unassigned-players="scoring.unassignedPlayers.value"
+              @save="handleSave"
+            />
+          </template>
 
-        <template v-else-if="tournament && !hasScores">
-          <BaseCard class="admin-view__empty">
-            <p>Tournament loaded but no team scores calculated.</p>
-            <p class="admin-view__hint">Make sure the team roster is set up correctly.</p>
-          </BaseCard>
+          <template v-else-if="tournament && !hasScores">
+            <BaseCard class="admin-view__empty">
+              <p>Tournament loaded but no team scores calculated.</p>
+              <p class="admin-view__hint">Make sure the team roster is set up correctly.</p>
+            </BaseCard>
+          </template>
         </template>
       </template>
 
       <nav class="admin-view__nav">
-        <router-link to="/" class="admin-view__link">← Back to Home</router-link>
+        <router-link to="/" class="admin-view__link">&larr; Back to Home</router-link>
       </nav>
     </div>
+
+    <!-- Lock Result / Recap Modal -->
+    <LockResultModal
+      v-if="showLockModal && lockResult"
+      :result="lockResult"
+      @close="handleCloseLockModal"
+    />
+
+    <!-- Error Dialog -->
+    <ConfirmDialog
+      :open="showErrorDialog"
+      :title="errorDialogTitle"
+      :message="errorDialogMessage"
+      confirm-text="OK"
+      cancel-text="Dismiss"
+      @confirm="showErrorDialog = false"
+      @cancel="showErrorDialog = false"
+    />
   </main>
 </template>
 
@@ -341,6 +463,10 @@ function handleLogout() {
   flex-shrink: 0;
 }
 
+.admin-view__btn-icon {
+  margin-right: var(--space-1);
+}
+
 .admin-view__error {
   padding: var(--space-3);
   font-size: var(--text-sm);
@@ -362,15 +488,23 @@ function handleLogout() {
   text-align: center;
 }
 
-.admin-view__empty {
-  text-align: center;
-  color: var(--color-text-secondary);
-}
-
 .admin-view__hint {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
   margin-top: var(--space-2);
+}
+
+.admin-view__hint--info {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(96, 165, 250, 0.08);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+}
+
+.admin-view__empty {
+  text-align: center;
+  color: var(--color-text-secondary);
 }
 
 .admin-view__nav {

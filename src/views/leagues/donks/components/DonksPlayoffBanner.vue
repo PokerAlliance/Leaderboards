@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { DonksPlayoffState, DonksPlayoffConfig } from '@/types/donks'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 
 const props = defineProps<{
   playoffState: DonksPlayoffState
@@ -91,7 +92,7 @@ const ctaText = computed(() => {
 
     <!-- Leader avatar (active/complete) -->
     <div v-if="leader && (phase === 'playoffs_active' || phase === 'playoffs_complete')" class="pb__leader">
-      <img :src="getAvatar(leader.username)" :alt="leader.username" class="pb__leader-avatar" />
+      <PlayerAvatar :src="getAvatar(leader.username)" :username="leader.username" class="pb__leader-avatar" />
       <span class="pb__leader-name">{{ leader.username }}</span>
       <span class="pb__leader-pts">{{ leader.totalPoints.toLocaleString() }} pts</span>
     </div>

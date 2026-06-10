@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 import type {
   DonksPlayoffGameSummary,
   DonksPlayoffQualifier,
@@ -134,7 +135,7 @@ function formatDate(d: Date): string {
             >
               <td class="pgr__cell pgr__cell--pos">{{ result.finishPosition }}</td>
               <td class="pgr__cell pgr__cell--player">
-                <img :src="getAvatar(result.username)" :alt="result.username" class="pgr__avatar" />
+                <PlayerAvatar :src="getAvatar(result.username)" :username="result.username" class="pgr__avatar" />
                 <span class="pgr__name">{{ result.username }}</span>
               </td>
               <td class="pgr__cell pgr__cell--position">

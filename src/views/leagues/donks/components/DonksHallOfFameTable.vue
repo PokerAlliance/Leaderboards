@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DonksHallOfFameEntry } from '@/types/donks'
+import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
 
 defineProps<{
   entries: DonksHallOfFameEntry[]
@@ -60,11 +61,10 @@ function displayVal(n: number): string {
           >
             <td class="hof-cell hof-cell--rank">{{ idx + 1 }}</td>
             <td class="hof-cell hof-cell--player">
-              <img
+              <PlayerAvatar
                 :src="getAvatar(entry.username)"
-                :alt="entry.username"
+                :username="entry.username"
                 class="hof-avatar"
-                loading="lazy"
               />
               <span class="hof-username">{{ entry.username }}</span>
             </td>
