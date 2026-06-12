@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/league/dreamweaver',
     name: 'dreamweaver-league',
-    component: () => import('@/views/leagues/dreamweaver/DreamweaverLeagueView.vue'),
+    component: () => import('@/views/leagues/dreamweaver/DreamweaverComingsoon.vue'),
   },
   {
     path: '/league/dreamweaver/game/:tournamentId',

@@ -451,6 +451,27 @@ export interface MockLeague {
 
 export const mockLeagues: MockLeague[] = [
   {
+    slug: 'muckers',
+    name: 'Barnyard Muckers',
+    description: 'Team-based SNG league with 9 teams competing across 3 weekly tables for quarterly supremacy.',
+    teamCount: 9,
+    format: 'Team SNG',
+    isActive: true,
+    isNew: true,
+    themeColor: '#00B4D8',
+  },
+  {
+    slug: 'donks',
+    name: "Badonk's Donks League",
+    description: 'The toughest private poker tournaments on ReplayPoker. 6 weekly cups, 8 leaderboards, quarterly standings.',
+    teamCount: 0,
+    format: 'Individual MTT',
+    isActive: true,
+    isNew: true,
+    themeColor: '#c9a227',
+  },
+  
+  {
     slug: 'anarchy',
     name: 'Anarchy',
     description: 'Where silence is broken and strategy is shared. Bounty MTT with open table discussion.',
@@ -464,26 +485,7 @@ export const mockLeagues: MockLeague[] = [
       date: '2026-03-11T13:00:00-05:00',
     },
   },
-  {
-    slug: 'donks',
-    name: "Badonk's Donks League",
-    description: 'The toughest private poker tournaments on ReplayPoker. 6 weekly cups, 8 leaderboards, quarterly standings.',
-    teamCount: 0,
-    format: 'Individual MTT',
-    isActive: true,
-    isNew: true,
-    themeColor: '#c9a227',
-  },
-  {
-    slug: 'muckers',
-    name: 'Barnyard Muckers',
-    description: 'Team-based SNG league with 9 teams competing across 3 weekly tables for quarterly supremacy.',
-    teamCount: 9,
-    format: 'Team SNG',
-    isActive: true,
-    isNew: true,
-    themeColor: '#00B4D8',
-  },
+ 
   {
     slug: 'dreamweaver',
     name: 'Dreamweavers',

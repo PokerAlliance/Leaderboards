@@ -41,9 +41,7 @@
 
       <nav class="app-header__nav" :class="{ 'app-header__nav--open': isMobileMenuOpen }">
         <RouterLink to="/" class="app-header__link" @click="closeMobileMenu">Home</RouterLink>
-        <RouterLink to="/league/anarchy" class="app-header__link app-header__link--anarchy" @click="closeMobileMenu">
-          Anarchy
-        </RouterLink>
+        
         <RouterLink to="/league/muckers" class="app-header__link app-header__link--muckers" @click="closeMobileMenu">
           Muckers
         </RouterLink>
@@ -162,6 +160,9 @@
             </RouterLink>
           </div>
         </div>
+        <RouterLink to="/league/anarchy" class="app-header__link app-header__link--anarchy" @click="closeMobileMenu">
+          Anarchy
+        </RouterLink>
         <RouterLink to="/league/dreamweaver" class="app-header__link" @click="closeMobileMenu">
           Dreamweaver
         </RouterLink>
