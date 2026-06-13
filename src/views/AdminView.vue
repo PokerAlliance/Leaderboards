@@ -226,12 +226,12 @@ const leagueLabel: Record<string, string> = {
                 id="league-select"
                 v-model="selectedLeague"
                 class="admin-view__select"
-                :disabled="adminLeague !== 'all'"
+               
               >
-                <option value="donks">Donks</option>
-                <option value="anarchy">Anarchy</option>
-                <option value="muckers">Muckers</option>
-                <option value="dreamweaver">Dreamweaver</option>
+                <option  :disabled="adminLeague !== 'all' && adminLeague !== 'donks'" value="donks">Donks</option>
+                <option  :disabled="adminLeague !== 'all' && adminLeague !== 'anarchy'" value="anarchy">Anarchy</option>
+                <option  :disabled="adminLeague !== 'all' && adminLeague !== 'muckers'" value="muckers">Muckers</option>
+                <option  :disabled="adminLeague !== 'all' && adminLeague !== 'dreamweaver'" value="dreamweaver">Dreamweaver</option>
               </select>
             </div>
 
