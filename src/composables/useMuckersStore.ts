@@ -20,6 +20,8 @@ import type {
   MuckersTeamDetail,
   MuckersPlayerWeekScore,
   MuckersTeamSlug,
+  MuckersPrimarySlot,
+  MuckersQuarterOverrideInfo,
 } from '@/types/muckers'
 import {
   getCurrentMuckersQuarter,
@@ -41,6 +43,7 @@ const _games = ref<MuckersGame[]>([])
 const _playerResults = ref<MuckersPlayerResult[]>([])
 const _teams = ref<MuckersTeamRoster[]>([])
 const _avatarMap = ref<Record<string, string>>({})
+const _quarterOverrides = ref<MuckersQuarterOverrideInfo[]>([])
 const _weekOffset = ref(0)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -409,6 +412,18 @@ function getTeamMemberCount(teamSlug: MuckersTeamSlug): number {
   return _teams.value.filter((t) => t.teamSlug === teamSlug && t.isActive).length
 }
 
+/**
+ * Get the override reason for a game at a given week/slot, if it was included via
+ * a quarter override (makeup game).
+ */
+function getGameOverrideReason(weekNum: number, slot: MuckersPrimarySlot): string | null {
+  const gameWeekMap = buildGameWeekMap()
+  const game = _games.value.find(
+    (g) => g.gameSlot === slot && gameWeekMap.get(g.gameId) === weekNum
+  )
+  return game?.overrideReason ?? null
+}
+
 // ─── Derived ──────────────────────────────────────────────────────────────────
 
 const loadedQuarterLabel = computed(() => {
@@ -422,6 +437,7 @@ function populateStore(data: import('@/types/muckers').MuckersStoreData) {
   _playerResults.value = data.playerResults
   _teams.value = data.teams
   _avatarMap.value = data.avatarMap
+  _quarterOverrides.value = data.quarterOverrides ?? []
 }
 
 async function loadQuarter(key: MuckersQuarterKey): Promise<void> {
@@ -467,6 +483,7 @@ export function useMuckersStore() {
     playerResults: _playerResults,
     teams: _teams,
     avatarMap: _avatarMap,
+    quarterOverrides: _quarterOverrides,
 
     // Computed leaderboards
     teamStandings,
@@ -487,5 +504,6 @@ export function useMuckersStore() {
     getTeamDetail,
     getAvatar,
     getTeamMemberCount,
+    getGameOverrideReason,
   }
 }

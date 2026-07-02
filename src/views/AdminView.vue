@@ -4,9 +4,12 @@ import { useAuth, useTournament, useTeamRoster, useScoring } from '@/composables
 import { sheetsClient } from '@/services/sheets'
 import { LoginForm, ScoreEditor, ConfirmDialog } from '@/components/admin'
 import LockResultModal from '@/components/admin/LockResultModal.vue'
+import TournamentPoolImport from '@/components/admin/TournamentPoolImport.vue'
+import TournamentPoolTable from '@/components/admin/TournamentPoolTable.vue'
+import MuckersQuarterOverrideManager from '@/components/admin/MuckersQuarterOverrideManager.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import type { LeagueSlug, GameSavePayload, Tournament, LockTournamentResponse, LockableLeague } from '@/types'
+import type { LeagueSlug, GameSavePayload, Tournament, LockTournamentResponse, LockableLeague, ImportTournamentsResponse } from '@/types'
 
 const LOCKABLE_LEAGUES: LockableLeague[] = ['donks', 'anarchy', 'muckers']
 
@@ -29,6 +32,10 @@ const lockError = ref('')
 const showErrorDialog = ref(false)
 const errorDialogTitle = ref('')
 const errorDialogMessage = ref('')
+
+const poolRefreshTrigger = ref(0)
+const showPoolSection = ref(false)
+const showOverrideSection = ref(false)
 
 const scoreEditorRef = ref<InstanceType<typeof ScoreEditor> | null>(null)
 
@@ -175,6 +182,46 @@ function handleLogout() {
   lockError.value = ''
   saveError.value = ''
   saveSuccess.value = false
+  showPoolSection.value = false
+}
+
+function handlePoolImported(_response: ImportTournamentsResponse) {
+  poolRefreshTrigger.value++
+}
+
+async function handlePoolLockTournament(tournamentId: number) {
+  const adminKey = getAdminKey()
+  if (!adminKey) {
+    errorDialogTitle.value = 'Session Expired'
+    errorDialogMessage.value = 'Please log in again.'
+    showErrorDialog.value = true
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const result = await sheetsClient.lockTournament(
+      selectedLeague.value as LockableLeague,
+      tournamentId,
+      adminKey
+    )
+
+    if (result.success) {
+      lockResult.value = result
+      showLockModal.value = true
+      poolRefreshTrigger.value++
+    } else {
+      errorDialogTitle.value = 'Lock Failed'
+      errorDialogMessage.value = result.error || 'Failed to lock tournament'
+      showErrorDialog.value = true
+    }
+  } catch (err) {
+    errorDialogTitle.value = 'Unexpected Error'
+    errorDialogMessage.value = err instanceof Error ? err.message : 'An unexpected error occurred'
+    showErrorDialog.value = true
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const leagueLabel: Record<string, string> = {
@@ -282,6 +329,54 @@ const leagueLabel: Record<string, string> = {
             {{ lockError }}
           </div>
         </BaseCard>
+
+        <!-- Tournament Pool section for Donks / Muckers -->
+        <template v-if="selectedLeague === 'donks' || selectedLeague === 'muckers'">
+          <div class="admin-view__pool-toggle">
+            <button
+              class="admin-view__pool-toggle-btn"
+              :class="{ 'admin-view__pool-toggle-btn--open': showPoolSection }"
+              @click="showPoolSection = !showPoolSection"
+            >
+              <span class="admin-view__pool-toggle-icon">{{ showPoolSection ? '&#9660;' : '&#9654;' }}</span>
+              Tournament Pool
+            </button>
+          </div>
+
+          <template v-if="showPoolSection">
+            <TournamentPoolImport
+              :league="(selectedLeague as LockableLeague)"
+              :admin-key="getAdminKey() || ''"
+              @imported="handlePoolImported"
+              @lock-tournament="handlePoolLockTournament"
+            />
+
+            <TournamentPoolTable
+              :league="(selectedLeague as LockableLeague)"
+              :refresh-trigger="poolRefreshTrigger"
+              @lock-tournament="handlePoolLockTournament"
+            />
+          </template>
+        </template>
+
+        <!-- Quarter Override section for Muckers only -->
+        <template v-if="selectedLeague === 'muckers'">
+          <div class="admin-view__pool-toggle">
+            <button
+              class="admin-view__pool-toggle-btn"
+              :class="{ 'admin-view__pool-toggle-btn--open': showOverrideSection }"
+              @click="showOverrideSection = !showOverrideSection"
+            >
+              <span class="admin-view__pool-toggle-icon">{{ showOverrideSection ? '&#9660;' : '&#9654;' }}</span>
+              Quarter Overrides
+            </button>
+          </div>
+
+          <MuckersQuarterOverrideManager
+            v-if="showOverrideSection"
+            :admin-key="getAdminKey() || ''"
+          />
+        </template>
 
         <!-- Dreamweaver: existing ScoreEditor flow -->
         <template v-if="!isQuickLockLeague">
@@ -521,6 +616,44 @@ const leagueLabel: Record<string, string> = {
 
 .admin-view__link:hover {
   color: var(--color-gold);
+}
+
+.admin-view__pool-toggle {
+  margin: 0;
+}
+
+.admin-view__pool-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.admin-view__pool-toggle-btn:hover {
+  color: var(--color-gold);
+  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.admin-view__pool-toggle-btn--open {
+  color: var(--color-gold);
+  border-color: rgba(212, 175, 55, 0.2);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.admin-view__pool-toggle-icon {
+  font-size: 0.7em;
+  transition: transform var(--transition-base);
 }
 
 @media (max-width: 640px) {

@@ -195,6 +195,7 @@ export const appScriptClient = {
       playerResults: Array<Record<string, unknown>>
       teams: Array<Record<string, unknown>>
       avatarMap: Record<string, string>
+      quarterOverrides?: Array<Record<string, unknown>>
     }>({
       action: 'GET_MUCKERS_DATA',
       quarter,
@@ -208,7 +209,7 @@ export const appScriptClient = {
       const gameDate = (!isNaN(y) && !isNaN(m) && !isNaN(d))
         ? new Date(y, m - 1, d)
         : new Date(String(r.game_date ?? ''))
-      return {
+      const game: import('@/types/muckers').MuckersGame = {
         gameId,
         tournamentId: Number(r.tournament_id ?? 0),
         gameDate,
@@ -217,6 +218,8 @@ export const appScriptClient = {
         lockedBy: String(r.locked_by ?? ''),
         lockedAt: new Date(String(r.locked_at ?? '')),
       }
+      if (r._override_reason) game.overrideReason = String(r._override_reason)
+      return game
     })
 
     const playerResults = (raw.playerResults ?? []).map((r) => ({
@@ -228,7 +231,6 @@ export const appScriptClient = {
       gameSlot: String(r.game_slot ?? '') as import('@/types/muckers').MuckersPrimarySlot,
     }))
 
-
     const teams = (raw.teams ?? []).map((r) => ({
       username: String(r.username ?? ''),
       teamSlug: String(r.team_slug ?? '') as import('@/types/muckers').MuckersTeamSlug,
@@ -236,11 +238,20 @@ export const appScriptClient = {
       isActive: Boolean(r.is_active),
     }))
 
+    const quarterOverrides = (raw.quarterOverrides ?? []).map((r) => ({
+      game_date: String(r.game_date ?? ''),
+      slot: String(r.slot ?? ''),
+      target_quarter: String(r.target_quarter ?? ''),
+      target_year: Number(r.target_year ?? 0),
+      reason: String(r.reason ?? ''),
+    }))
+
     return {
       games,
       playerResults,
       teams,
       avatarMap: raw.avatarMap ?? {},
+      quarterOverrides,
     }
   },
 }

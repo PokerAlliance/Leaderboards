@@ -23,6 +23,10 @@ const slotConfig = computed(() =>
   MUCKERS_SCHEDULE.find((s) => s.slot === props.slotId),
 )
 
+const overrideReason = computed(() =>
+  store.getGameOverrideReason(props.weekNumber, props.slotId),
+)
+
 const gameDate = computed(() => {
   if (!detail.value) return null
   const ws = detail.value.weekStartDate
@@ -68,6 +72,11 @@ function podiumClass(rank: number): string {
           <template v-if="table"> &middot; {{ table.results.length }} players</template>
         </span>
       </div>
+      <span
+        v-if="overrideReason"
+        class="mk-gc__makeup-badge"
+        :title="overrideReason"
+      >Makeup</span>
       <span class="mk-gc__week-tag">Wk{{ weekNumber }}</span>
     </div>
 
@@ -161,6 +170,20 @@ function podiumClass(rank: number): string {
 .mk-gc__meta {
   font-size: 0.65rem;
   color: var(--color-mk-text-muted, #64748B);
+}
+
+.mk-gc__makeup-badge {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  cursor: help;
 }
 
 .mk-gc__week-tag {

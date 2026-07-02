@@ -56,6 +56,52 @@ export interface SaveGameResponse {
 
 export type LockableLeague = 'donks' | 'anarchy' | 'muckers'
 
+export interface TournamentPoolEntry {
+  tournament_id: number
+  league_slug: string
+  tournament_name: string
+  start_date: string
+  state: string
+  cup_slug: string
+  source: string
+  added_at: string
+}
+
+export interface ImportTournamentResult {
+  tournament_id: number
+  name: string
+  start_date: string
+  state: string
+  cup_slug: string
+}
+
+export interface ImportTournamentsResponse {
+  success: boolean
+  error?: string
+  imported?: ImportTournamentResult[]
+  importedCount?: number
+  skippedCount?: number
+  skippedIds?: number[]
+  errors?: Array<{ id: number | string; error: string }>
+}
+
+export interface MuckersQuarterOverride {
+  game_date: string
+  slot: string
+  target_quarter: string
+  target_year: number
+  reason: string
+  created_by: string
+  created_at: string
+}
+
+export interface ManageOverrideResponse {
+  success: boolean
+  error?: string
+  message?: string
+  overrides?: MuckersQuarterOverride[]
+}
+
 export interface LockTournamentPlayerResult {
   username: string
   finishPosition: number

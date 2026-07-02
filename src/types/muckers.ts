@@ -49,6 +49,8 @@ export interface MuckersGame {
   totalPlayers: number
   lockedBy: string
   lockedAt: Date
+  /** Present when this game was included via a quarter override (makeup game) */
+  overrideReason?: string
 }
 
 /** One row from muckers_player_results sheet */
@@ -164,10 +166,22 @@ export interface MuckersTeamDetail {
 // ─── Store Shape ─────────────────────────────────────────────────────────────
 
 /** The full payload returned by GET_MUCKERS_DATA and cached in useMuckersStore */
+export interface MuckersQuarterOverrideInfo {
+  game_date: string
+  slot: string
+  target_quarter: string
+  target_year: number
+  reason: string
+  created_by?: string
+  created_at?: string
+}
+
 export interface MuckersStoreData {
   games: MuckersGame[]
   playerResults: MuckersPlayerResult[]
   teams: MuckersTeamRoster[]
   /** username → avatar URL (current, from Replay league member list) */
   avatarMap: Record<string, string>
+  /** Active quarter overrides (makeup game assignments) */
+  quarterOverrides?: MuckersQuarterOverrideInfo[]
 }

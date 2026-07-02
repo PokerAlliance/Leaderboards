@@ -19,6 +19,10 @@ import type {
   AnarchyTeamSlug,
   LockTournamentResponse,
   LockableLeague,
+  TournamentPoolEntry,
+  ImportTournamentsResponse,
+  MuckersQuarterOverride,
+  ManageOverrideResponse,
 } from '@/types'
 
 export class SheetsClientError extends Error {
@@ -404,6 +408,79 @@ export const sheetsClient = {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to lock tournament',
+      }
+    }
+  },
+
+  /**
+   * Get tournament pool entries for a league
+   */
+  async getTournamentPool(league: LockableLeague): Promise<TournamentPoolEntry[]> {
+    const baseUrl = getAppScriptUrl()
+    if (!baseUrl) {
+      throw new SheetsClientError('AppScript URL not configured')
+    }
+
+    const url = `${baseUrl}?action=get_tournament_pool&league=${encodeURIComponent(league)}`
+    const response = await ofetch<TournamentPoolEntry[]>(url, {
+      retry: 1,
+      timeout: 30000,
+    })
+    return response
+  },
+
+  /**
+   * Import tournament IDs into the pool (admin only)
+   */
+  async importTournaments(
+    league: LockableLeague,
+    tournamentIds: number[],
+    adminKey: string
+  ): Promise<ImportTournamentsResponse> {
+    if (!adminKey) {
+      return { success: false, error: 'Admin key is required' }
+    }
+
+    try {
+      const response = await postToAppScript<ImportTournamentsResponse>({
+        action: 'import_tournaments',
+        key: adminKey,
+        league,
+        tournamentIds,
+      })
+      return response
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to import tournaments',
+      }
+    }
+  },
+
+  /**
+   * Manage Muckers quarter overrides (add/remove/list)
+   */
+  async manageMuckersQuarterOverride(
+    operation: 'add' | 'remove' | 'list',
+    adminKey: string,
+    overrideData?: Partial<MuckersQuarterOverride>
+  ): Promise<ManageOverrideResponse> {
+    if (!adminKey) {
+      return { success: false, error: 'Admin key is required' }
+    }
+
+    try {
+      const response = await postToAppScript<ManageOverrideResponse>({
+        action: 'manage_muckers_quarter_override',
+        key: adminKey,
+        operation,
+        override: overrideData || {},
+      })
+      return response
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to manage quarter override',
       }
     }
   },
