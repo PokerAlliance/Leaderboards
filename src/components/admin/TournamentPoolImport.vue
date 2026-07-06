@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { sheetsClient } from '@/services/sheets'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
-import type { LockableLeague, ImportTournamentResult, ImportTournamentsResponse } from '@/types'
+import type { LockableLeague, ImportTournamentsResponse } from '@/types'
 
 const props = defineProps<{
   league: LockableLeague
