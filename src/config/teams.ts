@@ -125,6 +125,13 @@ export const MUCKERS_TEAMS: Team[] = [
     color: '#191970',
     logoUrl: `${BASE}assets/sprites/muckers/cobra_chickens.png`,
   },
+  {
+    id: 'mucku20',
+    name: 'MUCK U 2.0',
+    slug: 'mucku20',
+    color: '#DC143C',
+    logoUrl: `${BASE}assets/sprites/muckers/mucku20.png`,
+  },
 ]
 
 export const LEAGUE_TEAMS: Record<LeagueSlug, Team[]> = {
