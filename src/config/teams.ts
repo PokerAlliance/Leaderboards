@@ -113,7 +113,7 @@ export const MUCKERS_TEAMS: Team[] = [
   },
   {
     id: 'howlers',
-    name: "Freeto's Howlers",
+    name: "The Howlers",
     slug: 'howlers',
     color: '#B8860B',
     logoUrl: `${BASE}assets/sprites/muckers/howlers.png`,
