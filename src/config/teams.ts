@@ -127,10 +127,10 @@ export const MUCKERS_TEAMS: Team[] = [
   },
   {
     id: 'mucku20',
-    name: 'MUCK U 2.0',
+    name: 'MUCK STATE',
     slug: 'mucku20',
     color: '#DC143C',
-    logoUrl: `${BASE}assets/sprites/muckers/mucku20.png`,
+    logoUrl: `${BASE}assets/sprites/muckers/muckstate.png`,
   },
 ]
 

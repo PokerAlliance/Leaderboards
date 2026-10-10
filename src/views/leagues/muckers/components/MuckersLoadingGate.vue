@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useMuckersStore } from '@/composables/useMuckersStore'
 import { MUCKERS_TEAMS } from '@/config/teams'
 import MuckersBubbleShooter from './MuckersBubbleShooter.vue'
@@ -22,9 +23,16 @@ const progressMessages = ['Calculating edges...', 'Reading the solver...', 'Anal
 const currentMessage = ref(0)
 let messageTimer: ReturnType<typeof setInterval> | null = null
 
+const showTimeout = computed(() => store.loadTimedOut.value && !store.isLoading.value)
+
 const shouldShowGate = computed(() => {
-  return store.isLoading.value && !animationFinished.value
+  return (store.isLoading.value && !animationFinished.value) || showTimeout.value
 })
+
+function retry() {
+  // Errors are surfaced through store.loadError / store.loadTimedOut
+  store.retryLastLoad().catch(() => {})
+}
 
 function startAnimation() {
   animationStarted.value = Date.now()
@@ -90,7 +98,15 @@ onUnmounted(() => {
       <div v-if="shouldShowGate" class="mk-gate-overlay">
         <div class="mk-gate-bg" />
 
-        <div class="mk-gate-content">
+        <!-- Timed out: offer a retry instead of an error -->
+        <div v-if="showTimeout" class="mk-gate-content mk-gate-timeout">
+          <p class="mk-gate-timeout__title">The solver took too long to respond.</p>
+          <p class="mk-gate-timeout__text">Loading the standings timed out. This usually works on a second try.</p>
+          <button type="button" class="mk-gate-timeout__btn" @click="retry">Try again</button>
+          <RouterLink to="/" class="mk-gate-timeout__home">Back to home</RouterLink>
+        </div>
+
+        <div v-else class="mk-gate-content">
           <!-- Card fan with team names -->
           <div class="mk-gate-cards">
             <div
@@ -266,6 +282,50 @@ onUnmounted(() => {
   color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.04em;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Timeout / retry panel */
+.mk-gate-timeout {
+  max-width: 420px;
+  margin-top: 18vh;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.mk-gate-timeout__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.mk-gate-timeout__text {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.mk-gate-timeout__btn {
+  padding: 0.6rem 1.8rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-mk-cyan, #00B4D8);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.mk-gate-timeout__btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.mk-gate-timeout__home {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .mk-gate-slow {

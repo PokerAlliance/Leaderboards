@@ -26,7 +26,7 @@ import type {
 import { DONKS_CUPS, DONKS_MEDALS, DONKS_PLAYOFF_DEFAULTS, TOP_N_SCORES, getCurrentDonksQuarter, quarterLabel } from '@/config/donks'
 import { calculateTopN, getCountedGameIds } from '@/services/scoring/strategies/donks'
 import { computePlayoffState } from '@/services/scoring/playoffs'
-import { appScriptClient } from '@/services/appscript'
+import { appScriptClient, isTimeoutError } from '@/services/appscript'
 
 // ─── Module-Level State ───────────────────────────────────────────────────────
 // These refs live outside the function, making them a true singleton shared
@@ -34,6 +34,10 @@ import { appScriptClient } from '@/services/appscript'
 
 const isLoading = ref(false)
 const loadError = ref<string | null>(null)
+/** True when the last load failed by hitting the client-side timeout */
+const loadTimedOut = ref(false)
+/** Quarter of the most recent load attempt — what a retry should re-request */
+let lastRequestedQuarter: DonksQuarterKey | null = null
 const loadedQuarter = ref<DonksQuarterKey | null>(null)
 
 const _playerResults = ref<DonksPlayerResult[]>([])
@@ -319,8 +323,10 @@ async function loadQuarter(key: DonksQuarterKey): Promise<void> {
     return // already cached
   }
 
+  lastRequestedQuarter = key
   isLoading.value = true
   loadError.value = null
+  loadTimedOut.value = false
 
   try {
     const data = await appScriptClient.getDonksData(key.quarter, key.year)
@@ -328,6 +334,7 @@ async function loadQuarter(key: DonksQuarterKey): Promise<void> {
     loadedQuarter.value = key
   } catch (err) {
     loadError.value = err instanceof Error ? err.message : String(err)
+    loadTimedOut.value = isTimeoutError(err)
     console.error('[useDonksStore] Failed to load quarter data:', err)
     throw err
   } finally {
@@ -344,6 +351,12 @@ async function loadCurrentQuarter(): Promise<void> {
 async function forceRefresh(key?: DonksQuarterKey): Promise<void> {
   loadedQuarter.value = null
   return loadQuarter(key ?? getCurrentDonksQuarter())
+}
+
+/** Retry the most recent load attempt (e.g. after a timeout) */
+async function retryLastLoad(): Promise<void> {
+  loadedQuarter.value = null
+  return loadQuarter(lastRequestedQuarter ?? getCurrentDonksQuarter())
 }
 
 // ─── Computed display helpers ─────────────────────────────────────────────────
@@ -455,6 +468,7 @@ export function useDonksStore() {
     // State
     isLoading,
     loadError,
+    loadTimedOut,
     loadedQuarter,
     loadedQuarterLabel,
 
@@ -475,6 +489,7 @@ export function useDonksStore() {
     loadQuarter,
     loadCurrentQuarter,
     forceRefresh,
+    retryLastLoad,
 
     // Queries
     getCupLeaderboard,

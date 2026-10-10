@@ -31,12 +31,16 @@ import {
   MUCKERS_SCHEDULE,
 } from '@/config/muckers'
 import { getMuckersTeam, MUCKERS_TEAMS } from '@/config/teams'
-import { appScriptClient } from '@/services/appscript'
+import { appScriptClient, isTimeoutError } from '@/services/appscript'
 
 // ─── Module-Level State ───────────────────────────────────────────────────────
 
 const isLoading = ref(false)
 const loadError = ref<string | null>(null)
+/** True when the last load failed by hitting the client-side timeout */
+const loadTimedOut = ref(false)
+/** Quarter of the most recent load attempt — what a retry should re-request */
+let lastRequestedQuarter: MuckersQuarterKey | null = null
 const loadedQuarter = ref<MuckersQuarterKey | null>(null)
 
 const _games = ref<MuckersGame[]>([])
@@ -446,8 +450,10 @@ async function loadQuarter(key: MuckersQuarterKey): Promise<void> {
     return
   }
 
+  lastRequestedQuarter = key
   isLoading.value = true
   loadError.value = null
+  loadTimedOut.value = false
 
   try {
     const data = await appScriptClient.getMuckersData(key.quarter, key.year)
@@ -455,6 +461,7 @@ async function loadQuarter(key: MuckersQuarterKey): Promise<void> {
     loadedQuarter.value = key
   } catch (err) {
     loadError.value = err instanceof Error ? err.message : String(err)
+    loadTimedOut.value = isTimeoutError(err)
     console.error('[useMuckersStore] Failed to load quarter data:', err)
     throw err
   } finally {
@@ -468,6 +475,12 @@ async function forceRefresh(): Promise<void> {
   await loadQuarter(current)
 }
 
+/** Retry the most recent load attempt (e.g. after a timeout) */
+async function retryLastLoad(): Promise<void> {
+  loadedQuarter.value = null
+  return loadQuarter(lastRequestedQuarter ?? getCurrentMuckersQuarter())
+}
+
 // ─── Export ───────────────────────────────────────────────────────────────────
 
 export function useMuckersStore() {
@@ -475,6 +488,7 @@ export function useMuckersStore() {
     // State
     isLoading,
     loadError,
+    loadTimedOut,
     loadedQuarter,
     loadedQuarterLabel,
 
@@ -497,6 +511,7 @@ export function useMuckersStore() {
     // Actions
     loadQuarter,
     forceRefresh,
+    retryLastLoad,
 
     // Queries
     getWeekDetail,

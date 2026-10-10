@@ -39,7 +39,7 @@ const store = useMuckersStore()
         </div>
 
         <!-- Error state -->
-        <div v-if="store.loadError.value" class="mk-standings__error mk-glass">
+        <div v-if="store.loadError.value && !store.loadTimedOut.value" class="mk-standings__error mk-glass">
           <p>Failed to load data: {{ store.loadError.value }}</p>
           <button class="mk-btn mk-btn--primary" @click="store.forceRefresh()">
             Retry

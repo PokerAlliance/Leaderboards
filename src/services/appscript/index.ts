@@ -2,4 +2,4 @@
  * AppScript Service Exports
  */
 
-export { appScriptClient, isAppScriptConfigured } from './client'
+export { appScriptClient, isAppScriptConfigured, isTimeoutError } from './client'

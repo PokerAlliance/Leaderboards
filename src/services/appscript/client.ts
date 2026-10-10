@@ -20,7 +20,24 @@ export function isAppScriptConfigured(): boolean {
   return getAppScriptUrl() !== null
 }
 
-async function fetchFromAppScript<T>(params: Record<string, string>): Promise<T> {
+/**
+ * Timeout for the heavy league aggregators (GET_DONKS_DATA / GET_MUCKERS_DATA).
+ * AppScript keeps running after the browser gives up, so retrying a timed-out
+ * call only stacks a second execution on top of the first — no retries here.
+ */
+const AGGREGATOR_FETCH_OPTIONS = { timeout: 180_000, retry: 0 } as const
+
+/** True when a request was aborted because it hit its client-side timeout */
+export function isTimeoutError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false
+  const cause = (err as Error & { cause?: { name?: string } }).cause
+  return err.name === 'TimeoutError' || cause?.name === 'TimeoutError'
+}
+
+async function fetchFromAppScript<T>(
+  params: Record<string, string>,
+  options: { timeout?: number; retry?: number } = {},
+): Promise<T> {
   const baseUrl = getAppScriptUrl()
   if (!baseUrl) {
     throw new Error('AppScript URL not configured. Set VITE_APPSCRIPT_URL in .env')
@@ -33,6 +50,7 @@ async function fetchFromAppScript<T>(params: Record<string, string>): Promise<T>
     retry: 2,
     retryDelay: 1000,
     timeout: 30000,
+    ...options,
   })
 
   if (response && typeof response === 'object' && 'error' in response) {
@@ -133,7 +151,7 @@ export const appScriptClient = {
       action: 'GET_DONKS_DATA',
       quarter,
       year: String(year),
-    })
+    }, AGGREGATOR_FETCH_OPTIONS)
 
     const playerResults = (raw.playerResults ?? []).map((r) => ({
       gameId: String(r.game_id ?? ''),
@@ -200,7 +218,7 @@ export const appScriptClient = {
       action: 'GET_MUCKERS_DATA',
       quarter,
       year: String(year),
-    })
+    }, AGGREGATOR_FETCH_OPTIONS)
 
     const games = (raw.games ?? []).map((r) => {
       const gameId = String(r.game_id ?? '')
