@@ -79,6 +79,12 @@ const routes: RouteRecordRaw[] = [
     meta: { donksRoute: true },
   },
   {
+    path: '/league/donks/milestones',
+    name: 'donks-milestones',
+    component: () => import('@/views/leagues/donks/DonksMilestonesView.vue'),
+    meta: { donksRoute: true },
+  },
+  {
     path: '/league/donks/playoffs',
     name: 'donks-playoffs',
     component: () => import('@/views/leagues/donks/DonksPlayoffsView.vue'),

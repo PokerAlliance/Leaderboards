@@ -5,7 +5,8 @@
 
 import { ofetch } from 'ofetch'
 import type { ApiLeagueResponse, ApiTournamentResponse } from '@/types'
-import type { DonksStoreData, DonksQuarter } from '@/types/donks'
+import type { DonksStoreData, DonksQuarter, DonksCupSlug } from '@/types/donks'
+import { getDonksCup } from '@/config/donks'
 import type { MuckersStoreData, MuckersQuarter } from '@/types/muckers'
 
 function getAppScriptUrl(): string | null {
@@ -177,10 +178,16 @@ export const appScriptClient = {
       omaha: Number(r.omaha ?? 0),
     }))
 
-    const gamesPlayedAllTime = (raw.gamesPlayedAllTime ?? []).map((r) => ({
-      username: String(r.username ?? ''),
-      allTimeGamesPlayed: Number(r.all_time_games_played ?? 0),
-    }))
+    const gamesPlayedAllTime = (raw.gamesPlayedAllTime ?? []).map((r) => {
+      const date = String(r.last_milestone_date ?? '').substring(0, 10)
+      const cup = String(r.last_milestone_cup ?? '')
+      return {
+        username: String(r.username ?? ''),
+        allTimeGamesPlayed: Number(r.all_time_games_played ?? 0),
+        lastMilestoneDate: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
+        lastMilestoneCup: getDonksCup(cup as DonksCupSlug) ? (cup as DonksCupSlug) : null,
+      }
+    })
 
     const playoffConfig = raw.playoffConfig ? {
       qualifiersPerCup: Number(raw.playoffConfig.qualifiers_per_cup ?? 15),

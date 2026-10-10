@@ -101,6 +101,15 @@
                 Playoffs
               </RouterLink>
               <RouterLink
+                :to="{ name: 'donks-milestones' }"
+                class="donks-dropdown__item"
+                :style="{ '--cup-c': '#c9a227' }"
+                @click="closeMobileMenu"
+              >
+                <i class="i-lucide-flag donks-dropdown__icon" />
+                Milestones
+              </RouterLink>
+              <RouterLink
                 :to="{ name: 'donks-hall-of-fame' }"
                 class="donks-dropdown__item"
                 :style="{ '--cup-c': '#c9a227' }"
@@ -154,6 +163,9 @@
             <div class="donks-accordion__divider" />
             <RouterLink :to="{ name: 'donks-playoffs' }" class="donks-accordion__link donks-accordion__link--special" @click="closeMobileMenu">
               <i class="i-lucide-swords donks-accordion__icon" /> Playoffs
+            </RouterLink>
+            <RouterLink :to="{ name: 'donks-milestones' }" class="donks-accordion__link donks-accordion__link--special" @click="closeMobileMenu">
+              <i class="i-lucide-flag donks-accordion__icon" /> Milestones
             </RouterLink>
             <RouterLink :to="{ name: 'donks-hall-of-fame' }" class="donks-accordion__link donks-accordion__link--special" @click="closeMobileMenu">
               <i class="i-lucide-trophy donks-accordion__icon" /> Hall of Fame

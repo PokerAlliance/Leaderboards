@@ -13,6 +13,7 @@ import type {
   DonksQuarter,
   DonksGameType,
   DonksPlayoffConfig,
+  DonksMilestoneTier,
 } from '@/types/donks'
 
 // ─── Cup Definitions ──────────────────────────────────────────────────────────
@@ -158,6 +159,30 @@ export const CONTACT_LINKS = {
 }
 
 export const LEAGUE_ID = 14
+
+// ─── Milestones ──────────────────────────────────────────────────────────────
+
+/** Games-played milestone interval (mirror of DONKS_MILESTONE_STEP in Code.gs) */
+export const DONKS_MILESTONE_STEP = 500
+
+const MILESTONE_TIERS: DonksMilestoneTier[] = [
+  { key: 'bronze', name: 'Bronze', colors: { light: '#f0b27a', base: '#cd7f32', dark: '#7a4a1c' } },
+  { key: 'silver', name: 'Silver', colors: { light: '#f4f6f8', base: '#b8c0c8', dark: '#6b737b' } },
+  { key: 'gold', name: 'Gold', colors: { light: '#fff1a8', base: '#e4b528', dark: '#8a6a10' } },
+  { key: 'platinum', name: 'Platinum', colors: { light: '#ffffff', base: '#a9d6e5', dark: '#4a7c8c' } },
+  { key: 'diamond', name: 'Diamond', colors: { light: '#f3e8ff', base: '#b388ff', dark: '#5b2a9e' } },
+]
+
+/** Highest milestone reached for a games-played count (0 below the first) */
+export function getMilestoneFor(gamesPlayed: number): number {
+  return Math.floor(gamesPlayed / DONKS_MILESTONE_STEP) * DONKS_MILESTONE_STEP
+}
+
+/** Tier for a milestone: 500 bronze, 1000 silver, 1500 gold, 2000 platinum, 2500+ diamond */
+export function getMilestoneTier(milestone: number): DonksMilestoneTier {
+  const idx = Math.max(0, Math.min(MILESTONE_TIERS.length - 1, milestone / DONKS_MILESTONE_STEP - 1))
+  return MILESTONE_TIERS[Math.floor(idx)]!
+}
 
 // ─── Quarter Utilities ────────────────────────────────────────────────────────
 

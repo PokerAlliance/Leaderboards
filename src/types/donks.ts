@@ -138,6 +138,39 @@ export interface DonksHallOfFameEntry {
 export interface DonksGamesPlayedEntry {
   username: string
   allTimeGamesPlayed: number
+  /** yyyy-MM-dd of the game where the player crossed their latest milestone (tracked from Oct 2026) */
+  lastMilestoneDate: string | null
+  /** Cup in which that milestone game was played */
+  lastMilestoneCup: DonksCupSlug | null
+}
+
+// ─── Milestones ──────────────────────────────────────────────────────────────
+
+export interface DonksMilestoneTier {
+  key: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond'
+  name: string
+  colors: { light: string; base: string; dark: string }
+}
+
+/** A player's most recent milestone, shown as a timeline card */
+export interface DonksMilestoneEvent {
+  username: string
+  milestone: number
+  gamesPlayed: number
+  date: Date
+  cupSlug: DonksCupSlug | null
+}
+
+/** A row of the all-players games-played table */
+export interface DonksGamesPlayedRow {
+  rank: number
+  username: string
+  gamesPlayed: number
+  /** Highest milestone reached (0 when below the first one) */
+  milestone: number
+  nextMilestone: number
+  /** Progress from the current milestone toward the next, 0–1 */
+  progress: number
 }
 
 // ─── Playoffs (Phase 2) ────────────────────────────────────────────────────────

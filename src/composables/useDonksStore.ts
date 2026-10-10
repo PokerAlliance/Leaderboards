@@ -20,10 +20,12 @@ import type {
   DonksCompositeSlug,
   DonksHallOfFameEntry,
   DonksGamesPlayedEntry,
+  DonksGamesPlayedRow,
+  DonksMilestoneEvent,
   DonksPlayoffState,
   DonksPlayoffConfig,
 } from '@/types/donks'
-import { DONKS_CUPS, DONKS_MEDALS, DONKS_PLAYOFF_DEFAULTS, TOP_N_SCORES, getCurrentDonksQuarter, quarterLabel } from '@/config/donks'
+import { DONKS_CUPS, DONKS_MEDALS, DONKS_MILESTONE_STEP, DONKS_PLAYOFF_DEFAULTS, TOP_N_SCORES, getCurrentDonksQuarter, getMilestoneFor, quarterLabel } from '@/config/donks'
 import { calculateTopN, getCountedGameIds } from '@/services/scoring/strategies/donks'
 import { computePlayoffState } from '@/services/scoring/playoffs'
 import { appScriptClient, isTimeoutError } from '@/services/appscript'
@@ -445,6 +447,48 @@ function getGamesPlayedMap(): Map<string, number> {
   return map
 }
 
+// ─── Milestones ──────────────────────────────────────────────────────────────
+
+/** Every tracked player, most games first */
+const gamesPlayedLeaderboard = computed<DonksGamesPlayedRow[]>(() =>
+  [..._gamesPlayedAllTime.value]
+    .filter((e) => e.allTimeGamesPlayed > 0)
+    .sort((a, b) => b.allTimeGamesPlayed - a.allTimeGamesPlayed || a.username.localeCompare(b.username))
+    .map((e, idx) => {
+      const milestone = getMilestoneFor(e.allTimeGamesPlayed)
+      return {
+        rank: idx + 1,
+        username: e.username,
+        gamesPlayed: e.allTimeGamesPlayed,
+        milestone,
+        nextMilestone: milestone + DONKS_MILESTONE_STEP,
+        progress: (e.allTimeGamesPlayed - milestone) / DONKS_MILESTONE_STEP,
+      }
+    }),
+)
+
+/** Each player's latest recorded milestone, newest first */
+const milestoneEvents = computed<DonksMilestoneEvent[]>(() =>
+  _gamesPlayedAllTime.value
+    .filter((e) => e.lastMilestoneDate && getMilestoneFor(e.allTimeGamesPlayed) >= DONKS_MILESTONE_STEP)
+    .map((e) => ({
+      username: e.username,
+      milestone: getMilestoneFor(e.allTimeGamesPlayed),
+      gamesPlayed: e.allTimeGamesPlayed,
+      // Noon local time so the calendar day never shifts across timezones
+      date: new Date(`${e.lastMilestoneDate}T12:00:00`),
+      cupSlug: e.lastMilestoneCup,
+    }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime() || b.milestone - a.milestone),
+)
+
+/** Players closest to their next milestone */
+const milestoneContenders = computed<DonksGamesPlayedRow[]>(() =>
+  [...gamesPlayedLeaderboard.value]
+    .sort((a, b) => (a.nextMilestone - a.gamesPlayed) - (b.nextMilestone - b.gamesPlayed) || b.gamesPlayed - a.gamesPlayed)
+    .slice(0, 8),
+)
+
 /** Check if a player has any Hall of Fame awards, returns entry or null */
 function getHallOfFameEntry(username: string): DonksHallOfFameEntry | null {
   return _hallOfFame.value.find((e) => e.username === username) ?? null
@@ -509,6 +553,11 @@ export function useDonksStore() {
     getAllTimeGamesPlayed,
     getGamesPlayedMap,
     getHallOfFameEntry,
+
+    // Milestones
+    gamesPlayedLeaderboard,
+    milestoneEvents,
+    milestoneContenders,
 
     // Phase 2: Playoffs
     getPlayoffState,

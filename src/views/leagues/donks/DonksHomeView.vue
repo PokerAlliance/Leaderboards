@@ -61,6 +61,9 @@ const backgroundStyle = computed(() => ({
           <RouterLink v-if="showPlayoffsCta" to="/league/donks/playoffs" class="donks-btn donks-btn--outline donks-hero__cta">
             Playoffs
           </RouterLink>
+          <RouterLink to="/league/donks/milestones" class="donks-btn donks-btn--outline donks-hero__cta">
+            Milestones
+          </RouterLink>
         </div>
       </section>
 
