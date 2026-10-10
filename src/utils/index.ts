@@ -4,3 +4,4 @@
 
 export * from './datetime'
 export * from './avatars'
+export * from './search'

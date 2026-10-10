@@ -1,11 +1,26 @@
 <script setup lang="ts">
 import type { DonksHallOfFameEntry } from '@/types/donks'
 import PlayerAvatar from '@/components/common/PlayerAvatar.vue'
+import { splitHighlight } from '@/utils/search'
 
 const props = defineProps<{
   entries: DonksHallOfFameEntry[]
   getAvatar: (username: string) => string
+  /** Real rank of a player (keeps ranks stable when the list is filtered) */
+  rankOf?: (username: string) => number
+  /** Normalised term to <mark> inside usernames */
+  highlight?: string
+  emptyText?: string
 }>()
+
+/** [before, match, after] — match is empty when nothing to highlight */
+function nameParts(username: string): [string, string, string] {
+  return splitHighlight(username, props.highlight ?? '') ?? [username, '', '']
+}
+
+function rankFor(entry: DonksHallOfFameEntry, idx: number): number {
+  return props.rankOf ? props.rankOf(entry.username) : idx + 1
+}
 
 const emit = defineEmits<{
   'row-click': [username: string]
@@ -44,21 +59,21 @@ function podiumClass(rank: number): string {
 <template>
   <div class="hof-grid">
     <div v-if="entries.length === 0" class="hof-grid__empty">
-      No Hall of Fame data available yet.
+      {{ emptyText ?? 'No Hall of Fame data available yet.' }}
     </div>
 
     <div
       v-for="(entry, idx) in entries"
       :key="entry.username"
       class="hof-card"
-      :class="podiumClass(idx + 1)"
+      :class="podiumClass(rankFor(entry, idx))"
       :style="{ '--card-i': idx }"
       @click="emit('row-click', entry.username)"
     >
       <div class="hof-card__glow" />
 
       <!-- Rank badge -->
-      <span class="hof-card__rank">#{{ idx + 1 }}</span>
+      <span class="hof-card__rank">#{{ rankFor(entry, idx) }}</span>
 
       <!-- Avatar -->
       <PlayerAvatar
@@ -68,7 +83,7 @@ function podiumClass(rank: number): string {
       />
 
       <!-- Username -->
-      <span class="hof-card__name">{{ entry.username }}</span>
+      <span v-for="parts in [nameParts(entry.username)]" :key="entry.username" class="hof-card__name">{{ parts[0] }}<mark v-if="parts[1]" class="hof-card__mark">{{ parts[1] }}</mark>{{ parts[2] }}</span>
 
       <!-- Trophies -->
       <div class="hof-card__trophies">
@@ -105,6 +120,13 @@ function podiumClass(rank: number): string {
 }
 
 /* ─── Card ──────────────────────────────────────────────── */
+
+.hof-card__mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  color: inherit;
+  background: rgba(228, 201, 90, 0.55);
+}
 
 .hof-card {
   position: relative;

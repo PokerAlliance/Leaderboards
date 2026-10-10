@@ -32,16 +32,15 @@ function tierStyle(row: DonksGamesPlayedRow) {
       :style="tierStyle(row)"
       @click="emit('select', row.username)"
     >
-      <PlayerAvatar :src="getAvatar(row.username)" :username="row.username" :size="40" class="ms-brink__avatar" />
-      <span class="ms-brink__name">{{ row.username }}</span>
-      <span class="ms-brink__togo">
-        <strong>{{ row.nextMilestone - row.gamesPlayed }}</strong> to go
+      <PlayerAvatar :src="getAvatar(row.username)" :username="row.username" :size="34" class="ms-brink__avatar" />
+      <span class="ms-brink__info">
+        <span class="ms-brink__name">{{ row.username }}</span>
+        <span class="ms-brink__togo">
+          <strong>{{ row.nextMilestone - row.gamesPlayed }}</strong> to {{ row.nextMilestone.toLocaleString('en-US') }}
+        </span>
       </span>
       <span class="ms-brink__bar">
         <span class="ms-brink__fill" :style="{ width: `${Math.round(row.progress * 100)}%` }" />
-      </span>
-      <span class="ms-brink__target">
-        {{ row.gamesPlayed.toLocaleString('en-US') }} → {{ row.nextMilestone.toLocaleString('en-US') }}
       </span>
     </button>
   </div>
@@ -50,26 +49,25 @@ function tierStyle(row: DonksGamesPlayedRow) {
 <style scoped>
 .ms-brink {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
 }
 
-@media (max-width: 640px) {
-  .ms-brink { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
+/* Compact card: avatar beside name, progress bar along the bottom */
 .ms-brink__card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.9rem 0.75rem;
+  gap: 0.45rem 0.55rem;
+  padding: 0.6rem 0.65rem;
   font: inherit;
+  text-align: left;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--color-donks-ivory);
   border: 1px solid var(--color-donks-card-border);
-  border-top: 3px solid var(--tier-base);
+  border-left: 3px solid var(--tier-base);
   color: var(--color-donks-text);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -86,29 +84,36 @@ function tierStyle(row: DonksGamesPlayedRow) {
   border: 2px solid var(--tier-base);
 }
 
+.ms-brink__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
 .ms-brink__name {
-  max-width: 100%;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .ms-brink__togo {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--color-donks-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .ms-brink__togo strong {
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   color: var(--color-donks-burgundy);
 }
 
 .ms-brink__bar {
-  width: 100%;
-  height: 6px;
+  grid-column: 1 / -1;
+  height: 5px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.08);
   overflow: hidden;
@@ -119,11 +124,5 @@ function tierStyle(row: DonksGamesPlayedRow) {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--tier-dark), var(--tier-base), var(--tier-light));
-}
-
-.ms-brink__target {
-  font-size: 0.66rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-donks-text-muted);
 }
 </style>

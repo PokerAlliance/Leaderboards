@@ -40,7 +40,7 @@ function tierStyle(ev: DonksMilestoneEvent) {
       </div>
       <p class="ms-tl__empty-title">The first milestone is being dealt…</p>
       <p class="ms-tl__empty-text">
-        Every 500 games a player earns a trophy here. See who's on the brink below.
+        Every 500 games a player earns a trophy here. Check who's on the brink!
       </p>
     </div>
 
@@ -49,7 +49,6 @@ function tierStyle(ev: DonksMilestoneEvent) {
         v-for="(ev, idx) in events"
         :key="ev.username"
         class="ms-tl__item"
-        :class="idx % 2 === 0 ? 'ms-tl__item--left' : 'ms-tl__item--right'"
         :style="{ ...tierStyle(ev), '--i': Math.min(idx, 12) }"
       >
         <span class="ms-tl__node" :class="{ 'ms-tl__node--red': idx % 4 === 1 || idx % 4 === 2 }">
@@ -103,7 +102,7 @@ function tierStyle(ev: DonksMilestoneEvent) {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 50%;
+  left: 15px;
   width: 3px;
   transform: translateX(-50%);
   background: linear-gradient(180deg, transparent, var(--color-donks-gold) 6%, var(--color-donks-gold) 94%, transparent);
@@ -112,14 +111,11 @@ function tierStyle(ev: DonksMilestoneEvent) {
 
 .ms-tl__item {
   position: relative;
-  width: 50%;
-  padding: 0.6rem 2.25rem;
+  padding: 0.55rem 0 0.55rem 2.6rem;
   animation: ms-tl-in 0.5s ease both;
   animation-delay: calc(var(--i) * 70ms);
 }
 
-.ms-tl__item--left { margin-right: auto; }
-.ms-tl__item--right { margin-left: auto; }
 
 @keyframes ms-tl-in {
   from { opacity: 0; transform: translateY(14px); }
@@ -140,12 +136,11 @@ function tierStyle(ev: DonksMilestoneEvent) {
   background: var(--color-donks-ivory);
   border: 2px solid var(--tier-base);
   box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.18), 0 2px 8px rgba(0, 0, 0, 0.25);
+  left: 0;
   transform: translateY(-50%);
   z-index: 1;
 }
 .ms-tl__node--red { color: #c9184a; }
-.ms-tl__item--left .ms-tl__node { right: -15px; }
-.ms-tl__item--right .ms-tl__node { left: -15px; }
 
 /* Card */
 .ms-tl__card {
@@ -178,9 +173,6 @@ function tierStyle(ev: DonksMilestoneEvent) {
   outline: none;
 }
 
-.ms-tl__item--left .ms-tl__card { flex-direction: row-reverse; text-align: right; }
-.ms-tl__item--left .ms-tl__body { align-items: flex-end; }
-.ms-tl__item--left .ms-tl__open { left: 0.6rem; right: auto; }
 
 .ms-tl__trophy { flex-shrink: 0; }
 
@@ -224,7 +216,6 @@ function tierStyle(ev: DonksMilestoneEvent) {
   min-width: 0;
 }
 
-.ms-tl__item--left .ms-tl__player { flex-direction: row-reverse; }
 
 .ms-tl__avatar {
   border-radius: 50%;
@@ -339,24 +330,6 @@ function tierStyle(ev: DonksMilestoneEvent) {
   margin: 0;
   font-size: 0.85rem;
   color: rgba(245, 240, 232, 0.75);
-}
-
-/* Mobile: single column, spine on the left */
-@media (max-width: 720px) {
-  .ms-tl__list::before { left: 15px; }
-  .ms-tl__item,
-  .ms-tl__item--left,
-  .ms-tl__item--right {
-    width: 100%;
-    margin: 0;
-    padding: 0.5rem 0 0.5rem 2.6rem;
-  }
-  .ms-tl__item .ms-tl__node,
-  .ms-tl__item--left .ms-tl__node { left: 0; right: auto; }
-  .ms-tl__item--left .ms-tl__card { flex-direction: row; text-align: left; }
-  .ms-tl__item--left .ms-tl__body { align-items: flex-start; }
-  .ms-tl__item--left .ms-tl__player { flex-direction: row; }
-  .ms-tl__item--left .ms-tl__open { right: 0.6rem; left: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

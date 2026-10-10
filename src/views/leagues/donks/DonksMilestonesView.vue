@@ -19,7 +19,7 @@ const backgroundStyle = computed(() => ({
 
 const rows = computed(() => store.gamesPlayedLeaderboard.value)
 const events = computed(() => store.milestoneEvents.value)
-const contenders = computed(() => store.milestoneContenders.value)
+const contenders = computed(() => store.milestoneContenders.value.slice(0, 4))
 
 const totalGames = computed(() => rows.value.reduce((sum, r) => sum + r.gamesPlayed, 0))
 const ironDonk = computed(() => rows.value[0] ?? null)
@@ -47,7 +47,9 @@ function openStats(username: string) {
           <h1 class="ms-page__title">Donks Milestones</h1>
           <p class="ms-page__subtitle">Every hand counts. Every 500 games, a legend is made.</p>
         </header>
+      </div>
 
+      <div class="ms-page ms-page--wide">
         <!-- Stats strip -->
         <div class="ms-page__stats">
           <div class="ms-stat">
@@ -68,24 +70,33 @@ function openStats(username: string) {
           </div>
         </div>
 
-        <!-- Timeline -->
-        <section class="ms-page__section">
-          <h2 class="ms-page__h2"><i class="i-lucide-trophy" /> Milestone Timeline</h2>
-          <DonksMilestoneTimeline :events="events" :get-avatar="store.getAvatar" @select="selectedEvent = $event" />
-        </section>
+        <div class="ms-page__columns">
+          <!-- Left: full games-played list -->
+          <div class="ms-page__main">
+            <!-- All players -->
+            <section class="ms-page__section donks-card ms-page__panel">
+              <h2 class="ms-page__h2 ms-page__h2--dark"><i class="i-lucide-users" /> Games Played — All Players</h2>
+              <DonksGamesPlayedTable :rows="rows" :get-avatar="store.getAvatar" @row-click="openStats" />
+            </section>
+          </div>
 
-        <!-- On the brink -->
-        <section v-if="contenders.length > 0" class="ms-page__section donks-card ms-page__panel">
-          <h2 class="ms-page__h2 ms-page__h2--dark"><i class="i-lucide-flame" /> On the Brink</h2>
-          <p class="ms-page__hint">Closest to their next milestone</p>
-          <DonksMilestoneContenders :rows="contenders" :get-avatar="store.getAvatar" @select="openStats" />
-        </section>
+          <!-- Right: timeline (scrolls on its own) + on the brink, sticky together -->
+          <aside class="ms-page__side">
+            <section class="ms-page__timeline">
+              <h2 class="ms-page__h2"><i class="i-lucide-trophy" /> Milestone Timeline</h2>
+              <div class="ms-page__timeline-scroll">
+                <DonksMilestoneTimeline :events="events" :get-avatar="store.getAvatar" @select="selectedEvent = $event" />
+              </div>
+            </section>
 
-        <!-- All players -->
-        <section class="ms-page__section donks-card ms-page__panel">
-          <h2 class="ms-page__h2 ms-page__h2--dark"><i class="i-lucide-users" /> Games Played — All Players</h2>
-          <DonksGamesPlayedTable :rows="rows" :get-avatar="store.getAvatar" @row-click="openStats" />
-        </section>
+            <!-- On the brink -->
+            <section v-if="contenders.length > 0" class="donks-card ms-page__panel ms-page__brink">
+              <h2 class="ms-page__h2 ms-page__h2--dark"><i class="i-lucide-flame" /> On the Brink</h2>
+              <p class="ms-page__hint">Closest to their next milestone</p>
+              <DonksMilestoneContenders :rows="contenders" :get-avatar="store.getAvatar" @select="openStats" />
+            </section>
+          </aside>
+        </div>
 
         <footer class="ms-page__footer">
           <p>
@@ -119,6 +130,67 @@ function openStats(username: string) {
   margin: 0 auto;
   padding: var(--space-6, 1.5rem);
   padding-top: var(--space-8, 2rem);
+}
+
+/* Header keeps the usual 1100px; everything below it uses most of the viewport */
+.ms-page:not(.ms-page--wide) {
+  padding-bottom: 0;
+}
+
+.ms-page--wide {
+  max-width: min(1680px, 92vw);
+  padding-top: 0;
+}
+
+.ms-page__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 65fr) minmax(0, 35fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.ms-page__side {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: calc(100vh - 96px);
+}
+
+.ms-page__brink {
+  flex: none;
+  padding: 0.9rem 1rem 1rem;
+}
+
+.ms-page__brink .ms-page__hint {
+  margin-bottom: 0.7rem;
+}
+
+.ms-page__timeline {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 220px;
+  padding: 1.1rem 0.9rem 0.5rem 1.1rem;
+  border-radius: 14px;
+  background: rgba(9, 31, 20, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(228, 201, 90, 0.35);
+}
+
+.ms-page__timeline .ms-page__h2 {
+  margin-bottom: 0.75rem;
+}
+
+.ms-page__timeline-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.6rem 0.4rem 0.75rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(228, 201, 90, 0.5) transparent;
 }
 
 /* Header */
@@ -214,6 +286,10 @@ function openStats(username: string) {
   margin-bottom: 1.5rem;
 }
 
+.ms-page__main > .ms-page__section:last-child {
+  margin-bottom: 0;
+}
+
 .ms-page__panel {
   padding: 1.25rem;
 }
@@ -252,6 +328,7 @@ function openStats(username: string) {
 
 /* Footer */
 .ms-page__footer {
+  margin-top: 1.5rem;
   text-align: center;
   padding: 1rem;
   border-radius: 12px;
@@ -274,8 +351,24 @@ function openStats(username: string) {
   font-weight: 700;
 }
 
+/* Stack on tablets/phones: timeline first, no inner scroll */
+@media (max-width: 1024px) {
+  .ms-page__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ms-page__side {
+    position: static;
+    order: -1;
+    max-height: none;
+  }
+  .ms-page__timeline-scroll {
+    overflow: visible;
+  }
+}
+
 @media (max-width: 600px) {
   .ms-page { padding: 1rem; }
+  .ms-page--wide { padding-top: 0; }
   .ms-page__header { padding: 1.5rem 1rem 1rem; }
   .ms-page__back {
     position: static;
